@@ -74,11 +74,51 @@ enum MargaritavilleSoundAsset {
   final String? packageAssetPath;
   final String title;
 
+  static MargaritavilleSoundAsset? fromId(String? id) {
+    for (final asset in values) {
+      if (asset.id == id) return asset;
+    }
+    return null;
+  }
+
   static List<InteractionSoundRegistration> get nativeRegistrations => [
     for (final asset in values)
       if (asset.packageAssetPath case final path?)
         InteractionSoundRegistration(id: asset.id, packageAssetPath: path),
   ];
+}
+
+enum MargaritavilleSoundSlot {
+  interfaceActions(
+    'interface_actions',
+    'Все остальные действия',
+    'Любые действия, которые не касаются ячеек.',
+    MargaritavilleSoundAsset.uiRolloverTick,
+  ),
+  room(
+    'room',
+    'Ячейка',
+    'Любое взаимодействие с ячейкой, кроме финального зелёного статуса.',
+    MargaritavilleSoundAsset.uiConfirmGlass,
+  ),
+  roomReady(
+    'room_ready',
+    'Зелёная ячейка',
+    'Когда ячейка становится зелёной.',
+    MargaritavilleSoundAsset.frontDeskBell,
+  );
+
+  const MargaritavilleSoundSlot(
+    this.id,
+    this.title,
+    this.subtitle,
+    this.defaultAsset,
+  );
+
+  final String id;
+  final String title;
+  final String subtitle;
+  final MargaritavilleSoundAsset defaultAsset;
 }
 
 enum MargaritavilleSoundEvent {
@@ -105,15 +145,67 @@ enum MargaritavilleSoundEvent {
 
   final int priority;
 
-  MargaritavilleSoundAsset get defaultAsset => switch (this) {
-    MargaritavilleSoundEvent.roomReady =>
-      MargaritavilleSoundAsset.frontDeskBell,
+  MargaritavilleSoundSlot get slot => switch (this) {
+    MargaritavilleSoundEvent.roomReady => MargaritavilleSoundSlot.roomReady,
     MargaritavilleSoundEvent.actionMenuOpen ||
     MargaritavilleSoundEvent.roomPending ||
     MargaritavilleSoundEvent.roomOpen ||
     MargaritavilleSoundEvent.roomInProgress ||
-    MargaritavilleSoundEvent.roomScheduled =>
-      MargaritavilleSoundAsset.uiConfirmGlass,
-    _ => MargaritavilleSoundAsset.uiRolloverTick,
+    MargaritavilleSoundEvent.roomScheduled => MargaritavilleSoundSlot.room,
+    _ => MargaritavilleSoundSlot.interfaceActions,
   };
+}
+
+final class MargaritavilleSoundAssignments {
+  const MargaritavilleSoundAssignments({
+    required this.interfaceActions,
+    required this.room,
+    required this.roomReady,
+  });
+
+  static const defaults = MargaritavilleSoundAssignments(
+    interfaceActions: MargaritavilleSoundAsset.uiRolloverTick,
+    room: MargaritavilleSoundAsset.uiConfirmGlass,
+    roomReady: MargaritavilleSoundAsset.frontDeskBell,
+  );
+
+  final MargaritavilleSoundAsset interfaceActions;
+  final MargaritavilleSoundAsset room;
+  final MargaritavilleSoundAsset roomReady;
+
+  MargaritavilleSoundAsset assetFor(MargaritavilleSoundEvent event) {
+    return assetForSlot(event.slot);
+  }
+
+  MargaritavilleSoundAsset assetForSlot(MargaritavilleSoundSlot slot) {
+    return switch (slot) {
+      MargaritavilleSoundSlot.interfaceActions => interfaceActions,
+      MargaritavilleSoundSlot.room => room,
+      MargaritavilleSoundSlot.roomReady => roomReady,
+    };
+  }
+
+  MargaritavilleSoundAssignments withAsset(
+    MargaritavilleSoundSlot slot,
+    MargaritavilleSoundAsset asset,
+  ) {
+    return MargaritavilleSoundAssignments(
+      interfaceActions: slot == MargaritavilleSoundSlot.interfaceActions
+          ? asset
+          : interfaceActions,
+      room: slot == MargaritavilleSoundSlot.room ? asset : room,
+      roomReady: slot == MargaritavilleSoundSlot.roomReady ? asset : roomReady,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MargaritavilleSoundAssignments &&
+        other.interfaceActions == interfaceActions &&
+        other.room == room &&
+        other.roomReady == roomReady;
+  }
+
+  @override
+  int get hashCode => Object.hash(interfaceActions, room, roomReady);
 }

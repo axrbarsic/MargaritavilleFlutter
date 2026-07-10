@@ -67,6 +67,11 @@
   EDR/HDR, haptics, media/Speech и performance.
 - Flutter iOS Simulator не использовать без отдельного прямого разрешения.
 - Перед тяжёлыми сборками запускать `~/.codex/tools/disk_guard.sh --force`.
+- После iOS device build обязательно запускать
+  `tool/verify_ios_app_bundle.sh`: все embedded frameworks должны иметь
+  `platform IOS`, а не `IOSSIMULATOR`, и проходить deep codesign.
+- Успех `devicectl install/launch` не считать runtime smoke-тестом: проверить
+  хотя бы первое обращение к локальному хранилищу внутри открытого приложения.
 - После каждого блока: format, analyze, tests, физическая сборка, commit и push,
   если remote настроен.
 - Не коммить секреты, `.dart_tool`, `build`, DerivedData и чужие изменения.

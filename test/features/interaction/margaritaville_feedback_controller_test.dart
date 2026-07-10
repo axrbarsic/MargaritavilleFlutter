@@ -64,12 +64,49 @@ void main() {
       expect(bridge.requests[3].soundId, isNull);
     },
   );
+
+  test(
+    'applies persisted assignments and previews the exact selected asset',
+    () async {
+      final bridge = _FakeInteractionFeedbackBridge();
+      final controller = MargaritavilleFeedbackController(
+        runtime: InteractionFeedbackRuntime(bridge: bridge),
+      );
+      addTearDown(controller.dispose);
+      await controller.initialize();
+      controller.updateSoundAssignments(
+        const MargaritavilleSoundAssignments(
+          interfaceActions: MargaritavilleSoundAsset.none,
+          room: MargaritavilleSoundAsset.uiAlertSnap,
+          roomReady: MargaritavilleSoundAsset.kenneyBong1,
+        ),
+      );
+
+      controller.confirm();
+      controller.roomStatusChanged(RoomDisplayStatus.open);
+      controller.roomStatusChanged(RoomDisplayStatus.ready);
+      controller.previewSound(MargaritavilleSoundAsset.uiMenuOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(bridge.requests[0].soundId, isNull);
+      expect(
+        bridge.requests[1].soundId,
+        MargaritavilleSoundAsset.uiAlertSnap.id,
+      );
+      expect(
+        bridge.requests[2].soundId,
+        MargaritavilleSoundAsset.kenneyBong1.id,
+      );
+      expect(bridge.previews, [MargaritavilleSoundAsset.uiMenuOpen.id]);
+    },
+  );
 }
 
 final class _FakeInteractionFeedbackBridge
     implements InteractionFeedbackBridge {
   InteractionFeedbackConfiguration? configuration;
   final requests = <InteractionFeedbackRequest>[];
+  final previews = <String>[];
 
   @override
   Future<void> clearPending() async {}
@@ -85,7 +122,9 @@ final class _FakeInteractionFeedbackBridge
   }
 
   @override
-  Future<void> previewSound(String soundId) async {}
+  Future<void> previewSound(String soundId) async {
+    previews.add(soundId);
+  }
 
   @override
   Future<void> setAudioContext(InteractionAudioContext context) async {}

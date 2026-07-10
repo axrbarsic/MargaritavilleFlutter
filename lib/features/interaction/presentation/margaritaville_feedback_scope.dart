@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interaction_foundation/interaction_foundation.dart';
 
 import '../application/margaritaville_feedback_controller.dart';
+import '../domain/margaritaville_sound_routing.dart';
+import 'controllers/interaction_sound_settings_controller.dart';
 
-final class MargaritavilleFeedbackScope extends StatefulWidget {
+final class MargaritavilleFeedbackScope extends ConsumerStatefulWidget {
   const MargaritavilleFeedbackScope({
     required this.child,
     this.controller,
@@ -24,12 +27,12 @@ final class MargaritavilleFeedbackScope extends StatefulWidget {
   }
 
   @override
-  State<MargaritavilleFeedbackScope> createState() =>
+  ConsumerState<MargaritavilleFeedbackScope> createState() =>
       _MargaritavilleFeedbackScopeState();
 }
 
 final class _MargaritavilleFeedbackScopeState
-    extends State<MargaritavilleFeedbackScope>
+    extends ConsumerState<MargaritavilleFeedbackScope>
     with WidgetsBindingObserver {
   late final MargaritavilleFeedbackController _controller;
   late final bool _ownsController;
@@ -61,6 +64,12 @@ final class _MargaritavilleFeedbackScopeState
 
   @override
   Widget build(BuildContext context) {
+    final assignments = ref
+        .watch(interactionSoundSettingsControllerProvider)
+        .value;
+    _controller.updateSoundAssignments(
+      assignments ?? MargaritavilleSoundAssignments.defaults,
+    );
     return _FeedbackControllerScope(
       controller: _controller,
       child: widget.child,

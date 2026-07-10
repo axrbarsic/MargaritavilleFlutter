@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_theme.dart';
+import 'package:margaritaville_flutter/features/interaction/domain/margaritaville_sound_routing.dart';
+import 'package:margaritaville_flutter/features/interaction/domain/repositories/interaction_sound_settings_repository.dart';
+import 'package:margaritaville_flutter/features/interaction/presentation/controllers/interaction_sound_settings_controller.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
 import 'package:margaritaville_flutter/features/settings/domain/repositories/appearance_settings_repository.dart';
 import 'package:margaritaville_flutter/features/settings/presentation/appearance_settings_screen.dart';
@@ -12,7 +15,8 @@ void main() {
     tester,
   ) async {
     final repository = _MemoryAppearanceSettingsRepository();
-    await tester.pumpWidget(_app(repository));
+    final soundRepository = _MemoryInteractionSoundSettingsRepository();
+    await tester.pumpWidget(_app(repository, soundRepository: soundRepository));
     await tester.pumpAndSettle();
 
     expect(find.text('Настройки'), findsOneWidget);
@@ -27,6 +31,10 @@ void main() {
     expect(find.text('Фон приложения'), findsOneWidget);
     expect(find.text('Matrix'), findsOneWidget);
     expect(find.text('Выкл'), findsWidgets);
+    expect(find.text('Звуки'), findsOneWidget);
+    expect(find.text('Все остальные действия'), findsOneWidget);
+    expect(find.text('Ячейка'), findsOneWidget);
+    expect(find.text('Зелёная ячейка'), findsOneWidget);
 
     final statusPulse = find.byKey(const Key('setting-status-hdr-pulse'));
     await tester.ensureVisible(statusPulse);
@@ -43,6 +51,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.value.vividStatusPaletteEnabled, isFalse);
+
+    final roomSound = find.byKey(const Key('sound-picker-room'));
+    await tester.ensureVisible(roomSound);
+    await tester.pumpAndSettle();
+    await tester.tap(roomSound);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Резкий сигнал').last);
+    await tester.pumpAndSettle();
+
+    expect(soundRepository.value.room, MargaritavilleSoundAsset.uiAlertSnap);
   });
 
   testWidgets('settings stay intact at physical Pixel width and font scale', (
@@ -67,11 +85,15 @@ void main() {
 
 Widget _app(
   AppearanceSettingsRepository repository, {
+  InteractionSoundSettingsRepository? soundRepository,
   TextScaler textScaler = TextScaler.noScaling,
 }) {
   return ProviderScope(
     overrides: [
       appearanceSettingsRepositoryProvider.overrideWithValue(repository),
+      interactionSoundSettingsRepositoryProvider.overrideWithValue(
+        soundRepository ?? _MemoryInteractionSoundSettingsRepository(),
+      ),
     ],
     child: MaterialApp(
       theme: MargaritavilleTheme.dark,
@@ -82,6 +104,20 @@ Widget _app(
       home: const AppearanceSettingsScreen(),
     ),
   );
+}
+
+final class _MemoryInteractionSoundSettingsRepository
+    implements InteractionSoundSettingsRepository {
+  MargaritavilleSoundAssignments value =
+      MargaritavilleSoundAssignments.defaults;
+
+  @override
+  Future<MargaritavilleSoundAssignments> load() async => value;
+
+  @override
+  Future<void> save(MargaritavilleSoundAssignments assignments) async {
+    value = assignments;
+  }
 }
 
 final class _MemoryAppearanceSettingsRepository

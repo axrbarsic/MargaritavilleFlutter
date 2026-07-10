@@ -8,6 +8,7 @@ import 'controllers/appearance_settings_controller.dart';
 import 'widgets/appearance_settings_controls.dart';
 import 'widgets/appearance_settings_panel.dart';
 import 'widgets/background_settings_panel.dart';
+import 'widgets/interaction_sound_settings_panel.dart';
 
 final class AppearanceSettingsScreen extends ConsumerWidget {
   const AppearanceSettingsScreen({super.key});
@@ -36,6 +37,8 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
                             appearanceSettingsControllerProvider.notifier,
                           ),
                         ),
+                        const SizedBox(height: 18),
+                        const InteractionSoundSettingsPanel(),
                       ],
                     ),
                     error: (error, _) => _error(ref, error),

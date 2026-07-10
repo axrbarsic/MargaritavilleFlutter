@@ -1,7 +1,7 @@
+import '../../../../shared/persistence/settings_key_value_store.dart';
 import '../../domain/models/app_background_mode.dart';
 import '../../domain/models/appearance_settings.dart';
 import '../../domain/repositories/appearance_settings_repository.dart';
-import '../local/settings_key_value_store.dart';
 
 final class PreferencesAppearanceSettingsRepository
     implements AppearanceSettingsRepository {

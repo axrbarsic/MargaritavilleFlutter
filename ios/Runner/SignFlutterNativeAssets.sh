@@ -2,13 +2,17 @@
 
 set -eu
 
-if [ "${PLATFORM_NAME:-}" != "iphoneos" ]; then
-  exit 0
-fi
-
-if [ "${CODE_SIGNING_ALLOWED:-YES}" = "NO" ] || [ -z "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
-  exit 0
-fi
+case "${PLATFORM_NAME:-}" in
+  iphoneos)
+    expected_platform="IOS"
+    ;;
+  iphonesimulator)
+    expected_platform="IOSSIMULATOR"
+    ;;
+  *)
+    exit 0
+    ;;
+esac
 
 frameworks_dir="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
 
@@ -25,6 +29,20 @@ for framework in "${frameworks_dir}"/*.framework; do
   executable="${framework}/${framework_name}"
 
   if [ ! -f "${executable}" ]; then
+    continue
+  fi
+
+  actual_platform="$(xcrun vtool -show-build "${executable}" 2>/dev/null \
+    | /usr/bin/awk '$1 == "platform" { print $2; exit }')"
+
+  if [ "${actual_platform}" != "${expected_platform}" ]; then
+    echo "error: ${framework_name}.framework targets ${actual_platform:-UNKNOWN}; expected ${expected_platform}." >&2
+    exit 1
+  fi
+
+  if [ "${PLATFORM_NAME}" != "iphoneos" ] || \
+     [ "${CODE_SIGNING_ALLOWED:-YES}" = "NO" ] || \
+     [ -z "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
     continue
   fi
 

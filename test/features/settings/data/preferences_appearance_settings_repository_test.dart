@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:margaritaville_flutter/features/settings/data/local/settings_key_value_store.dart';
 import 'package:margaritaville_flutter/features/settings/data/repositories/preferences_appearance_settings_repository.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/app_background_mode.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
+import 'package:margaritaville_flutter/shared/persistence/settings_key_value_store.dart';
 
 void main() {
   test('persists each visual setting as an independent typed value', () async {

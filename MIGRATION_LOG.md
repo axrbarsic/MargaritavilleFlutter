@@ -327,19 +327,54 @@ haptics. Физический Pixel сейчас заблокирован, по�
   Android adapter использует `SoundPool` sonification/maxStreams 1 и
   API-aware system haptics с fallback; его физическая калибровка остаётся
   обязательной на Pixel 8.
-- iOS `0.1.0 (9)` собран, установлен и запущен на физическом iPhone. Android
-  profile APK build 9 собран и установлен на Pixel 8 Emulator; plugin стартует
-  без fatal exception, sound assets присутствуют в обоих bundles. Физический
-  Pixel сейчас отсутствует в `adb devices`/mDNS, поэтому установка и perceptual
-  проверка Android отложены до его подключения.
-- Обнаружен и устранён device-install дефект Flutter 3.41.9 native assets:
-  `objective_c.framework` после `embed_and_thin` оставался с ad-hoc подписью,
-  хотя Runner и App.framework были подписаны Apple Development. Отдельная
-  Xcode-фаза теперь после Thin Binary подписывает только framework без Team ID
-  через `EXPANDED_CODE_SIGN_IDENTITY`; повторная физическая установка build 9
-  успешно прошла проверку целостности и приложение запустилось.
+- Android profile APK build 9 собран и установлен на Pixel 8 Emulator; plugin
+  стартует без fatal exception, sound assets присутствуют в обоих bundles.
+  Физический Pixel сейчас отсутствует в `adb devices`/mDNS, поэтому установка и
+  perceptual проверка Android отложены до его подключения.
+- Первый физический smoke build 9 выявил двойной дефект Flutter 3.41.9 native
+  assets. `objective_c.framework` после `embed_and_thin` сначала оставался с
+  ad-hoc подписью, а после исправления подписи в device bundle попал Mach-O для
+  `IOSSIMULATOR`. Команды install/launch это пропустили; ошибка проявилась при
+  первом вызове локального хранилища уже внутри работающего приложения.
+- Build 10 получил два принудительных барьера: pre-build сверяет `vtool`
+  platform, удаляет конфликтующий `build/native_assets/ios` и инвалидирует iOS
+  `install_code_assets.stamp`; post-embed снова проверяет каждый framework и
+  только затем подписывает отсутствующий Team ID. В физическом bundle проверены
+  `App`, `Flutter`, feedback, `objective_c`, preferences и `sqlite3`: все имеют
+  `platform IOS`, deep codesign валиден, приложение установлено и запущено.
 - Полный gate зелёный после модульного разбиения oversized room tile: format,
   analyze, 66 tests, 300-line size guard, architecture guard, native EDR
   XCTest, iOS device build и Android profile build. Физическое подтверждение
-  новых VIP jelly, звука и haptics build 9 остаётся открытым пользовательским
+  новых VIP jelly, звука и haptics build 10 остаётся открытым пользовательским
   гейтом; подтверждённым пока является EDR build 8.
+
+## 2026-07-10 — Checkpoint 8: iOS runtime guard, elastic scroll и sound assignments
+
+- Alex подтвердил на физическом iPhone, что build 10 после замены ошибочного
+  simulator framework снова открывает локальную смену. Успех восстановлен не
+  очисткой всего проекта, а воспроизводимым pre/post native-assets guard.
+- Регрессия «жёсткого» вертикального скролла сведена к конкретной разнице
+  Flutter widgets: прежний вертикальный `ListView` сам добавлял
+  `AlwaysScrollableScrollPhysics`, а новый общий EDR `SingleChildScrollView` —
+  нет. При короткой смене контент не превышал viewport, поэтому стандартный iOS
+  `BouncingScrollPhysics` не мог выйти за границу и дать резиновый отскок.
+- Summary теперь явно использует на iOS
+  `BouncingScrollPhysics(decelerationRate: normal)` поверх
+  `AlwaysScrollableScrollPhysics`. Для Android функция возвращает `null`, то
+  есть сохраняет его нативную platform physics без искусственной iOS-пружины.
+  Widget-тест закрепляет обе ветки и отдельно короткий iPhone viewport.
+- Swift build 37 показывает ровно три пользовательских назначения звука:
+  «Все остальные действия», «Ячейка», «Зелёная ячейка». Flutter получил те же
+  заголовки, пояснения, порядок, 14 пунктов palette включая «Без звука», preview
+  и немедленное применение к уже работающему feedback runtime.
+- Каждое назначение хранится отдельной namespaced строкой через repository и
+  serial AsyncNotifier; JSON blob не используется. Общий typed preferences
+  adapter вынесен из settings feature в `shared/persistence`.
+- Отдельный haptics toggle намеренно не придуман: Swift build 37 передаёт
+  `hapticsV2: true` жёстко на app root. Flutter повторяет этот контракт, а
+  звуковое отключение не выключает тактильную отдачу.
+- Physical iOS build `0.1.0 (11)` прошёл проверку шести embedded frameworks как
+  `platform IOS`, deep codesign и установку на iPhone 17 Pro Max. Автозапуск был
+  отклонён заблокированным экраном, поэтому perceptual scroll-гейт остаётся за
+  ручным открытием build 11. Полный software gate зелёный: analyze, 71 test,
+  format, file-size и architecture guards.

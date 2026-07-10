@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/local/shared_preferences_settings_key_value_store.dart';
+import '../../../../shared/persistence/shared_preferences_settings_key_value_store.dart';
 import '../../data/repositories/preferences_appearance_settings_repository.dart';
 import '../../domain/models/app_background_mode.dart';
 import '../../domain/models/appearance_settings.dart';

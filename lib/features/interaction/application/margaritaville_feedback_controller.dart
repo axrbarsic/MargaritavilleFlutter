@@ -4,10 +4,15 @@ import '../../work_session/domain/models/room_state.dart';
 import '../domain/margaritaville_sound_routing.dart';
 
 final class MargaritavilleFeedbackController {
-  MargaritavilleFeedbackController({InteractionFeedbackRuntime? runtime})
-    : _runtime = runtime ?? InteractionFeedbackRuntime();
+  MargaritavilleFeedbackController({
+    InteractionFeedbackRuntime? runtime,
+    MargaritavilleSoundAssignments soundAssignments =
+        MargaritavilleSoundAssignments.defaults,
+  }) : _runtime = runtime ?? InteractionFeedbackRuntime(),
+       _soundAssignments = soundAssignments;
 
   final InteractionFeedbackRuntime _runtime;
+  MargaritavilleSoundAssignments _soundAssignments;
 
   Future<void> initialize() {
     return _runtime.configure(
@@ -37,6 +42,15 @@ final class MargaritavilleFeedbackController {
   void actionMenuOpened() =>
       _playSound(MargaritavilleSoundEvent.actionMenuOpen);
 
+  void updateSoundAssignments(MargaritavilleSoundAssignments assignments) {
+    _soundAssignments = assignments;
+  }
+
+  void previewSound(MargaritavilleSoundAsset asset) {
+    if (asset == MargaritavilleSoundAsset.none) return;
+    _runtime.previewSound(asset.id);
+  }
+
   void roomStatusChanged(RoomDisplayStatus status) {
     _playSound(switch (status) {
       RoomDisplayStatus.pending => MargaritavilleSoundEvent.roomPending,
@@ -53,7 +67,7 @@ final class MargaritavilleFeedbackController {
   void dispose() => _runtime.dispose();
 
   void _emit(MargaritavilleSoundEvent event, InteractionFeedbackCue cue) {
-    final asset = event.defaultAsset;
+    final asset = _soundAssignments.assetFor(event);
     _runtime.emit(
       cue: cue,
       soundId: asset == MargaritavilleSoundAsset.none ? null : asset.id,
@@ -62,7 +76,7 @@ final class MargaritavilleFeedbackController {
   }
 
   void _playSound(MargaritavilleSoundEvent event) {
-    final asset = event.defaultAsset;
+    final asset = _soundAssignments.assetFor(event);
     if (asset == MargaritavilleSoundAsset.none) return;
     _runtime.emit(
       cue: InteractionFeedbackCue.none,

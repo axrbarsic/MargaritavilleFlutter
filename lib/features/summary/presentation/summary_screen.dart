@@ -11,6 +11,7 @@ import '../../work_session/domain/models/room_state.dart';
 import '../../work_session/domain/models/work_session.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
 import 'summary_layout_tokens.dart';
+import 'summary_scroll_physics.dart';
 import 'summary_visual_policy.dart';
 import 'summary_visual_pulse.dart';
 import 'widgets/room_schedule_sheet.dart';
@@ -114,6 +115,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
               const SizedBox(height: SummaryLayoutTokens.headerContentGap),
               Expanded(
                 child: SingleChildScrollView(
+                  physics: summaryScrollPhysicsFor(Theme.of(context).platform),
                   padding: const EdgeInsets.fromLTRB(
                     SummaryLayoutTokens.contentHorizontalPadding,
                     0,
