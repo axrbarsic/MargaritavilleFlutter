@@ -231,3 +231,41 @@ haptics. Физический Pixel сейчас заблокирован, по�
 
 Открытые части Settings parity: остальные категории, общий reset confirmation,
 нативный iPhone EDR bridge и физический performance gate.
+
+## 2026-07-10 — Checkpoint 6: app-wide Matrix Rain и activity leases
+
+- Read-only аудит Swift build 37 зафиксировал активный background contract:
+  default `matrixRain`, speed `1.0` с диапазоном `0.08...3.0`, 80 колонок,
+  Courier-like bold glyphs, диапазоны длины/скорости/opacity, четыре копии
+  зелёной головы и тёмную vignette поверх `#020804`.
+- По `shared-app-foundation` clock/renderer host оставлены
+  `shared-foundation`, параметры Matrix — `shared-parameterized`, а выбранный
+  режим и его persistence — `app-specific`. Swift/SpriteKit-код не копировался.
+- Единственный `VisualRuntimeScope` поднят в app composition root под всем
+  Navigator. Matrix теперь одинаково продолжается за Summary и Settings;
+  вложенный Summary runtime удалён.
+- Runtime получил reference-counted activity leases: один ticker работает для
+  всех видимых эффектов и полностью засыпает после последнего клиента, а также
+  в background, reduced-motion и выключенном `TickerMode`.
+- Pure-Dart deterministic field заранее создаёт 80 колонок; styled glyph
+  paragraphs кэшируются один раз. Кадр двигает только координаты с общим
+  30 FPS clock; `BackdropFilter`, per-drop ticker/controller/timer и повторные
+  renderer hosts запрещены architecture guard.
+- Settings сохраняют mode и speed отдельными typed values. Реализованы только
+  честно рабочие `Выкл` и `Matrix`; TV noise и локальное video не показаны как
+  готовые режимы и остаются следующими renderer/adapters.
+- На host-GPU Pixel 8 Emulator подтверждены Matrix за Summary и Settings,
+  переключение на чёрный фон, persistence обоих режимов после force-stop/cold
+  relaunch и отсутствие fatal exception, ANR и layout overflow. Финальная
+  profile-сборка стартовала cold за 1.041 s.
+- Profile-замер с одним VIP: чёрный фон держал примерно 14-16%, Matrix вместе
+  с VIP — 32-35% одного guest CPU core. Эксперимент с per-column `Picture`
+  caching не снизил CPU и добавил около 20-25 MB RSS, поэтому не вошёл в код.
+  Это emulator-сигнал; финальные FPS/thermal/energy гейты остаются за
+  физическими Pixel 8 и iPhone.
+- Осознанно открытые части точного Matrix parity: случайная 3% замена glyphs,
+  adaptive LOD/thermal governor и физический performance gate.
+- Полный quality gate зелёный: format, analyze, 53 tests, architecture и
+  300-line size guards. Дополнительно собран unsigned physical iOS profile
+  artifact `0.1.0 (2)`: arm64 и beta bundle
+  `com.alex.margaritaville.flutter.beta`.

@@ -12,11 +12,11 @@ abstract final class MargaritavilleTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: MargaritavilleColors.background,
+      scaffoldBackgroundColor: Colors.transparent,
       fontFamily: 'MargaritavilleRounded',
       fontFamilyFallback: const ['Roboto', 'sans-serif'],
       appBarTheme: const AppBarTheme(
-        backgroundColor: MargaritavilleColors.background,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
       ),

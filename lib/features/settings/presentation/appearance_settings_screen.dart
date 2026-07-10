@@ -7,6 +7,7 @@ import '../domain/models/appearance_settings.dart';
 import 'controllers/appearance_settings_controller.dart';
 import 'widgets/appearance_settings_controls.dart';
 import 'widgets/appearance_settings_panel.dart';
+import 'widgets/background_settings_panel.dart';
 
 final class AppearanceSettingsScreen extends ConsumerWidget {
   const AppearanceSettingsScreen({super.key});
@@ -25,7 +26,18 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
                   _header(context),
                   const SizedBox(height: 18),
                   state.when(
-                    data: (settings) => _content(ref, settings),
+                    data: (settings) => Column(
+                      children: [
+                        _content(ref, settings),
+                        const SizedBox(height: 18),
+                        BackgroundSettingsPanel(
+                          settings: settings,
+                          controller: ref.read(
+                            appearanceSettingsControllerProvider.notifier,
+                          ),
+                        ),
+                      ],
+                    ),
                     error: (error, _) => _error(ref, error),
                     loading: () => const Padding(
                       padding: EdgeInsets.all(48),

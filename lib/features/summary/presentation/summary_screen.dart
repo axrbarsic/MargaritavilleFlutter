@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/visual_runtime/visual_runtime_scope.dart';
 import '../../work_session/domain/models/room_state.dart';
 import '../../work_session/domain/models/work_session.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
@@ -87,64 +86,54 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
         })
         .where((section) => section.rooms.isNotEmpty)
         .toList();
-    final hasActiveVisuals =
-        (widget.visualPolicy.transientPulseEnabled &&
-            _visualPulses.hasEvents) ||
-        (widget.visualPolicy.vipJellyEnabled &&
-            widget.session.activeRooms.any((room) => room.isVip));
-    return VisualRuntimeScope(
-      policy: widget.visualPolicy.framePolicy,
-      enabled: hasActiveVisuals,
-      child: Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(
-              top: SummaryLayoutTokens.screenTopPadding,
-            ),
-            child: Column(
-              children: [
-                SummaryHeader(
-                  session: widget.session,
-                  activeFilter: _activeFilter,
-                  onFilterChanged: (status) {
-                    setState(() => _activeFilter = status);
-                  },
-                  onOpenSettings:
-                      widget.onOpenSettings ??
-                      () => _showSettingsNotice(context),
-                  onOpenSelection: _unlockWorkday,
-                ),
-                const SizedBox(height: SummaryLayoutTokens.headerContentGap),
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      SummaryLayoutTokens.contentHorizontalPadding,
-                      0,
-                      SummaryLayoutTokens.contentHorizontalPadding,
-                      SummaryLayoutTokens.contentBottomPadding,
-                    ),
-                    itemCount: sections.length,
-                    separatorBuilder: (_, _) => const SizedBox(
-                      height: SummaryLayoutTokens.sectionSpacing,
-                    ),
-                    itemBuilder: (context, index) {
-                      final section = sections[index];
-                      return SummaryAssignmentSection(
-                        assignment: section.assignment,
-                        rooms: section.rooms,
-                        onAdvance: _advanceRoom,
-                        onReset: _resetRoom,
-                        onToggleVip: _toggleVip,
-                        onSchedule: _openSchedule,
-                        onOpenMedia: _showMediaNotice,
-                        visualPolicy: widget.visualPolicy,
-                        pulseEventFor: _visualPulses.eventFor,
-                      );
-                    },
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(
+            top: SummaryLayoutTokens.screenTopPadding,
+          ),
+          child: Column(
+            children: [
+              SummaryHeader(
+                session: widget.session,
+                activeFilter: _activeFilter,
+                onFilterChanged: (status) {
+                  setState(() => _activeFilter = status);
+                },
+                onOpenSettings:
+                    widget.onOpenSettings ?? () => _showSettingsNotice(context),
+                onOpenSelection: _unlockWorkday,
+              ),
+              const SizedBox(height: SummaryLayoutTokens.headerContentGap),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    SummaryLayoutTokens.contentHorizontalPadding,
+                    0,
+                    SummaryLayoutTokens.contentHorizontalPadding,
+                    SummaryLayoutTokens.contentBottomPadding,
                   ),
+                  itemCount: sections.length,
+                  separatorBuilder: (_, _) => const SizedBox(
+                    height: SummaryLayoutTokens.sectionSpacing,
+                  ),
+                  itemBuilder: (context, index) {
+                    final section = sections[index];
+                    return SummaryAssignmentSection(
+                      assignment: section.assignment,
+                      rooms: section.rooms,
+                      onAdvance: _advanceRoom,
+                      onReset: _resetRoom,
+                      onToggleVip: _toggleVip,
+                      onSchedule: _openSchedule,
+                      onOpenMedia: _showMediaNotice,
+                      visualPolicy: widget.visualPolicy,
+                      pulseEventFor: _visualPulses.eventFor,
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

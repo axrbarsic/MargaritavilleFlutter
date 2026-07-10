@@ -1,8 +1,5 @@
-import '../../../shared/visual_runtime/visual_frame_clock.dart';
-
 final class SummaryVisualPolicy {
   const SummaryVisualPolicy({
-    required this.framePolicy,
     this.liveCellsEnabled = false,
     this.vipJellyEnabled = true,
     this.vipHdrLightEnabled = false,
@@ -12,11 +9,8 @@ final class SummaryVisualPolicy {
     this.springIntensity = 0.72,
   });
 
-  static const balanced = SummaryVisualPolicy(
-    framePolicy: VisualFramePolicy(maxFramesPerSecond: 30),
-  );
+  static const balanced = SummaryVisualPolicy();
 
-  final VisualFramePolicy framePolicy;
   final bool liveCellsEnabled;
   final bool vipJellyEnabled;
   final bool vipHdrLightEnabled;

@@ -59,6 +59,19 @@ if rg -n "AnimationController|TickerProvider|Timer\.periodic" \
   failed=1
 fi
 
+if rg -n "AnimationController|TickerProvider|Timer\.periodic|BackdropFilter" \
+  lib/features/background --glob '*.dart'; then
+  echo "ERROR: background must use the shared visual runtime and no heavy blur"
+  failed=1
+fi
+
+visual_runtime_hosts=$(rg -l "VisualRuntimeScope\(" lib/app lib/features \
+  --glob '*.dart' | wc -l | tr -d ' ')
+if [[ "$visual_runtime_hosts" != "1" ]]; then
+  echo "ERROR: app must mount exactly one process-wide visual runtime scope"
+  failed=1
+fi
+
 visual_clock_files=$(rg -l "AnimationController" \
   lib/shared/visual_runtime --glob '*.dart' | wc -l | tr -d ' ')
 if [[ "$visual_clock_files" != "1" ]]; then

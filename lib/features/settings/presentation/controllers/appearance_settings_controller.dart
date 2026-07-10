@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/shared_preferences_settings_key_value_store.dart';
 import '../../data/repositories/preferences_appearance_settings_repository.dart';
+import '../../domain/models/app_background_mode.dart';
 import '../../domain/models/appearance_settings.dart';
 import '../../domain/repositories/appearance_settings_repository.dart';
 
@@ -54,6 +55,14 @@ final class AppearanceSettingsController
 
   Future<void> resetVisualEffects() {
     return _update((_) => AppearanceSettings.defaults);
+  }
+
+  Future<void> setBackgroundMode(AppBackgroundMode mode) {
+    return _update((value) => value.copyWith(backgroundMode: mode));
+  }
+
+  Future<void> setMatrixSpeed(double speed) {
+    return _update((value) => value.copyWith(matrixSpeed: speed));
   }
 
   Future<void> _update(

@@ -1,3 +1,4 @@
+import '../../domain/models/app_background_mode.dart';
 import '../../domain/models/appearance_settings.dart';
 import '../../domain/repositories/appearance_settings_repository.dart';
 import '../local/settings_key_value_store.dart';
@@ -18,6 +19,9 @@ final class PreferencesAppearanceSettingsRepository
       'margaritaville.appearance.vip_hdr_light_enabled.v1';
   static const statusHdrPulseEnabledKey =
       'margaritaville.appearance.status_hdr_pulse_enabled.v1';
+  static const backgroundModeKey =
+      'margaritaville.appearance.background_mode.v1';
+  static const matrixSpeedKey = 'margaritaville.appearance.matrix_speed.v1';
 
   final SettingsKeyValueStore _store;
 
@@ -41,6 +45,11 @@ final class PreferencesAppearanceSettingsRepository
       statusHdrPulseEnabled:
           await _store.readBool(statusHdrPulseEnabledKey) ??
           defaults.statusHdrPulseEnabled,
+      backgroundMode: _backgroundMode(
+        await _store.readString(backgroundModeKey),
+      ),
+      matrixSpeed:
+          await _store.readDouble(matrixSpeedKey) ?? defaults.matrixSpeed,
     ).normalized();
   }
 
@@ -54,6 +63,15 @@ final class PreferencesAppearanceSettingsRepository
       _store.writeDouble(vipJellySpeedKey, value.vipJellySpeed),
       _store.writeBool(vipHdrLightEnabledKey, value.vipHdrLightEnabled),
       _store.writeBool(statusHdrPulseEnabledKey, value.statusHdrPulseEnabled),
+      _store.writeString(backgroundModeKey, value.backgroundMode.name),
+      _store.writeDouble(matrixSpeedKey, value.matrixSpeed),
     ]);
+  }
+
+  AppBackgroundMode _backgroundMode(String? rawValue) {
+    for (final mode in AppBackgroundMode.values) {
+      if (mode.name == rawValue) return mode;
+    }
+    return AppearanceSettings.defaults.backgroundMode;
   }
 }

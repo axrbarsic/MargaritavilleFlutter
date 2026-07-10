@@ -51,12 +51,15 @@ presentation (Flutter + Riverpod)
 - `features/summary` — рабочая четырёхколоночная summary-сетка.
 - `features/settings` — pure-Dart visual settings, repository contract,
   отдельные typed preferences и Riverpod controller.
+- `features/background` — app-specific выбор режима и pure-Dart параметры
+  Matrix; presentation рисует один app-wide фон через общий visual runtime.
 - `shared/presentation` — локальные нейтральные UI-примитивы приложения.
 
 `AppearanceSummaryVisualPolicy` находится в app composition root: Settings не
 импортирует Summary presentation, а Summary не знает, где и как сохраняются
-настройки. Простые visual preferences хранятся отдельными `bool`/`double`
-значениями через `SharedPreferencesAsync`; JSON blob запрещён guard-скриптом.
+настройки. Простые visual preferences хранятся отдельными
+`bool`/`double`/`String` значениями через `SharedPreferencesAsync`; JSON blob
+запрещён guard-скриптом.
 Рабочая смена, история, медиа и sync state по-прежнему принадлежат Drift и
 никогда не смешиваются с preferences.
 
@@ -72,10 +75,15 @@ presentation (Flutter + Riverpod)
 - Рабочие мутации требуют long press; быстрые фильтры/навигация смогут оставаться
   обычным tap.
 - Эффекты не получают отдельный ticker на ячейку. Один
-  `VisualRuntimeScope` владеет единственным `AnimationController`, публикует
-  общий clock с frame budget 30 FPS и полностью останавливается, когда в
-  активной смене нет VIP/one-shot pulse, приложение ушло в background,
-  отключены анимации или предок выключил `TickerMode`.
+  app-wide `VisualRuntimeScope` под `MaterialApp` владеет единственным
+  `AnimationController`, публикует общий clock с frame budget 30 FPS и
+  полностью останавливается, когда ни Matrix, ни видимая VIP/one-shot pulse не
+  держат activity lease, приложение ушло в background, отключены анимации или
+  предок выключил `TickerMode`.
+- Matrix Rain монтируется один раз под всем Navigator, а не внутри отдельных
+  экранов. Поле заранее создаёт 80 donor-shaped колонок; glyph paragraphs
+  кэшируются, а кадр меняет только координаты. `BackdropFilter`, отдельные
+  ticker/timer и per-screen renderer запрещены architecture guard.
 - VIP jelly и status pulse — чистая функция общего времени и stable room seed;
   rebuild/recycling не перезапускают завершённое событие. One-shot события
   живут отдельно от persisted room state и удаляются по generation-aware

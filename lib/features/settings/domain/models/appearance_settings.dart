@@ -1,3 +1,5 @@
+import 'app_background_mode.dart';
+
 final class AppearanceSettings {
   const AppearanceSettings({
     required this.liveCellsEnabled,
@@ -6,6 +8,8 @@ final class AppearanceSettings {
     required this.vipJellySpeed,
     required this.vipHdrLightEnabled,
     required this.statusHdrPulseEnabled,
+    this.backgroundMode = AppBackgroundMode.matrixRain,
+    this.matrixSpeed = 1,
   });
 
   static const defaults = AppearanceSettings(
@@ -15,6 +19,8 @@ final class AppearanceSettings {
     vipJellySpeed: 0.75,
     vipHdrLightEnabled: false,
     statusHdrPulseEnabled: false,
+    backgroundMode: AppBackgroundMode.matrixRain,
+    matrixSpeed: 1,
   );
 
   final bool liveCellsEnabled;
@@ -23,6 +29,8 @@ final class AppearanceSettings {
   final double vipJellySpeed;
   final bool vipHdrLightEnabled;
   final bool statusHdrPulseEnabled;
+  final AppBackgroundMode backgroundMode;
+  final double matrixSpeed;
 
   AppearanceSettings copyWith({
     bool? liveCellsEnabled,
@@ -31,6 +39,8 @@ final class AppearanceSettings {
     double? vipJellySpeed,
     bool? vipHdrLightEnabled,
     bool? statusHdrPulseEnabled,
+    AppBackgroundMode? backgroundMode,
+    double? matrixSpeed,
   }) {
     return AppearanceSettings(
       liveCellsEnabled: liveCellsEnabled ?? this.liveCellsEnabled,
@@ -40,6 +50,8 @@ final class AppearanceSettings {
       vipHdrLightEnabled: vipHdrLightEnabled ?? this.vipHdrLightEnabled,
       statusHdrPulseEnabled:
           statusHdrPulseEnabled ?? this.statusHdrPulseEnabled,
+      backgroundMode: backgroundMode ?? this.backgroundMode,
+      matrixSpeed: matrixSpeed ?? this.matrixSpeed,
     );
   }
 
@@ -47,6 +59,7 @@ final class AppearanceSettings {
     return copyWith(
       cellSpringIntensity: cellSpringIntensity.clamp(0, 1).toDouble(),
       vipJellySpeed: vipJellySpeed.clamp(0.2, 2.5).toDouble(),
+      matrixSpeed: matrixSpeed.clamp(0.08, 3).toDouble(),
     );
   }
 
@@ -58,7 +71,9 @@ final class AppearanceSettings {
         other.vipJellyEnabled == vipJellyEnabled &&
         other.vipJellySpeed == vipJellySpeed &&
         other.vipHdrLightEnabled == vipHdrLightEnabled &&
-        other.statusHdrPulseEnabled == statusHdrPulseEnabled;
+        other.statusHdrPulseEnabled == statusHdrPulseEnabled &&
+        other.backgroundMode == backgroundMode &&
+        other.matrixSpeed == matrixSpeed;
   }
 
   @override
@@ -69,5 +84,7 @@ final class AppearanceSettings {
     vipJellySpeed,
     vipHdrLightEnabled,
     statusHdrPulseEnabled,
+    backgroundMode,
+    matrixSpeed,
   );
 }

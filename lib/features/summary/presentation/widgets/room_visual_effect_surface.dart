@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../../shared/visual_runtime/visual_runtime_activity.dart';
 import '../../../../shared/visual_runtime/visual_runtime_scope.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../summary_layout_tokens.dart';
@@ -31,15 +32,15 @@ final class RoomVisualEffectSurface extends StatelessWidget {
     final shouldAnimate =
         (room.isVip && policy.vipJellyEnabled) ||
         (pulseEvent != null && policy.transientPulseEnabled);
-    if (!shouldAnimate || clock == null) {
-      return _frame(now: DateTime.now(), seconds: 0);
-    }
-    return AnimatedBuilder(
-      animation: clock,
-      builder: (context, _) {
-        return _frame(now: clock.now, seconds: clock.seconds);
-      },
-    );
+    final surface = !shouldAnimate || clock == null
+        ? _frame(now: DateTime.now(), seconds: 0)
+        : AnimatedBuilder(
+            animation: clock,
+            builder: (context, _) {
+              return _frame(now: clock.now, seconds: clock.seconds);
+            },
+          );
+    return VisualRuntimeActivity(active: shouldAnimate, child: surface);
   }
 
   Widget _frame({required DateTime now, required double seconds}) {

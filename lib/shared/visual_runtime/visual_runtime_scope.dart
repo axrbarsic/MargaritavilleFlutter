@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'visual_frame_clock.dart';
+import 'visual_runtime_activity_controller.dart';
 
 final class VisualRuntimeScope extends StatefulWidget {
   const VisualRuntimeScope({
@@ -20,6 +21,14 @@ final class VisualRuntimeScope extends StatefulWidget {
         ?.clock;
   }
 
+  static VisualRuntimeActivityController? maybeActivityControllerOf(
+    BuildContext context,
+  ) {
+    return context
+        .getInheritedWidgetOfExactType<_VisualFrameClockScope>()
+        ?.activityController;
+  }
+
   @override
   State<VisualRuntimeScope> createState() => _VisualRuntimeScopeState();
 }
@@ -28,6 +37,7 @@ final class _VisualRuntimeScopeState extends State<VisualRuntimeScope>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _controller;
   late final VisualFrameClock _clock;
+  late final VisualRuntimeActivityController _activityController;
   var _animationsDisabled = false;
   var _tickerModeEnabled = true;
   var _isForeground = true;
@@ -40,6 +50,9 @@ final class _VisualRuntimeScopeState extends State<VisualRuntimeScope>
         WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     _clock = VisualFrameClock(policy: widget.policy);
+    _activityController = VisualRuntimeActivityController(
+      onActivityChanged: _syncTicker,
+    );
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(hours: 1),
@@ -80,7 +93,11 @@ final class _VisualRuntimeScopeState extends State<VisualRuntimeScope>
 
   @override
   Widget build(BuildContext context) {
-    return _VisualFrameClockScope(clock: _clock, child: widget.child);
+    return _VisualFrameClockScope(
+      clock: _clock,
+      activityController: _activityController,
+      child: widget.child,
+    );
   }
 
   void _publishFrame() {
@@ -91,6 +108,7 @@ final class _VisualRuntimeScopeState extends State<VisualRuntimeScope>
     final shouldRun =
         widget.enabled &&
         widget.policy.enabled &&
+        _activityController.hasActiveClients &&
         !_animationsDisabled &&
         _tickerModeEnabled &&
         _isForeground;
@@ -103,12 +121,18 @@ final class _VisualRuntimeScopeState extends State<VisualRuntimeScope>
 }
 
 final class _VisualFrameClockScope extends InheritedWidget {
-  const _VisualFrameClockScope({required this.clock, required super.child});
+  const _VisualFrameClockScope({
+    required this.clock,
+    required this.activityController,
+    required super.child,
+  });
 
   final VisualFrameClock clock;
+  final VisualRuntimeActivityController activityController;
 
   @override
   bool updateShouldNotify(_VisualFrameClockScope oldWidget) {
-    return oldWidget.clock != clock;
+    return oldWidget.clock != clock ||
+        oldWidget.activityController != activityController;
   }
 }

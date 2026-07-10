@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/settings/data/local/settings_key_value_store.dart';
 import 'package:margaritaville_flutter/features/settings/data/repositories/preferences_appearance_settings_repository.dart';
+import 'package:margaritaville_flutter/features/settings/domain/models/app_background_mode.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
 
 void main() {
@@ -17,11 +18,13 @@ void main() {
       vipJellySpeed: 1.25,
       vipHdrLightEnabled: true,
       statusHdrPulseEnabled: true,
+      backgroundMode: AppBackgroundMode.off,
+      matrixSpeed: 1.7,
     );
     await repository.save(expected);
 
     expect(await repository.load(), expected);
-    expect(store.values.length, 6);
+    expect(store.values.length, 8);
     expect(
       store.values.values,
       everyElement(isNot(isA<Map<Object?, Object?>>())),
@@ -33,6 +36,7 @@ void main() {
       doubles: {
         PreferencesAppearanceSettingsRepository.cellSpringIntensityKey: -4,
         PreferencesAppearanceSettingsRepository.vipJellySpeedKey: 9,
+        PreferencesAppearanceSettingsRepository.matrixSpeedKey: -4,
       },
     );
     final repository = PreferencesAppearanceSettingsRepository(store);
@@ -41,6 +45,7 @@ void main() {
 
     expect(loaded.cellSpringIntensity, 0);
     expect(loaded.vipJellySpeed, 2.5);
+    expect(loaded.matrixSpeed, 0.08);
   });
 }
 
@@ -57,12 +62,20 @@ final class _MemorySettingsKeyValueStore implements SettingsKeyValueStore {
   Future<double?> readDouble(String key) async => values[key] as double?;
 
   @override
+  Future<String?> readString(String key) async => values[key] as String?;
+
+  @override
   Future<void> writeBool(String key, bool value) async {
     values[key] = value;
   }
 
   @override
   Future<void> writeDouble(String key, double value) async {
+    values[key] = value;
+  }
+
+  @override
+  Future<void> writeString(String key, String value) async {
     values[key] = value;
   }
 }

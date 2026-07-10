@@ -16,6 +16,9 @@ final class SharedPreferencesSettingsKeyValueStore
   Future<double?> readDouble(String key) => _preferences.getDouble(key);
 
   @override
+  Future<String?> readString(String key) => _preferences.getString(key);
+
+  @override
   Future<void> writeBool(String key, bool value) {
     return _preferences.setBool(key, value);
   }
@@ -23,5 +26,10 @@ final class SharedPreferencesSettingsKeyValueStore
   @override
   Future<void> writeDouble(String key, double value) {
     return _preferences.setDouble(key, value);
+  }
+
+  @override
+  Future<void> writeString(String key, String value) {
+    return _preferences.setString(key, value);
   }
 }

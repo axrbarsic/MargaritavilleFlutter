@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_app.dart';
 import 'package:margaritaville_flutter/core/time/clock.dart';
+import 'package:margaritaville_flutter/features/settings/domain/models/app_background_mode.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
 import 'package:margaritaville_flutter/features/settings/domain/repositories/appearance_settings_repository.dart';
 import 'package:margaritaville_flutter/features/settings/presentation/controllers/appearance_settings_controller.dart';
@@ -83,7 +84,9 @@ void main() {
 
 final class _MemoryAppearanceSettingsRepository
     implements AppearanceSettingsRepository {
-  AppearanceSettings value = AppearanceSettings.defaults;
+  AppearanceSettings value = AppearanceSettings.defaults.copyWith(
+    backgroundMode: AppBackgroundMode.off,
+  );
 
   @override
   Future<AppearanceSettings> load() async => value;

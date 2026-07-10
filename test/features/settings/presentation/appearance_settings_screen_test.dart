@@ -23,6 +23,9 @@ void main() {
     expect(find.text('VIP HDR-свет'), findsOneWidget);
     expect(find.text('HDR-всплеск статуса'), findsOneWidget);
     expect(find.text('Скорость пружины'), findsNothing);
+    expect(find.text('Фон приложения'), findsOneWidget);
+    expect(find.text('Matrix'), findsOneWidget);
+    expect(find.text('Выкл'), findsWidgets);
 
     final statusPulse = find.byKey(const Key('setting-status-hdr-pulse'));
     await tester.ensureVisible(statusPulse);

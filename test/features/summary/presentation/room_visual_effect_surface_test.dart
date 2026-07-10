@@ -4,7 +4,6 @@ import 'package:margaritaville_flutter/features/summary/presentation/summary_vis
 import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_pulse.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_tile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
-import 'package:margaritaville_flutter/shared/visual_runtime/visual_frame_clock.dart';
 
 void main() {
   testWidgets('VIP HDR setting owns the static SDR light fallback', (
@@ -16,7 +15,6 @@ void main() {
       selectedAt: selectedAt,
     ).setVip(isVip: true, changedAt: selectedAt);
     const policy = SummaryVisualPolicy(
-      framePolicy: VisualFramePolicy(maxFramesPerSecond: 30),
       vipJellyEnabled: false,
       vipHdrLightEnabled: true,
     );
@@ -40,7 +38,6 @@ void main() {
       startedAt: startedAt,
     );
     const policy = SummaryVisualPolicy(
-      framePolicy: VisualFramePolicy(maxFramesPerSecond: 30),
       liveCellsEnabled: true,
       statusPulseEnabled: false,
     );
@@ -64,10 +61,7 @@ void main() {
       status: RoomDisplayStatus.pending,
       startedAt: startedAt,
     );
-    const policy = SummaryVisualPolicy(
-      framePolicy: VisualFramePolicy(maxFramesPerSecond: 30),
-      statusPulseEnabled: true,
-    );
+    const policy = SummaryVisualPolicy(statusPulseEnabled: true);
 
     await tester.pumpWidget(
       _tile(room: room, policy: policy, pulseEvent: event),
