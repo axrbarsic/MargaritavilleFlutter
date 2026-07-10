@@ -98,14 +98,19 @@ if rg -n "CADisplayLink|Timer\." ios/Runner/Edr*.swift; then
   failed=1
 fi
 
-if rg -n "shared/edr|EdrOverlay(Scope|Surface)" \
+if rg -n "SingleChildScrollView|EdrOverlay(Scope|Surface)" \
   lib/features/summary --glob '*.dart'; then
-  echo "ERROR: dormant native EDR must not enter the production Summary scroll tree"
+  echo "ERROR: Summary must keep ListView and reject the legacy moving EDR overlay"
   failed=1
 fi
 
 if rg -n "EdrOverlayPlugin\.register" ios/Runner/AppDelegate.swift; then
-  echo "ERROR: dormant native EDR plugin must stay unregistered"
+  echo "ERROR: legacy moving EDR plugin must stay unregistered"
+  failed=1
+fi
+
+if ! rg -q "EdrViewportPlugin\.register" ios/Runner/AppDelegate.swift; then
+  echo "ERROR: fixed EDR viewport plugin must be registered through AppDelegate"
   failed=1
 fi
 

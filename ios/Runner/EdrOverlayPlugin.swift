@@ -1,13 +1,13 @@
 import Flutter
 import UIKit
 
-enum EdrOverlayPlugin {
-  static let viewType = "margaritaville/edr-overlay"
+enum EdrViewportPlugin {
+  static let viewType = "margaritaville/edr-viewport"
 
   static func register(with registrar: FlutterPluginRegistrar) {
-    let registry = EdrOverlayViewRegistry.shared
+    let registry = EdrViewportViewRegistry.shared
     registrar.register(
-      EdrOverlayViewFactory(registry: registry),
+      EdrViewportViewFactory(registry: registry),
       withId: viewType
     )
     EdrOverlayHostApiSetup.setUp(
@@ -18,18 +18,44 @@ enum EdrOverlayPlugin {
 }
 
 private final class EdrOverlayHostApiImplementation: EdrOverlayHostApi {
-  init(registry: EdrOverlayViewRegistry) {
+  init(registry: EdrViewportViewRegistry) {
     self.registry = registry
   }
 
-  private let registry: EdrOverlayViewRegistry
+  private let registry: EdrViewportViewRegistry
 
-  func updateTiles(viewId: Int64, tiles: [EdrTileSnapshot]) throws {
-    onMain { self.registry.view(viewId)?.apply(tiles) }
+  func configureViewport(
+    viewId: Int64,
+    revision: Int64,
+    scrollOffset: Double,
+    tiles: [EdrTileSnapshot]
+  ) throws {
+    onMain {
+      self.registry.view(viewId)?.configure(
+        revision: revision,
+        scrollOffset: scrollOffset,
+        snapshots: tiles
+      )
+    }
   }
 
-  func clearTiles(viewId: Int64) throws {
-    onMain { self.registry.view(viewId)?.clear() }
+  func updateScrollOffset(
+    viewId: Int64,
+    revision: Int64,
+    sequence: Int64,
+    scrollOffset: Double
+  ) throws {
+    onMain {
+      self.registry.view(viewId)?.updateScrollOffset(
+        revision: revision,
+        sequence: sequence,
+        scrollOffset: scrollOffset
+      )
+    }
+  }
+
+  func clearViewport(viewId: Int64, revision: Int64) throws {
+    onMain { self.registry.view(viewId)?.clear(revision: revision) }
   }
 
   private func onMain(_ operation: @escaping () -> Void) {
@@ -41,34 +67,34 @@ private final class EdrOverlayHostApiImplementation: EdrOverlayHostApi {
   }
 }
 
-private final class EdrOverlayViewFactory: NSObject, FlutterPlatformViewFactory {
-  init(registry: EdrOverlayViewRegistry) {
+private final class EdrViewportViewFactory: NSObject, FlutterPlatformViewFactory {
+  init(registry: EdrViewportViewRegistry) {
     self.registry = registry
   }
 
-  private let registry: EdrOverlayViewRegistry
+  private let registry: EdrViewportViewRegistry
 
   func create(
     withFrame frame: CGRect,
     viewIdentifier viewId: Int64,
     arguments args: Any?
   ) -> FlutterPlatformView {
-    EdrOverlayPlatformView(frame: frame, viewId: viewId, registry: registry)
+    EdrViewportPlatformView(frame: frame, viewId: viewId, registry: registry)
   }
 }
 
-private final class EdrOverlayPlatformView: NSObject, FlutterPlatformView {
-  init(frame: CGRect, viewId: Int64, registry: EdrOverlayViewRegistry) {
-    self.rootView = EdrOverlayRootView(frame: frame)
+private final class EdrViewportPlatformView: NSObject, FlutterPlatformView {
+  init(frame: CGRect, viewId: Int64, registry: EdrViewportViewRegistry) {
+    self.rootView = EdrViewportRootView(frame: frame)
     self.viewId = viewId
     self.registry = registry
     super.init()
     registry.insert(rootView, for: viewId)
   }
 
-  private let rootView: EdrOverlayRootView
+  private let rootView: EdrViewportRootView
   private let viewId: Int64
-  private let registry: EdrOverlayViewRegistry
+  private let registry: EdrViewportViewRegistry
 
   func view() -> UIView { rootView }
 
@@ -77,24 +103,24 @@ private final class EdrOverlayPlatformView: NSObject, FlutterPlatformView {
   }
 }
 
-private final class WeakEdrOverlayView {
-  weak var value: EdrOverlayRootView?
+private final class WeakEdrViewportView {
+  weak var value: EdrViewportRootView?
 
-  init(_ value: EdrOverlayRootView) {
+  init(_ value: EdrViewportRootView) {
     self.value = value
   }
 }
 
-private final class EdrOverlayViewRegistry {
-  static let shared = EdrOverlayViewRegistry()
+private final class EdrViewportViewRegistry {
+  static let shared = EdrViewportViewRegistry()
 
-  private var views: [Int64: WeakEdrOverlayView] = [:]
+  private var views: [Int64: WeakEdrViewportView] = [:]
 
-  func insert(_ view: EdrOverlayRootView, for viewId: Int64) {
-    views[viewId] = WeakEdrOverlayView(view)
+  func insert(_ view: EdrViewportRootView, for viewId: Int64) {
+    views[viewId] = WeakEdrViewportView(view)
   }
 
-  func view(_ viewId: Int64) -> EdrOverlayRootView? {
+  func view(_ viewId: Int64) -> EdrViewportRootView? {
     views[viewId]?.value
   }
 
@@ -103,16 +129,33 @@ private final class EdrOverlayViewRegistry {
   }
 }
 
-private final class EdrOverlayRootView: UIView {
+private final class EdrViewportRootView: UIView {
+  private struct PendingScroll {
+    let revision: Int64
+    let sequence: Int64
+    let offset: Double
+  }
+
   private var tiles: [String: EdrTileView] = [:]
+  private let tileContainer = UIView(frame: .zero)
   private var activationObserver: NSObjectProtocol?
+  private var layoutRevision: Int64 = -1
+  private var scrollSequence: Int64 = -1
+  private var anchorScrollOffset = 0.0
+  private var currentScrollOffset = 0.0
+  private var pendingScroll: PendingScroll?
 
   override init(frame: CGRect) {
     super.init(frame: frame)
     isOpaque = false
     isUserInteractionEnabled = false
     backgroundColor = .clear
-    clipsToBounds = false
+    clipsToBounds = true
+    tileContainer.isOpaque = false
+    tileContainer.isUserInteractionEnabled = false
+    tileContainer.backgroundColor = .clear
+    tileContainer.clipsToBounds = false
+    addSubview(tileContainer)
     activationObserver = NotificationCenter.default.addObserver(
       forName: UIApplication.didBecomeActiveNotification,
       object: nil,
@@ -133,7 +176,25 @@ private final class EdrOverlayRootView: UIView {
     }
   }
 
-  func apply(_ snapshots: [EdrTileSnapshot]) {
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    tileContainer.layer.bounds = bounds
+    tileContainer.layer.position = CGPoint(x: bounds.midX, y: bounds.midY)
+    applyScrollTransform()
+    CATransaction.commit()
+  }
+
+  func configure(
+    revision: Int64,
+    scrollOffset: Double,
+    snapshots: [EdrTileSnapshot]
+  ) {
+    guard revision >= layoutRevision else { return }
+    layoutRevision = revision
+    anchorScrollOffset = scrollOffset
+    currentScrollOffset = scrollOffset
     let activeIds = Set(snapshots.map(\.roomId))
     let staleIds = tiles.keys.filter { !activeIds.contains($0) }
     for roomId in staleIds {
@@ -151,19 +212,73 @@ private final class EdrOverlayRootView: UIView {
       )
       CATransaction.commit()
       tile.apply(snapshot)
+      tileContainer.bringSubviewToFront(tile)
+    }
+    if let pendingScroll, pendingScroll.revision == revision {
+      self.pendingScroll = nil
+      applyScroll(
+        sequence: pendingScroll.sequence,
+        scrollOffset: pendingScroll.offset
+      )
+    } else {
+      if let pendingScroll, pendingScroll.revision < revision {
+        self.pendingScroll = nil
+      }
+      CATransaction.begin()
+      CATransaction.setDisableActions(true)
+      applyScrollTransform()
+      CATransaction.commit()
     }
   }
 
-  func clear() {
+  func updateScrollOffset(
+    revision: Int64,
+    sequence: Int64,
+    scrollOffset: Double
+  ) {
+    guard revision >= layoutRevision, sequence > scrollSequence else { return }
+    guard revision == layoutRevision else {
+      if pendingScroll == nil || sequence > pendingScroll!.sequence {
+        pendingScroll = PendingScroll(
+          revision: revision,
+          sequence: sequence,
+          offset: scrollOffset
+        )
+      }
+      return
+    }
+    applyScroll(sequence: sequence, scrollOffset: scrollOffset)
+  }
+
+  func clear(revision: Int64) {
+    guard revision >= layoutRevision else { return }
+    layoutRevision = revision
     tiles.values.forEach { $0.removeFromSuperview() }
     tiles.removeAll()
+    pendingScroll = nil
   }
 
   private func makeTile(_ roomId: String) -> EdrTileView {
     let tile = EdrTileView(frame: .zero, seed: stableSeed(roomId))
-    addSubview(tile)
+    tileContainer.addSubview(tile)
     tiles[roomId] = tile
     return tile
+  }
+
+  private func applyScroll(sequence: Int64, scrollOffset: Double) {
+    scrollSequence = sequence
+    currentScrollOffset = scrollOffset
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    applyScrollTransform()
+    CATransaction.commit()
+  }
+
+  private func applyScrollTransform() {
+    let translation = anchorScrollOffset - currentScrollOffset
+    tileContainer.layer.setAffineTransform(
+      CGAffineTransform(translationX: 0, y: translation)
+    )
   }
 
   private func stableSeed(_ value: String) -> Double {

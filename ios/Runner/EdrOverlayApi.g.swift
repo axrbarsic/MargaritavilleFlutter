@@ -322,8 +322,9 @@ class EdrOverlayApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable
 
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol EdrOverlayHostApi {
-  func updateTiles(viewId: Int64, tiles: [EdrTileSnapshot]) throws
-  func clearTiles(viewId: Int64) throws
+  func configureViewport(viewId: Int64, revision: Int64, scrollOffset: Double, tiles: [EdrTileSnapshot]) throws
+  func updateScrollOffset(viewId: Int64, revision: Int64, sequence: Int64, scrollOffset: Double) throws
+  func clearViewport(viewId: Int64, revision: Int64) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -332,36 +333,57 @@ class EdrOverlayHostApiSetup {
   /// Sets up an instance of `EdrOverlayHostApi` to handle messages through the `binaryMessenger`.
   static func setUp(binaryMessenger: FlutterBinaryMessenger, api: EdrOverlayHostApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
-    let updateTilesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.updateTiles\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let configureViewportChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.configureViewport\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      updateTilesChannel.setMessageHandler { message, reply in
+      configureViewportChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let viewIdArg = args[0] as! Int64
-        let tilesArg = args[1] as! [EdrTileSnapshot]
+        let revisionArg = args[1] as! Int64
+        let scrollOffsetArg = args[2] as! Double
+        let tilesArg = args[3] as! [EdrTileSnapshot]
         do {
-          try api.updateTiles(viewId: viewIdArg, tiles: tilesArg)
+          try api.configureViewport(viewId: viewIdArg, revision: revisionArg, scrollOffset: scrollOffsetArg, tiles: tilesArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      updateTilesChannel.setMessageHandler(nil)
+      configureViewportChannel.setMessageHandler(nil)
     }
-    let clearTilesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearTiles\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let updateScrollOffsetChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.updateScrollOffset\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      clearTilesChannel.setMessageHandler { message, reply in
+      updateScrollOffsetChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let viewIdArg = args[0] as! Int64
+        let revisionArg = args[1] as! Int64
+        let sequenceArg = args[2] as! Int64
+        let scrollOffsetArg = args[3] as! Double
         do {
-          try api.clearTiles(viewId: viewIdArg)
+          try api.updateScrollOffset(viewId: viewIdArg, revision: revisionArg, sequence: sequenceArg, scrollOffset: scrollOffsetArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      clearTilesChannel.setMessageHandler(nil)
+      updateScrollOffsetChannel.setMessageHandler(nil)
+    }
+    let clearViewportChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearViewport\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      clearViewportChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let viewIdArg = args[0] as! Int64
+        let revisionArg = args[1] as! Int64
+        do {
+          try api.clearViewport(viewId: viewIdArg, revision: revisionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      clearViewportChannel.setMessageHandler(nil)
     }
   }
 }

@@ -5,7 +5,9 @@ import 'package:margaritaville_flutter/features/summary/presentation/summary_vis
 import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_pulse.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_light_painter.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_tile.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_visual_effect_surface.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
+import 'package:margaritaville_flutter/shared/visual_runtime/visual_runtime_activity.dart';
 
 void main() {
   testWidgets('effect stack paints the full grid slot, not child intrinsics', (
@@ -98,6 +100,44 @@ void main() {
     final painter = light.painter! as RoomStatusLightPainter;
     expect(painter.color, MargaritavilleColors.vividStatus(event.status));
     expect(painter.fullFill, isTrue);
+  });
+
+  testWidgets('native EDR owns the contour while Flutter moves foreground', (
+    tester,
+  ) async {
+    final selectedAt = DateTime(2027, 2, 10, 12);
+    final room = RoomState.pending(
+      roomNumber: '104',
+      selectedAt: selectedAt,
+    ).setVip(isVip: true, changedAt: selectedAt);
+    const policy = SummaryVisualPolicy(
+      vipJellyEnabled: true,
+      vipHdrLightEnabled: true,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 96,
+          height: 98,
+          child: RoomVisualEffectSurface(
+            room: room,
+            baseColor: MargaritavilleColors.vividStatus(room.displayStatus),
+            policy: policy,
+            nativeEdrActive: true,
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('vip-jelly-shape-104')), findsNothing);
+    expect(
+      tester
+          .widget<VisualRuntimeActivity>(find.byType(VisualRuntimeActivity))
+          .active,
+      isTrue,
+    );
   });
 }
 

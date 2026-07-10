@@ -45,7 +45,7 @@ final class EdrTileView: UIView {
     jellyMask.tileRect = contentView.bounds
     CATransaction.commit()
     if let snapshot, snapshot.vipJellyEnabled {
-      synchronizeJelly(snapshot, force: true)
+      synchronizeJelly(snapshot, force: false)
     }
   }
 
@@ -55,7 +55,7 @@ final class EdrTileView: UIView {
     vipFill.statusComponents = EdrRGB(argb: snapshot.baseColorArgb)
     vipFill.intensity = 1
     vipFill.isHidden = !snapshot.vipHdrEnabled
-    synchronizeJelly(snapshot, force: forcePulse)
+    synchronizeJelly(snapshot, force: false)
 
     guard
       let generation = snapshot.pulseGeneration,

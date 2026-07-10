@@ -21,10 +21,17 @@ void main() {
     'MARGARITAVILLE_STRICT_PERFORMANCE',
     defaultValue: true,
   );
+  const requestedVipCount = int.fromEnvironment(
+    'MARGARITAVILLE_PERF_VIP_COUNT',
+    defaultValue: -1,
+  );
 
   testWidgets('Summary scroll follows the physical display frame budget', (
     tester,
   ) async {
+    final vipCount = requestedVipCount < 0
+        ? summaryPerformanceRoomCount
+        : requestedVipCount.clamp(0, summaryPerformanceRoomCount);
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
@@ -45,7 +52,7 @@ void main() {
             ),
           ),
           home: SummaryScreen(
-            session: summaryPerformanceSession(),
+            session: summaryPerformanceSession(vipRoomCount: vipCount),
             visualPolicy: const SummaryVisualPolicy(
               liveCellsEnabled: true,
               vipJellyEnabled: true,
@@ -63,7 +70,7 @@ void main() {
     expect(scrollable, findsOneWidget);
     await _exerciseScroll(tester, binding, passes: 2);
 
-    const measuredPasses = 8;
+    const measuredPasses = 12;
     const passDuration = Duration(milliseconds: 800);
     await binding.watchPerformance(
       () => _exerciseScroll(
@@ -93,6 +100,7 @@ void main() {
 
     debugPrint(
       'SUMMARY_SCROLL refresh=${refreshRate.toStringAsFixed(1)}Hz '
+      'rooms=$summaryPerformanceRoomCount vip=$vipCount '
       'budget=${frameBudgetMicros}us frames=${buildTimes.length} '
       'p95Build=${p95Build}us p95Raster=${p95Raster}us',
     );
@@ -117,8 +125,13 @@ Future<void> _exerciseScroll(
   Duration passDuration = const Duration(milliseconds: 600),
 }) async {
   final scrollable = find.byType(ListView);
+  final downwardPasses = (passes / 2).ceil();
   for (var pass = 0; pass < passes; pass++) {
-    await tester.fling(scrollable, Offset(0, pass.isEven ? -900 : 900), 2800);
+    await tester.fling(
+      scrollable,
+      Offset(0, pass < downwardPasses ? -900 : 900),
+      2800,
+    );
     await binding.delayed(passDuration);
   }
 }

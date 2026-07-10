@@ -112,7 +112,11 @@ final class RoomVisualEffectSurface extends StatelessWidget {
           ),
       ],
     );
-    final shapedContent = vipJellyActive
+    // The native EDR tile owns the animated edge contour. Flutter keeps the
+    // matching lightweight transform for text/gestures, but must not rebuild
+    // a second invisible PhysicalShape over the transparent native surface.
+    final flutterOwnsJellyContour = vipJellyActive && !nativeEdrActive;
+    final shapedContent = flutterOwnsJellyContour
         ? PhysicalShape(
             key: Key('vip-jelly-shape-${room.roomNumber}'),
             clipper: VipJellyShapeClipper(

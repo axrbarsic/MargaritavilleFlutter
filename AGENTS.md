@@ -57,6 +57,10 @@
   1 pt; checkpoint нельзя считать готовым только по widget/semantics bounds.
 - Android-track явно открыт Alex 2026-07-09. Проверять на физическом Pixel 8:
   `44171FDJH003R5`.
+- Физический Pixel 5 `redfin` (`09111FDD4000L7`, Android 14, 90 Гц) —
+  дополнительный low-end regression/performance device. Build 20 запускается,
+  но cold start показал Choreographer bursts `Skipped 50/74 frames`; не
+  объявлять его startup performance зелёным без отдельного profile gate.
 - Alex 2026-07-09 разрешил Pixel 8 Emulator для ежедневного visual/navigation
   QA: AVD `margarita_pixel_8_api36`, Android 16/API 36, обычно
   `emulator-5554`. Он не заменяет физический Pixel для density/font-scale,

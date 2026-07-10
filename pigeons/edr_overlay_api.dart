@@ -28,7 +28,19 @@ class EdrTileSnapshot {
 
 @HostApi()
 abstract class EdrOverlayHostApi {
-  void updateTiles(int viewId, List<EdrTileSnapshot> tiles);
+  void configureViewport(
+    int viewId,
+    int revision,
+    double scrollOffset,
+    List<EdrTileSnapshot> tiles,
+  );
 
-  void clearTiles(int viewId);
+  void updateScrollOffset(
+    int viewId,
+    int revision,
+    int sequence,
+    double scrollOffset,
+  );
+
+  void clearViewport(int viewId, int revision);
 }

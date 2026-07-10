@@ -12,7 +12,10 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    // The native EDR prototype stays unregistered until it can render without
-    // introducing a Platform View into the scrolling Summary composition.
+    if let registrar = engineBridge.pluginRegistry.registrar(
+      forPlugin: "EdrViewportPlugin"
+    ) {
+      EdrViewportPlugin.register(with: registrar)
+    }
   }
 }

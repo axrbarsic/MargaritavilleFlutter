@@ -5,18 +5,23 @@ import 'package:flutter/services.dart';
 
 import 'edr_overlay_controller.dart';
 
-final class EdrOverlaySurface extends StatefulWidget {
-  const EdrOverlaySurface({required this.controller, super.key});
+/// One fixed native viewport behind the Flutter [ListView].
+///
+/// The view itself never participates in scrolling. Flutter sends batched
+/// visible-tile coordinates after each scroll frame, while the original
+/// platform scrollable keeps full ownership of physics and gestures.
+final class EdrViewportSurface extends StatefulWidget {
+  const EdrViewportSurface({required this.controller, super.key});
 
-  static const viewType = 'margaritaville/edr-overlay';
+  static const viewType = 'margaritaville/edr-viewport';
 
   final EdrOverlayController controller;
 
   @override
-  State<EdrOverlaySurface> createState() => _EdrOverlaySurfaceState();
+  State<EdrViewportSurface> createState() => _EdrViewportSurfaceState();
 }
 
-final class _EdrOverlaySurfaceState extends State<EdrOverlaySurface> {
+final class _EdrViewportSurfaceState extends State<EdrViewportSurface> {
   int? _viewId;
 
   @override
@@ -36,7 +41,7 @@ final class _EdrOverlaySurfaceState extends State<EdrOverlaySurface> {
     return IgnorePointer(
       child: UiKitView(
         key: widget.controller.surfaceKey,
-        viewType: EdrOverlaySurface.viewType,
+        viewType: EdrViewportSurface.viewType,
         layoutDirection: TextDirection.ltr,
         hitTestBehavior: PlatformViewHitTestBehavior.transparent,
         creationParamsCodec: const StandardMessageCodec(),

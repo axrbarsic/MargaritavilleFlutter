@@ -1,9 +1,21 @@
 import 'generated/edr_overlay_api.g.dart';
 
 abstract interface class EdrOverlayBridge {
-  Future<void> updateTiles(int viewId, List<EdrTileSnapshot> tiles);
+  Future<void> configureViewport(
+    int viewId,
+    int revision,
+    double scrollOffset,
+    List<EdrTileSnapshot> tiles,
+  );
 
-  Future<void> clearTiles(int viewId);
+  Future<void> updateScrollOffset(
+    int viewId,
+    int revision,
+    int sequence,
+    double scrollOffset,
+  );
+
+  Future<void> clearViewport(int viewId, int revision);
 }
 
 final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
@@ -13,12 +25,27 @@ final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
   final EdrOverlayHostApi _api;
 
   @override
-  Future<void> updateTiles(int viewId, List<EdrTileSnapshot> tiles) {
-    return _api.updateTiles(viewId, tiles);
+  Future<void> configureViewport(
+    int viewId,
+    int revision,
+    double scrollOffset,
+    List<EdrTileSnapshot> tiles,
+  ) {
+    return _api.configureViewport(viewId, revision, scrollOffset, tiles);
   }
 
   @override
-  Future<void> clearTiles(int viewId) {
-    return _api.clearTiles(viewId);
+  Future<void> updateScrollOffset(
+    int viewId,
+    int revision,
+    int sequence,
+    double scrollOffset,
+  ) {
+    return _api.updateScrollOffset(viewId, revision, sequence, scrollOffset);
+  }
+
+  @override
+  Future<void> clearViewport(int viewId, int revision) {
+    return _api.clearViewport(viewId, revision);
   }
 }

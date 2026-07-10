@@ -501,3 +501,106 @@ haptics. Физический Pixel сейчас заблокирован, по�
   [FlutterTextureRegistry](https://api.flutter.dev/ios-embedder/protocol_flutter_texture_registry-p.html)
   отдельным экспериментом с обязательным физическим scroll/HDR gate до
   подключения к Summary.
+
+## 2026-07-10 — Checkpoint 12: настоящий EDR с исходным ListView
+
+- Alex физически подтвердил build 17 как стабильную точку: нативный отскок
+  вернулся, но настоящего EDR в ожидаемо отключённом baseline не было. Коммит
+  `5a49e66` отправлен в GitHub до нового эксперимента.
+- Аудит Swift build 37 подтвердил точный z-order ячейки: UIKit EDR fill лежит в
+  `.background` под Flutter/SwiftUI-текстом, а jelly mask и pulse-transform
+  применяются ко всей композиции. Поэтому root UIView поверх Flutter и stock
+  `FlutterTexture` не сохраняют контракт.
+- Build 18 реализовал один постоянный `EdrViewportSurface` как sibling перед
+  неизменённым `ListView.separated`. Platform View больше не находится внутри
+  scroll content, не монтируется заново на ScrollStart/ScrollEnd, не участвует
+  в hit testing и клипуется строго viewport списка.
+- Native viewport берёт ownership всех видимых background ячеек при включённом
+  EDR, даже если конкретная комната не VIP и pulse сейчас не активен. Flutter
+  делает заливку прозрачной только после native acknowledgment; текст, жесты и
+  semantics остаются Flutter. Это убирает переключение ownership в момент VIP
+  или status pulse.
+- Alex проверил build 18 на физическом iPhone 17 Pro Max: настоящий EDR,
+  VIP-клякса и нормальный scroll/отскок одновременно заработали. Он заметил
+  возможные микропросадки и отдельную паузу jelly примерно на полсекунды при
+  первом входе.
+- Найдена детерминированная причина стартовой паузы: каждый начальный
+  `layoutSubviews` принудительно перезапускал `EdrJellyMaskLayer` и четыре
+  Core Animation wave. Build 19 больше не resynchronize'ит неизменившуюся
+  конфигурацию; размер входит в `JellyConfiguration`, поэтому реальный resize
+  всё ещё корректно создаёт новую фазу. Нативный XCTest фиксирует один запуск
+  на повторных layout и новый запуск только после resize.
+- Для устранения вероятных микропросадок Pigeon-контракт разделён на редкий
+  `configureViewport` и частый `updateScrollOffset`. Полный batch видимых
+  `EdrTileSnapshot` отправляется только при layout/recycling/filter/state
+  change; на каждом scroll tick передаётся один `double`. Native контейнер
+  двигает все EDR tiles одним отключённым от implicit animation transform.
+  Revision и sequence защищают от устаревших сообщений разных каналов.
+- Stress fixture теперь использует полный каталог Margaritaville: 184 комнаты
+  в шести территориях, и по умолчанию все 184 являются VIP. Это намеренно
+  тяжелее рабочего диапазона 18–45 комнат и должно выявить потолок EDR/jelly
+  runtime.
+- Build 19 прошёл profile device-компиляцию, iOS bundle guard семи
+  `platform IOS` frameworks и установлен на физический iPhone. Полный software
+  gate зелёный: format, analyze, 85 tests, file-size и architecture guards.
+- Физический numeric performance run пока не получен: Flutter видит iPhone
+  только как wireless и не может открыть mDNS из-за macOS Local Network
+  permission (`No route to host`, UDP 5353). `devicectl` install работает, но
+  автозапуск build 19 сейчас отклонён заблокированным iPhone. После
+  разблокировки нужны два гейта: отсутствие стартовой jelly-паузы и profile
+  scroll полного 184-VIP каталога при реальном 120-Hz бюджете `8.33 ms`.
+- После подключения кабелем standalone profile probe обошёл mDNS: приложение
+  само прокручивает Summary, пишет `FrameTiming` в app tmp, а результат
+  извлекается через `devicectl`. Это даёт воспроизводимый физический gate без
+  камеры, mirroring и зависимости от `flutter drive` discovery.
+- Первая матрица A/B на iPhone 17 Pro Max строго разделила стоимость эффектов:
+  без EDR/jelly — `119.93 FPS`; EDR без jelly — `117.99 FPS`; Flutter jelly без
+  EDR — `105.49 FPS`; прежняя двойная EDR+jelly-композиция — только
+  `64.60 FPS`, p95 raster `15.30 ms`. Значит, fixed Platform View и настоящий
+  EDR сами по себе не являются bottleneck; проблема была в двух одновременно
+  вычисляемых контурах и старой native маске.
+- `EdrJellyMaskLayer` больше не пересчитывает сложный `UIBezierPath` через
+  `CALayer.draw(in:)` на каждом кадре каждой видимой VIP-ячейки. Он стал
+  `CAShapeLayer`; 12-секундные `path` keyframes рассчитываются один раз и
+  интерполируются Core Animation. Число samples выводится из максимальной
+  временной частоты формулы с коэффициентом `0.729`, Nyquist x2 и safety x1.5:
+  при штатной скорости `0.75` получается `20`, а не произвольные `48`.
+- Наборы путей кешируются по точным bit-pattern `rect/speed/seed/radius`, cache
+  ограничен 256 entries и 32 MiB. Повторный проход вверх больше не строит те же
+  пути заново. `resynchronizeEffects()` после app activation теперь
+  перезапускает только pulse, но не jelly; XCTest закрепляет неизменный
+  synchronization count после повторного layout и resync.
+- Flutter продолжает двигать текст/foreground по donor transform, но при
+  нативном EDR не строит второй невидимый `PhysicalShape`: animated edge
+  contour имеет одного владельца, native tile. Итоговый самый тяжёлый прогон
+  всех `184` комнат как VIP с EDR+jelly дал `117.40 FPS`, p95 build/raster
+  `2.89/2.80 ms`, p99 `6.27/3.22 ms` и только `5` over-budget frames за
+  34 секунды. Это улучшение относительно исходных `64.60 FPS` без снижения
+  refresh rate, отключения EDR или визуального движения foreground.
+- Рабочий probe на 45 комнатах подтвердил не нагрузочный, а variable-refresh
+  режим: p99 build/raster `3.23/3.87 ms`, `0` кадров тяжелее `8.33 ms`, но
+  средняя cadence callbacks `114.66`. В Flutter 3.41.9 локально проверен
+  `vsync_waiter_ios.mm`: при нашем
+  `CADisableMinimumFrameDurationOnPhone=true` engine выставляет iPhone
+  `CAFrameRateRange(60, 120, preferred: 120)`. Apple прямо документирует, что
+  ProMotion нельзя принудить к конкретной частоте: Core Animation учитывает
+  thermal/power/system policy. Поэтому физический performance gate — hardware
+  budget `8.33 ms`, p95/p99 и over-budget frames, а не требование ровно 120
+  callbacks каждую секунду. Второй app-side `CADisplayLink` запрещён: он
+  нарушил бы единый frame clock и снова создал конкурирующие часы.
+- Переход на общий Metal renderer пока отложен по измеримому критерию: fixed
+  UIKit EDR viewport с keyframed `CAShapeLayer` уже укладывает p99 существенно
+  ниже 120-Hz бюджета даже при 184 VIP. Metal остаётся следующим уровнем только
+  если будущий реальный сценарий даст over-budget frames, а не из-за системной
+  variable-refresh cadence.
+- Полный software gate checkpoint зелёный после codegen: format, analyze,
+  `89 tests`, file-size `300` и architecture guards. Обычный physical iOS
+  profile build `0.1.0 (20)` прошёл проверку 7 embedded frameworks как
+  `platform IOS`, deep codesign, установлен и запущен на iPhone 17 Pro Max;
+  после stress harness на телефоне снова находится production entrypoint.
+- Параллельный physical smoke выполнен на старом Pixel 5 `redfin`, Android 14,
+  90-Hz display: profile build 20 установлен адресно, cold launch успешен за
+  `1815 ms`, Activity resumed, crash/ANR/Flutter/Platform exceptions нет.
+  Android Choreographer на холодном старте сообщил два bursts `Skipped 50` и
+  `Skipped 74 frames`; это зафиксировано как отдельный startup performance debt
+  Pixel 5 и не смешивается с iOS steady-state EDR/jelly результатом.

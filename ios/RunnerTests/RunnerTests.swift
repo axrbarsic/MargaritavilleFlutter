@@ -42,4 +42,56 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(firstPoint?.x ?? 0, 11.52, accuracy: 0.000_000_001)
     XCTAssertEqual(firstPoint?.y ?? 0, -14.891_169_436_377_766, accuracy: 0.000_000_001)
   }
+
+  func testRepeatedViewportLayoutDoesNotRestartVIPJelly() throws {
+    let tile = EdrTileView(
+      frame: CGRect(x: 0, y: 0, width: 96, height: 98),
+      seed: 0.42
+    )
+    tile.apply(
+      EdrTileSnapshot(
+        roomId: "101",
+        left: 0,
+        top: 0,
+        width: 96,
+        height: 98,
+        cornerRadius: 16,
+        baseColorArgb: 0xFF00E524,
+        vipHdrEnabled: true,
+        vipJellyEnabled: true,
+        vipJellySpeed: 0.75,
+        springIntensity: 0.72
+      )
+    )
+    tile.layoutSubviews()
+
+    let content = try XCTUnwrap(tile.subviews.first)
+    let mask = try XCTUnwrap(content.layer.mask as? EdrJellyMaskLayer)
+    let firstSynchronization = mask.synchronizationCount
+    XCTAssertEqual(firstSynchronization, 1)
+    XCTAssertNotNil(mask.path)
+    let animation = try XCTUnwrap(
+      mask.animation(forKey: EdrJellyMaskLayer.animationKey)
+        as? CAKeyframeAnimation
+    )
+    XCTAssertEqual(
+      animation.values?.count,
+      EdrJellyMaskLayer.sampleCount(for: 0.75) + 1
+    )
+    XCTAssertEqual(EdrJellyMaskLayer.sampleCount(for: 0.75), 20)
+    XCTAssertEqual(EdrJellyMaskLayer.sampleCount(for: 0.2), 12)
+    XCTAssertEqual(EdrJellyMaskLayer.sampleCount(for: 2.5), 66)
+
+    for _ in 0 ..< 6 {
+      tile.layoutSubviews()
+    }
+    XCTAssertEqual(mask.synchronizationCount, firstSynchronization)
+
+    tile.resynchronizeEffects()
+    XCTAssertEqual(mask.synchronizationCount, firstSynchronization)
+
+    tile.bounds.size = CGSize(width: 98, height: 100)
+    tile.layoutSubviews()
+    XCTAssertEqual(mask.synchronizationCount, firstSynchronization + 1)
+  }
 }

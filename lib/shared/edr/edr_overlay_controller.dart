@@ -16,21 +16,21 @@ final class EdrOverlayController extends ChangeNotifier {
 
   final EdrOverlayBridge _bridge;
   final bool supported;
-  final GlobalKey contentKey = GlobalKey(debugLabel: 'summary-edr-content');
-  final GlobalKey surfaceKey = GlobalKey(debugLabel: 'summary-edr-overlay');
+  final GlobalKey surfaceKey = GlobalKey(debugLabel: 'summary-edr-viewport');
   final Map<String, _EdrTileEntry> _entries = {};
   Set<String> _renderedRoomIds = const {};
-  Rect? _overlayBounds;
   int? _viewId;
   bool _syncScheduled = false;
   bool _syncInProgress = false;
   bool _syncAgain = false;
+  bool _scrollSyncInProgress = false;
   bool _disposed = false;
+  int _layoutRevision = 0;
+  int _scrollSequence = 0;
+  double _scrollOffset = 0;
+  double? _pendingScrollOffset;
 
-  static const double horizontalEffectBleed = 11;
-  static const double verticalEffectBleed = 24;
-
-  Rect? get overlayBounds => _overlayBounds;
+  static const double effectBleed = 24;
 
   bool isTileRendered(String roomId) {
     return supported && _renderedRoomIds.contains(roomId);
@@ -91,12 +91,22 @@ final class EdrOverlayController extends ChangeNotifier {
     _scheduleSync();
   }
 
+  void updateScrollOffset(double scrollOffset) {
+    if (!supported || _disposed || !scrollOffset.isFinite) return;
+    _scrollOffset = scrollOffset;
+    _pendingScrollOffset = scrollOffset;
+    unawaited(_flushScrollOffset());
+  }
+
   @override
   void dispose() {
     _disposed = true;
     final viewId = _viewId;
-    if (viewId != null) unawaited(_bridge.clearTiles(viewId));
+    if (viewId != null) {
+      unawaited(_bridge.clearViewport(viewId, ++_layoutRevision));
+    }
     _entries.clear();
+    _pendingScrollOffset = null;
     _renderedRoomIds = const {};
     super.dispose();
   }
@@ -104,6 +114,7 @@ final class EdrOverlayController extends ChangeNotifier {
   void _scheduleSync() {
     if (!supported || _disposed || _syncScheduled) return;
     _syncScheduled = true;
+    WidgetsBinding.instance.scheduleFrame();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncScheduled = false;
       unawaited(_synchronize());
@@ -126,29 +137,20 @@ final class EdrOverlayController extends ChangeNotifier {
   Future<void> _sendCurrentSnapshot() async {
     final viewId = _viewId;
     if (_disposed) return;
-    final measuredTiles = _measureTiles();
-    final nextBounds = _effectBounds(measuredTiles);
-    if (_replaceOverlayBounds(nextBounds)) {
-      if (nextBounds == null && viewId != null) {
-        await _bridge.clearTiles(viewId);
-        _replaceRenderedIds(const {});
-      }
-      _scheduleSync();
-      return;
-    }
     final surface = surfaceKey.currentContext?.findRenderObject();
     if (viewId == null || surface is! RenderBox || !surface.hasSize) return;
     final surfaceOrigin = surface.localToGlobal(Offset.zero);
+    final viewport = (surfaceOrigin & surface.size).inflate(effectBleed);
+    final measuredTiles = _measureTiles()
+        .where((tile) => tile.bounds.overlaps(viewport))
+        .toList(growable: false);
     final tiles = <EdrTileSnapshot>[
       for (final measured in measuredTiles)
         measured.snapshot(relativeTo: surfaceOrigin),
     ];
+    final revision = ++_layoutRevision;
     try {
-      if (tiles.isEmpty) {
-        await _bridge.clearTiles(viewId);
-      } else {
-        await _bridge.updateTiles(viewId, tiles);
-      }
+      await _bridge.configureViewport(viewId, revision, _scrollOffset, tiles);
     } catch (error) {
       debugPrint('Нативный EDR-overlay недоступен: $error');
       _replaceRenderedIds(const {});
@@ -158,53 +160,45 @@ final class EdrOverlayController extends ChangeNotifier {
     _replaceRenderedIds({for (final tile in tiles) tile.roomId});
   }
 
+  Future<void> _flushScrollOffset() async {
+    if (_scrollSyncInProgress || _disposed) return;
+    _scrollSyncInProgress = true;
+    while (!_disposed) {
+      final scrollOffset = _pendingScrollOffset;
+      if (scrollOffset == null) break;
+      _pendingScrollOffset = null;
+      final viewId = _viewId;
+      if (viewId == null) continue;
+      try {
+        await _bridge.updateScrollOffset(
+          viewId,
+          _layoutRevision,
+          ++_scrollSequence,
+          scrollOffset,
+        );
+      } catch (error) {
+        debugPrint('Нативная синхронизация EDR-scroll недоступна: $error');
+      }
+    }
+    _scrollSyncInProgress = false;
+  }
+
   List<_MeasuredEdrTile> _measureTiles() {
-    final content = contentKey.currentContext?.findRenderObject();
-    final fallbackSurface = surfaceKey.currentContext?.findRenderObject();
-    final coordinateSpace = content is RenderBox && content.hasSize
-        ? content
-        : fallbackSurface is RenderBox && fallbackSurface.hasSize
-        ? fallbackSurface
-        : null;
-    if (coordinateSpace == null) return const [];
-    final coordinateOrigin = coordinateSpace.localToGlobal(Offset.zero);
     final tiles = <_MeasuredEdrTile>[];
     for (final MapEntry(key: roomId, value: entry) in _entries.entries) {
       final renderObject = entry.renderKey.currentContext?.findRenderObject();
       if (renderObject is! RenderBox || !renderObject.hasSize) continue;
       final globalOrigin = renderObject.localToGlobal(Offset.zero);
-      final origin = globalOrigin - coordinateOrigin;
       tiles.add(
         _MeasuredEdrTile(
           roomId: roomId,
           globalOrigin: globalOrigin,
-          bounds: origin & renderObject.size,
+          bounds: globalOrigin & renderObject.size,
           entry: entry,
         ),
       );
     }
     return tiles;
-  }
-
-  Rect? _effectBounds(List<_MeasuredEdrTile> tiles) {
-    if (tiles.isEmpty) return null;
-    var union = tiles.first.bounds;
-    for (final tile in tiles.skip(1)) {
-      union = union.expandToInclude(tile.bounds);
-    }
-    return Rect.fromLTRB(
-      union.left - horizontalEffectBleed,
-      union.top - verticalEffectBleed,
-      union.right + horizontalEffectBleed,
-      union.bottom + verticalEffectBleed,
-    );
-  }
-
-  bool _replaceOverlayBounds(Rect? next) {
-    if (_overlayBounds == next) return false;
-    _overlayBounds = next;
-    notifyListeners();
-    return true;
   }
 
   void _replaceRenderedIds(Set<String> next) {

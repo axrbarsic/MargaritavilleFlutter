@@ -1,3 +1,4 @@
+import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
@@ -5,61 +6,37 @@ import 'package:margaritaville_flutter/features/work_session/domain/models/room_
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
 
-WorkSession summaryPerformanceSession({Set<int> vipRoomIndexes = const {0}}) {
-  final startedAt = DateTime(2027, 2, 10, 8, 17);
-  const roomGroups = [
-    [
-      '101',
-      '102',
-      '103',
-      '104',
-      '105',
-      '106',
-      '107',
-      '108',
-      '109',
-      '110',
-      '111',
-      '112',
-    ],
-    [
-      '143',
-      '144',
-      '145',
-      '146',
-      '147',
-      '148',
-      '149',
-      '150',
-      '151',
-      '152',
-      '153',
-      '154',
-    ],
-    [
-      '201',
-      '202',
-      '203',
-      '204',
-      '205',
-      '206',
-      '207',
-      '208',
-      '209',
-      '210',
-      '211',
-      '212',
-    ],
-  ];
-  const names = ['Ketty', 'Omelene PM', 'Simone'];
-  const paletteKeys = ['ruby', 'violet', 'amber'];
+final int summaryPerformanceRoomCount = MargaritavilleRoomCatalog.territories
+    .fold(0, (total, territory) => total + territory.rooms.length);
 
-  final assignments = [
-    for (
-      var assignmentIndex = 0;
-      assignmentIndex < roomGroups.length;
-      assignmentIndex++
-    )
+WorkSession summaryPerformanceSession({
+  required int vipRoomCount,
+  int? roomCount,
+}) {
+  final startedAt = DateTime(2027, 2, 10, 8, 17);
+  const names = ['Ketty', 'Omelene PM', 'Simone', 'Bebita', 'Nadia', 'Marlene'];
+  const paletteKeys = ['ruby', 'violet', 'amber', 'aqua', 'mint', 'coral'];
+  final targetRoomCount = (roomCount ?? summaryPerformanceRoomCount).clamp(
+    1,
+    summaryPerformanceRoomCount,
+  );
+  var globalRoomIndex = 0;
+  var remainingRooms = targetRoomCount;
+  final assignments = <WorkAssignment>[];
+
+  for (
+    var assignmentIndex = 0;
+    assignmentIndex < MargaritavilleRoomCatalog.territories.length &&
+        remainingRooms > 0;
+    assignmentIndex++
+  ) {
+    final territoryRooms = MargaritavilleRoomCatalog
+        .territories[assignmentIndex]
+        .rooms
+        .take(remainingRooms)
+        .toList(growable: false);
+    remainingRooms -= territoryRooms.length;
+    assignments.add(
       WorkAssignment(
         id: 'performance-assignment-$assignmentIndex',
         cartNumber: assignmentIndex + 1,
@@ -72,20 +49,17 @@ WorkSession summaryPerformanceSession({Set<int> vipRoomIndexes = const {0}}) {
         assignedAt: startedAt,
         updatedAt: startedAt,
         rooms: [
-          for (
-            var roomIndex = 0;
-            roomIndex < roomGroups[assignmentIndex].length;
-            roomIndex++
-          )
+          for (final roomNumber in territoryRooms)
             _room(
-              roomGroups[assignmentIndex][roomIndex],
-              index: assignmentIndex * 12 + roomIndex,
+              roomNumber,
+              index: globalRoomIndex,
               startedAt: startedAt,
-              isVip: vipRoomIndexes.contains(assignmentIndex * 12 + roomIndex),
+              isVip: globalRoomIndex++ < vipRoomCount,
             ),
         ],
       ),
-  ];
+    );
+  }
 
   return WorkSession.create(
     id: 'summary-performance-v1',

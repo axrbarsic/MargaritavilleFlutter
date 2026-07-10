@@ -264,16 +264,21 @@ class EdrOverlayHostApi {
 
   final String pigeonVar_messageChannelSuffix;
 
-  Future<void> updateTiles(int viewId, List<EdrTileSnapshot> tiles) async {
+  Future<void> configureViewport(
+    int viewId,
+    int revision,
+    double scrollOffset,
+    List<EdrTileSnapshot> tiles,
+  ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.updateTiles$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.configureViewport$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[viewId, tiles],
+      <Object?>[viewId, revision, scrollOffset, tiles],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
@@ -284,16 +289,41 @@ class EdrOverlayHostApi {
     );
   }
 
-  Future<void> clearTiles(int viewId) async {
+  Future<void> updateScrollOffset(
+    int viewId,
+    int revision,
+    int sequence,
+    double scrollOffset,
+  ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearTiles$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.updateScrollOffset$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[viewId],
+      <Object?>[viewId, revision, sequence, scrollOffset],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  Future<void> clearViewport(int viewId, int revision) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearViewport$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[viewId, revision],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 

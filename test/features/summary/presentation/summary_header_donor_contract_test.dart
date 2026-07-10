@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_theme.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
 import 'package:margaritaville_flutter/shared/edr/edr_overlay_surface.dart';
 
 import 'support/summary_test_fixture.dart';
@@ -57,7 +58,42 @@ void main() {
     expect(find.byType(SingleChildScrollView), findsNothing);
     final listView = tester.widget<ListView>(find.byType(ListView));
     expect(listView.physics, isA<AlwaysScrollableScrollPhysics>());
-    expect(find.byType(EdrOverlaySurface), findsNothing);
+    expect(find.byType(EdrViewportSurface), findsNothing);
+  });
+
+  testWidgets('EDR viewport is fixed outside the original ListView', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(440, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: MargaritavilleTheme.dark,
+          home: SummaryScreen(
+            session: donorSession(),
+            visualPolicy: const SummaryVisualPolicy(
+              vipHdrLightEnabled: true,
+              statusPulseEnabled: true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final viewport = find.byType(EdrViewportSurface);
+    final list = find.byType(ListView);
+    expect(viewport, findsOneWidget);
+    expect(list, findsOneWidget);
+    expect(
+      find.ancestor(of: viewport, matching: find.byType(ListView)),
+      findsNothing,
+    );
+    expect(tester.getTopLeft(viewport), tester.getTopLeft(list));
+    expect(tester.getSize(viewport), tester.getSize(list));
   });
 
   testWidgets('summary stays intact at physical Pixel width and font scale', (
