@@ -29,6 +29,17 @@ if ! rg -q "com\.alex\.margaritaville\.flutter\.beta" \
   failed=1
 fi
 
+if ! rg -q 'applicationId = "com\.alex\.margaritaville\.flutter\.beta"' \
+  android/app/build.gradle.kts; then
+  echo "ERROR: Android beta application identity is missing"
+  failed=1
+fi
+
+if rg -n "com\.alex\.margaritaville\.margaritaville_flutter" android; then
+  echo "ERROR: generated Android identity leaked into the app shell"
+  failed=1
+fi
+
 if (( failed != 0 )); then
   exit 1
 fi

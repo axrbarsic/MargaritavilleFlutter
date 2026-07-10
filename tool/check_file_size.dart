@@ -7,7 +7,9 @@ Future<void> main() async {
   for (final root in [Directory('lib'), Directory('test')]) {
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is! File || !_isHandwrittenDart(entity.path)) continue;
-      final lineCount = await entity.readAsLines().then((lines) => lines.length);
+      final lineCount = await entity.readAsLines().then(
+        (lines) => lines.length,
+      );
       if (lineCount > _lineLimit) oversized[entity.path] = lineCount;
     }
   }

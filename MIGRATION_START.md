@@ -33,11 +33,20 @@ iOS-приложения Margaritaville с нативного Swift/SwiftUI на
 - Физический iPhone 17 Pro Max для проверки:
   - CoreDevice UUID: `81B4DF0D-A9BE-5131-93C8-8247618F9428`;
   - Xcode UDID: `00008150-001418301E68C01C`.
+- Android-track открыт Alex 2026-07-09. Физический Pixel 8 для проверки:
+  - ADB serial: `44171FDJH003R5`;
+  - Android Emulator без прямого разрешения не использовать.
+- Для повседневного visual/navigation baseline Swift-донора Alex разрешил
+  iPhone 17 Pro Max Simulator:
+  - UDID: `BE4AB2BD-CD2A-4D0F-A73C-B31E8E2D6C0B`;
+  - runtime: iOS 26.3;
+  - это не замена физическому iPhone для EDR/HDR, haptics, media/Speech и
+    performance.
 
-Каталог `MargaritavilleFlutter` уже создан как чистый iOS Flutter scaffold с
-beta identity, iOS 17, собственным git-репозиторием и project-local
-`AGENTS.md`. Не создавай его заново: сначала прочитай текущее состояние и
-продолжай существующий проект.
+Каталог `MargaritavilleFlutter` уже создан как отдельный iOS + Android Flutter
+scaffold с общей beta identity, iOS 17, собственным git-репозиторием и
+project-local `AGENTS.md`. Не создавай его заново: сначала прочитай текущее
+состояние и продолжай существующий проект.
 
 ## Сначала Прочитать
 
@@ -49,6 +58,8 @@ beta identity, iOS 17, собственным git-репозиторием и pr
 6. `/Users/alex/Developer/MargaritavilleSwift/Docs/FlutterParityPlan.md`
 7. Текущие `git status`, `git log`, `project.yml`, доменные модели, persistence,
    summary UI, visual effects, media и interaction infrastructure Swift-проекта.
+8. `/Users/alex/Developer/MargaritavilleFlutter/Docs/DonorSimulatorRunbook.md`
+   перед повторной сборкой Swift-донора на Simulator.
 
 Некоторые старые документы могут содержать устаревшие номера build. Текущий
 код, git log и build 37 приоритетнее старых снимков.
@@ -129,9 +140,10 @@ Flutter-приложение имеет право и должно исполь�
 передавать нативному EDR runtime геометрию видимых ячеек, статус/цвет и
 одноразовые pulse events; нативная сторона сама ведёт временную кривую.
 
-Для Android позднее потребуется Kotlin-аналог или явно согласованный SDR
-fallback. Первый migration track — iPhone; Android/Web пока не должны ухудшать
-iOS-архитектуру.
+Для Android используется отдельный Kotlin adapter или явный SDR fallback.
+iPhone остаётся эталоном HDR/EDR и performance, но физический Pixel 8 теперь
+входит в обязательную cross-platform visual/interaction проверку. Android не
+должен ухудшать iOS-архитектуру.
 
 ## Что Нужно Сохранить
 

@@ -6,6 +6,10 @@
 `com.alex.margaritaville.flutter.beta`. Оно не импортирует и не открывает
 хранилища `MargaritavilleSwift`, `OceanKeySwift` или `OceanKeyFlutterRun`.
 
+Android shell использует тот же изолированный beta application ID. Android
+platform adapter не должен ослаблять iPhone-first EDR/media архитектуру; для
+Apple-only возможностей вводятся явные Android fallback policies.
+
 По классификации `shared-app-foundation` текущая вертикаль является
 `app-specific`: hotel profile, simple-cycle, смена, назначения уборщиц, скрытые
 cart/work-block IDs и локальная база принадлежат именно Margaritaville.
