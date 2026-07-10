@@ -43,6 +43,9 @@ presentation (Flutter + Riverpod)
 ## Runtime-инварианты
 
 - Состояние подтверждается SQLite-транзакцией до публикации нового UI state.
+- Все application commands сериализуются одним controller queue: timer,
+  gesture и sheet callback не могут одновременно прочитать старый state и
+  затереть изменения друг друга.
 - Один активный номер может принадлежать только одному work block.
 - Cart number хранится как внутренний persistence key и не является primary UI
   label.
@@ -50,3 +53,12 @@ presentation (Flutter + Riverpod)
   обычным tap.
 - Эффекты не получают отдельный ticker на ячейку. Будущий visual runtime будет
   единой управляемой точкой.
+- VIP и schedule меняются отдельными versioned commands и сохраняют собственные
+  field timestamps; они не кодируются внутри room status.
+- Проверка due schedule выполняется одним 15-second coordinator на Summary и
+  при возврате приложения в foreground, а не отдельным timer на каждую ячейку.
+- Локальные уведомления проходят только через
+  `RoomScheduleNotificationClient`. Reset, clear и due-transition обязаны
+  отменять прежний notification ID `margaritaville.room.schedule.<room>`.
+  Сейчас подключён явный no-op adapter; нативные iOS/Android adapters являются
+  следующим platform-services checkpoint и не маскируются как готовые.

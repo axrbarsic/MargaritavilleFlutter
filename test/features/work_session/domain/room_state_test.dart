@@ -100,6 +100,34 @@ void main() {
       expect(due.room.timestamps.scheduledUpdatedAt, dueAt);
     });
 
+    test('schedule can be cleared without changing the underlying phase', () {
+      final pending = RoomState.pending(
+        roomNumber: '101',
+        selectedAt: selectedAt,
+      );
+      final dueAt = openedAt.add(const Duration(minutes: 30));
+      final scheduled = pending.schedule(
+        scheduledFor: dueAt,
+        changedAt: openedAt,
+      );
+      final clearedAt = openedAt.add(const Duration(minutes: 1));
+
+      final cleared = scheduled.schedule(
+        scheduledFor: null,
+        changedAt: clearedAt,
+      );
+      final ignored = cleared.schedule(
+        scheduledFor: null,
+        changedAt: clearedAt.add(const Duration(minutes: 1)),
+      );
+
+      expect(cleared.phase, RoomPhase.pending);
+      expect(cleared.displayStatus, RoomDisplayStatus.pending);
+      expect(cleared.scheduledFor, isNull);
+      expect(cleared.timestamps.scheduledUpdatedAt, clearedAt);
+      expect(ignored, cleared);
+    });
+
     test('VIP is independent from phase and has its own field timestamp', () {
       final pending = RoomState.pending(
         roomNumber: '101',

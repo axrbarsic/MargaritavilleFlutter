@@ -126,9 +126,10 @@ final class RoomState {
   }
 
   RoomState schedule({
-    required DateTime scheduledFor,
+    required DateTime? scheduledFor,
     required DateTime changedAt,
   }) {
+    if (this.scheduledFor == scheduledFor) return this;
     return _copy(
       scheduledFor: scheduledFor,
       timestamps: timestamps.changingSchedule(changedAt),

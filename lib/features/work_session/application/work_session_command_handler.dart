@@ -38,6 +38,18 @@ final class WorkSessionCommandHandler {
         roomNumber: command.roomNumber,
         changedAt: command.issuedAt,
       ),
+      final SetRoomVipCommand command => session.setRoomVip(
+        roomNumber: command.roomNumber,
+        isVip: command.isVip,
+        changedAt: command.issuedAt,
+      ),
+      final SetRoomScheduleCommand command => session.setRoomSchedule(
+        roomNumber: command.roomNumber,
+        scheduledFor: command.scheduledFor,
+        changedAt: command.issuedAt,
+      ),
+      final AdvanceScheduledRoomsCommand command =>
+        session.advanceScheduledRooms(now: command.issuedAt),
     };
     if (result.status == WorkSessionMutationStatus.changed) {
       await _repository.replaceSession(result.session);

@@ -134,3 +134,35 @@ menu (VIP/schedule/media), Matrix background/общий visual runtime, HDR/EDR 
 haptics. Физический Pixel сейчас заблокирован, поэтому финальный visual/gesture
 прогон этого checkpoint накоплен как отдельный гейт после разблокировки; ADB,
 сборки и автоматические проверки от блокировки не зависят.
+
+## 2026-07-10 — Checkpoint 3: room actions, VIP и schedule
+
+- Read-only аудит Swift build 37 подтвердил активный compact action contract:
+  свайп комнаты идёт вправо, порог `clamp(width * 0.72, 58, 84)`, быстрый бросок
+  учитывает predicted finish; меню должно открываться даже на pending-комнате.
+- Hardcode 48 pt и условие «меню только когда доступен reset» удалены. Typed
+  action sheet теперь всегда содержит `Голос/медиа`, `VIP включить/выключить`,
+  `Назначить время` и условный `Вернуть в жёлтый` в donor-порядке.
+- Добавлены versioned commands и единый controller/repository path для VIP,
+  установки/очистки schedule и пакетного due-transition. Pure-Dart домен
+  сохраняет `vipUpdatedAt` и timestamp очистки schedule независимо от phase.
+- Controller command queue теперь сериализует конкурентные gesture/timer/sheet
+  мутации. Tests-first сценарий сначала воспроизвёл потерю второго перехода
+  (`pending -> open` вместо `pending -> open -> ready`), затем закрепил fix.
+- Schedule sheet повторяет donor contract: часы 8–4, минуты 00/15/30/45,
+  AM/PM, следующая четверть часа, `Очистить` и `Установить`. Due-время
+  проверяется при входе/foreground и одним timer каждые 15 секунд.
+- Введён `RoomScheduleNotificationClient` и стабильный notification ID.
+  Reset, clear и due-transition покрыты тестом обязательной отмены. Пока
+  подключён честный no-op; platform adapters iOS/Android остаются следующим
+  отдельным блоком.
+- Два donor-дефекта сознательно не перенесены: reset scheduled-room не оставляет
+  старое уведомление и не стирает timestamp факта очистки, поэтому старое
+  расписание не должно воскреснуть при будущем merge.
+- На Pixel 8 Emulator комната 105 стала scheduled/pink на 1:30 AM, затем
+  автоматически перешла в open после due; VIP комнаты 106 сохранился после
+  force-stop/cold relaunch. Скриншоты action menu, schedule sheet и scheduled
+  grid лежат в ignored `build/qa`.
+- `Голос/медиа` пока явно сообщает о следующем platform-services блоке и не
+  выдаётся за готовую media parity-функцию. VIP persistence готов, его
+  jelly/HDR/SDR presentation относится к следующему visual-runtime checkpoint.

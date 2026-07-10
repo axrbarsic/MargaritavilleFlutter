@@ -59,6 +59,73 @@ void main() {
       expect(repository.session, changed.session);
     },
   );
+
+  test(
+    'persists VIP and schedule commands through the same command path',
+    () async {
+      final repository = _RecordingRepository();
+      final assigned =
+          WorkSession.create(
+                id: 'session-1',
+                hotel: HotelProfile.margaritaville,
+                startedAt: now,
+                assignments: [
+                  WorkAssignment.create(
+                    id: 'cart-1',
+                    cartNumber: 1,
+                    housekeeper: Housekeeper(
+                      id: 'ketty',
+                      displayName: 'Ketty',
+                      paletteKey: 'ruby',
+                      updatedAt: now,
+                    ),
+                    assignedAt: now,
+                  ),
+                ],
+              )
+              .assignRoom(
+                assignmentId: 'cart-1',
+                roomNumber: '101',
+                changedAt: now.add(const Duration(minutes: 1)),
+              )
+              .session;
+      final handler = WorkSessionCommandHandler(repository);
+      final dueAt = now.add(const Duration(hours: 1));
+
+      final vip = await handler.execute(
+        assigned,
+        SetRoomVipCommand(
+          commandId: 'vip-1',
+          issuedAt: now.add(const Duration(minutes: 2)),
+          roomNumber: '101',
+          isVip: true,
+        ),
+      );
+      final scheduled = await handler.execute(
+        vip.session,
+        SetRoomScheduleCommand(
+          commandId: 'schedule-1',
+          issuedAt: now.add(const Duration(minutes: 3)),
+          roomNumber: '101',
+          scheduledFor: dueAt,
+        ),
+      );
+      final duplicateVip = await handler.execute(
+        scheduled.session,
+        SetRoomVipCommand(
+          commandId: 'vip-2',
+          issuedAt: now.add(const Duration(minutes: 4)),
+          roomNumber: '101',
+          isVip: true,
+        ),
+      );
+
+      expect(scheduled.session.room('101')?.isVip, isTrue);
+      expect(scheduled.session.room('101')?.scheduledFor, dueAt);
+      expect(duplicateVip.status, WorkSessionMutationStatus.ignored);
+      expect(repository.writeCount, 2);
+    },
+  );
 }
 
 final class _RecordingRepository implements WorkSessionRepository {

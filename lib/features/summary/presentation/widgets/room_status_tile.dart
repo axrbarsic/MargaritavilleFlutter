@@ -1,20 +1,30 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../summary_layout_tokens.dart';
+import '../summary_swipe_commit_policy.dart';
 
 final class RoomStatusTile extends StatefulWidget {
   const RoomStatusTile({
     required this.room,
     required this.onAdvance,
     required this.onReset,
+    required this.onToggleVip,
+    required this.onSchedule,
+    required this.onOpenMedia,
     super.key,
   });
 
   final RoomState room;
   final VoidCallback onAdvance;
   final VoidCallback onReset;
+  final VoidCallback onToggleVip;
+  final VoidCallback onSchedule;
+  final VoidCallback onOpenMedia;
 
   @override
   State<RoomStatusTile> createState() => _RoomStatusTileState();
@@ -22,6 +32,7 @@ final class RoomStatusTile extends StatefulWidget {
 
 final class _RoomStatusTileState extends State<RoomStatusTile> {
   var _horizontalDrag = 0.0;
+  var _horizontalDragStart = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -43,21 +54,29 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
       button: true,
       label: 'Номер ${room.roomNumber}',
       value: '$label${room.isVip ? ', VIP' : ''}',
-      hint: 'Удерживайте для следующего статуса',
+      hint: 'Удерживайте для следующего статуса, свайпните вправо для действий',
       child: GestureDetector(
         key: Key('summary-room-${room.roomNumber}'),
         behavior: HitTestBehavior.opaque,
+        dragStartBehavior: DragStartBehavior.down,
         onLongPress: widget.onAdvance,
-        onHorizontalDragStart: (_) => _horizontalDrag = 0,
-        onHorizontalDragUpdate: (details) {
-          _horizontalDrag = (_horizontalDrag + details.delta.dx).clamp(
-            0,
-            double.infinity,
-          );
+        onHorizontalDragStart: (details) {
+          _horizontalDrag = 0;
+          _horizontalDragStart = details.localPosition.dx;
         },
-        onHorizontalDragEnd: (_) {
-          if (_horizontalDrag >= 48 && _canReset) {
-            _showActionMenu(context);
+        onHorizontalDragUpdate: (details) {
+          _horizontalDrag = (details.localPosition.dx - _horizontalDragStart)
+              .clamp(0, double.infinity);
+        },
+        onHorizontalDragEnd: (details) {
+          final width = context.size?.width ?? 88;
+          if (_horizontalDrag >= 38 &&
+              SummarySwipeCommitPolicy.compactArmed(
+                translation: _horizontalDrag,
+                velocity: details.primaryVelocity ?? 0,
+                cellWidth: width,
+              )) {
+            unawaited(_showActionMenu(context));
           }
           _horizontalDrag = 0;
         },
@@ -122,19 +141,91 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
       widget.room.scheduledFor != null;
 
   Future<void> _showActionMenu(BuildContext context) async {
-    await showModalBottomSheet<void>(
+    final action = await showModalBottomSheet<_RoomAction>(
       context: context,
       backgroundColor: MargaritavilleColors.surface,
+      showDragHandle: true,
       builder: (context) => SafeArea(
-        child: ListTile(
-          leading: const Icon(Icons.restart_alt_rounded),
-          title: const Text('Вернуть в жёлтый'),
-          onTap: () {
-            Navigator.pop(context);
-            widget.onReset();
-          },
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 6),
+              child: Text(
+                'Комната ${widget.room.roomNumber}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            _actionTile(
+              context,
+              action: _RoomAction.media,
+              key: const Key('room-action-media'),
+              icon: Icons.mic_rounded,
+              label: 'Голос/медиа',
+            ),
+            _actionTile(
+              context,
+              action: _RoomAction.vip,
+              key: const Key('room-action-vip'),
+              icon: widget.room.isVip
+                  ? Icons.diamond_rounded
+                  : Icons.diamond_outlined,
+              label: widget.room.isVip ? 'VIP выключить' : 'VIP включить',
+            ),
+            _actionTile(
+              context,
+              action: _RoomAction.schedule,
+              key: const Key('room-action-schedule'),
+              icon: Icons.schedule_rounded,
+              label: 'Назначить время',
+            ),
+            if (_canReset)
+              _actionTile(
+                context,
+                action: _RoomAction.reset,
+                key: const Key('room-action-reset'),
+                icon: Icons.restart_alt_rounded,
+                label: 'Вернуть в жёлтый',
+              ),
+          ],
         ),
       ),
+    );
+    switch (action) {
+      case _RoomAction.media:
+        widget.onOpenMedia();
+        break;
+      case _RoomAction.vip:
+        widget.onToggleVip();
+        break;
+      case _RoomAction.schedule:
+        widget.onSchedule();
+        break;
+      case _RoomAction.reset:
+        widget.onReset();
+        break;
+      case null:
+        break;
+    }
+  }
+
+  Widget _actionTile(
+    BuildContext context, {
+    required _RoomAction action,
+    required Key key,
+    required IconData icon,
+    required String label,
+  }) {
+    return ListTile(
+      key: key,
+      leading: Icon(icon),
+      title: Text(label),
+      onTap: () => Navigator.pop(context, action),
     );
   }
 
@@ -146,3 +237,5 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
     return '$hour:$minute $suffix';
   }
 }
+
+enum _RoomAction { media, vip, schedule, reset }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
 
@@ -115,6 +116,82 @@ void main() {
     expect(opened.status, WorkSessionMutationStatus.changed);
     expect(opened.session.room('101')?.phase.name, 'open');
     expect(opened.session.updatedAt, openedAt);
+  });
+
+  test('mutates VIP and schedule as independent room fields', () {
+    final assigned = makeSession()
+        .assignRoom(
+          assignmentId: 'cart-1',
+          roomNumber: '101',
+          changedAt: changedAt,
+        )
+        .session;
+    final vipAt = changedAt.add(const Duration(minutes: 1));
+    final dueAt = changedAt.add(const Duration(hours: 1));
+    final scheduledAt = changedAt.add(const Duration(minutes: 2));
+
+    final vip = assigned.setRoomVip(
+      roomNumber: '101',
+      isVip: true,
+      changedAt: vipAt,
+    );
+    final scheduled = vip.session.setRoomSchedule(
+      roomNumber: '101',
+      scheduledFor: dueAt,
+      changedAt: scheduledAt,
+    );
+
+    expect(vip.status, WorkSessionMutationStatus.changed);
+    expect(scheduled.status, WorkSessionMutationStatus.changed);
+    expect(scheduled.session.room('101')?.isVip, isTrue);
+    expect(scheduled.session.room('101')?.scheduledFor, dueAt);
+    expect(scheduled.session.room('101')?.timestamps.vipUpdatedAt, vipAt);
+    expect(
+      scheduled.session.room('101')?.timestamps.scheduledUpdatedAt,
+      scheduledAt,
+    );
+  });
+
+  test('advances every due scheduled room in one session mutation', () {
+    var session = makeSession()
+        .assignRoom(
+          assignmentId: 'cart-1',
+          roomNumber: '101',
+          changedAt: changedAt,
+        )
+        .session;
+    session = session
+        .assignRoom(
+          assignmentId: 'cart-1',
+          roomNumber: '102',
+          changedAt: changedAt.add(const Duration(seconds: 1)),
+        )
+        .session;
+    final dueAt = changedAt.add(const Duration(minutes: 30));
+    session = session
+        .setRoomSchedule(
+          roomNumber: '101',
+          scheduledFor: dueAt,
+          changedAt: changedAt.add(const Duration(minutes: 1)),
+        )
+        .session;
+    session = session
+        .setRoomSchedule(
+          roomNumber: '102',
+          scheduledFor: dueAt.add(const Duration(minutes: 1)),
+          changedAt: changedAt.add(const Duration(minutes: 1)),
+        )
+        .session;
+
+    final advanced = session.advanceScheduledRooms(now: dueAt);
+
+    expect(advanced.status, WorkSessionMutationStatus.changed);
+    expect(advanced.session.room('101')?.phase, RoomPhase.open);
+    expect(advanced.session.room('101')?.scheduledFor, isNull);
+    expect(
+      advanced.session.room('102')?.displayStatus,
+      RoomDisplayStatus.scheduled,
+    );
   });
 
   test('unassigning a room leaves a selection tombstone', () {

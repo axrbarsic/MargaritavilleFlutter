@@ -13,7 +13,7 @@ final class WorkSessionShell extends ConsumerWidget {
     final state = ref.watch(workSessionControllerProvider);
     return state.when(
       data: (session) => session.workdayLocked
-          ? SummaryScreen(session: session)
+          ? SummaryScreen(session: session, enableSchedulePolling: true)
           : WorkSetupScreen(session: session),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('Margaritaville')),

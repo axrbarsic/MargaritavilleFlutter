@@ -64,3 +64,34 @@ final class ResetRoomCommand extends WorkSessionCommand {
 
   final String roomNumber;
 }
+
+final class SetRoomVipCommand extends WorkSessionCommand {
+  const SetRoomVipCommand({
+    required super.commandId,
+    required super.issuedAt,
+    required this.roomNumber,
+    required this.isVip,
+  });
+
+  final String roomNumber;
+  final bool isVip;
+}
+
+final class SetRoomScheduleCommand extends WorkSessionCommand {
+  const SetRoomScheduleCommand({
+    required super.commandId,
+    required super.issuedAt,
+    required this.roomNumber,
+    required this.scheduledFor,
+  });
+
+  final String roomNumber;
+  final DateTime? scheduledFor;
+}
+
+final class AdvanceScheduledRoomsCommand extends WorkSessionCommand {
+  const AdvanceScheduledRoomsCommand({
+    required super.commandId,
+    required super.issuedAt,
+  });
+}

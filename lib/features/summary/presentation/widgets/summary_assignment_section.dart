@@ -12,6 +12,9 @@ final class SummaryAssignmentSection extends StatelessWidget {
     required this.assignment,
     required this.onAdvance,
     required this.onReset,
+    required this.onToggleVip,
+    required this.onSchedule,
+    required this.onOpenMedia,
     this.rooms,
     super.key,
   });
@@ -19,6 +22,9 @@ final class SummaryAssignmentSection extends StatelessWidget {
   final WorkAssignment assignment;
   final ValueChanged<RoomState> onAdvance;
   final ValueChanged<RoomState> onReset;
+  final ValueChanged<RoomState> onToggleVip;
+  final ValueChanged<RoomState> onSchedule;
+  final ValueChanged<RoomState> onOpenMedia;
   final List<RoomState>? rooms;
 
   @override
@@ -114,6 +120,9 @@ final class SummaryAssignmentSection extends StatelessWidget {
                 room: room,
                 onAdvance: () => onAdvance(room),
                 onReset: () => onReset(room),
+                onToggleVip: () => onToggleVip(room),
+                onSchedule: () => onSchedule(room),
+                onOpenMedia: () => onOpenMedia(room),
               );
             },
           ),

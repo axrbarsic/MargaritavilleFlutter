@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_theme.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_tile.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/summary_selection_puzzle_handle.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
@@ -79,6 +80,62 @@ void main() {
     );
     await tester.pump();
     expect(completions, 1);
+  });
+
+  testWidgets('pending room right swipe opens the complete typed action menu', (
+    tester,
+  ) async {
+    var vipToggles = 0;
+    final room = RoomState.pending(
+      roomNumber: '101',
+      selectedAt: DateTime(2027, 2, 10, 20, 47),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: MargaritavilleTheme.dark,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 96,
+              height: 98,
+              child: RoomStatusTile(
+                room: room,
+                onAdvance: () {},
+                onReset: () {},
+                onToggleVip: () => vipToggles++,
+                onSchedule: () {},
+                onOpenMedia: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final tile = find.byKey(const Key('summary-room-101'));
+    await tester.timedDrag(
+      tile,
+      const Offset(55, 0),
+      const Duration(milliseconds: 500),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Голос/медиа'), findsNothing);
+
+    await tester.timedDrag(
+      tile,
+      const Offset(72, 0),
+      const Duration(milliseconds: 500),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Комната 101'), findsOneWidget);
+    expect(find.text('Голос/медиа'), findsOneWidget);
+    expect(find.text('VIP включить'), findsOneWidget);
+    expect(find.text('Назначить время'), findsOneWidget);
+    expect(find.text('Вернуть в жёлтый'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('room-action-vip')));
+    await tester.pumpAndSettle();
+    expect(vipToggles, 1);
   });
 }
 
