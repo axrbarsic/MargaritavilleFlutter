@@ -17,6 +17,18 @@ if rg -n "features/.+/(data|presentation)/" \
   failed=1
 fi
 
+if rg -n "package:(flutter|flutter_riverpod|shared_preferences)" \
+  lib/features/settings/domain --glob '*.dart'; then
+  echo "ERROR: settings domain imports a framework package"
+  failed=1
+fi
+
+if rg -n "dart:convert|json(Encode|Decode)" \
+  lib/features/settings/data --glob '*.dart'; then
+  echo "ERROR: app settings must persist typed values, not a JSON blob"
+  failed=1
+fi
+
 if rg -n "OceanKeyFlutterRun|com\.alex\.margaritaville\.swift" \
   lib pubspec.yaml ios/Runner; then
   echo "ERROR: sibling app identity leaked into Flutter runtime"

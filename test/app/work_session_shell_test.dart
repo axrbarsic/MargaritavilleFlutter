@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_app.dart';
 import 'package:margaritaville_flutter/core/time/clock.dart';
+import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
+import 'package:margaritaville_flutter/features/settings/domain/repositories/appearance_settings_repository.dart';
+import 'package:margaritaville_flutter/features/settings/presentation/controllers/appearance_settings_controller.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
 import 'package:margaritaville_flutter/features/work_session/data/local/app_database.dart';
 import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_work_session_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/presentation/controllers/work_session_controller.dart';
@@ -19,6 +23,7 @@ void main() {
     final database = AppDatabase.inMemory();
     addTearDown(database.close);
     final repository = DriftWorkSessionRepository(database);
+    final appearanceRepository = _MemoryAppearanceSettingsRepository();
 
     await tester.pumpWidget(
       ProviderScope(
@@ -27,6 +32,9 @@ void main() {
             FixedClock(DateTime.utc(2027, 2, 10, 12)),
           ),
           workSessionRepositoryProvider.overrideWithValue(repository),
+          appearanceSettingsRepositoryProvider.overrideWithValue(
+            appearanceRepository,
+          ),
         ],
         child: const MargaritavilleApp(),
       ),
@@ -46,10 +54,42 @@ void main() {
     expect(find.byKey(const Key('summary-room-101')), findsOneWidget);
     expect(find.byKey(const Key('summary-total-count')), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('summary-open-settings')));
+    await tester.pumpAndSettle();
+    expect(find.text('Экспериментальное'), findsOneWidget);
+    final statusPulse = find.byKey(const Key('setting-status-hdr-pulse'));
+    await tester.ensureVisible(statusPulse);
+    await tester.pumpAndSettle();
+    await tester.tap(statusPulse);
+    await tester.pumpAndSettle();
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<SummaryScreen>(find.byType(SummaryScreen))
+          .visualPolicy
+          .statusPulseEnabled,
+      isTrue,
+    );
+
     await tester.longPress(find.byKey(const Key('summary-room-101')));
     await tester.pumpAndSettle();
 
     final saved = await repository.loadLatestSession();
     expect(saved?.room('101')?.phase.name, 'open');
   });
+}
+
+final class _MemoryAppearanceSettingsRepository
+    implements AppearanceSettingsRepository {
+  AppearanceSettings value = AppearanceSettings.defaults;
+
+  @override
+  Future<AppearanceSettings> load() async => value;
+
+  @override
+  Future<void> save(AppearanceSettings settings) async {
+    value = settings;
+  }
 }

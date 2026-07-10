@@ -49,7 +49,16 @@ presentation (Flutter + Riverpod)
 - `features/work_session/presentation` — Riverpod controller и root shell.
 - `features/work_setup` — выбор номеров по уборщице и зоне.
 - `features/summary` — рабочая четырёхколоночная summary-сетка.
+- `features/settings` — pure-Dart visual settings, repository contract,
+  отдельные typed preferences и Riverpod controller.
 - `shared/presentation` — локальные нейтральные UI-примитивы приложения.
+
+`AppearanceSummaryVisualPolicy` находится в app composition root: Settings не
+импортирует Summary presentation, а Summary не знает, где и как сохраняются
+настройки. Простые visual preferences хранятся отдельными `bool`/`double`
+значениями через `SharedPreferencesAsync`; JSON blob запрещён guard-скриптом.
+Рабочая смена, история, медиа и sync state по-прежнему принадлежат Drift и
+никогда не смешиваются с preferences.
 
 ## Runtime-инварианты
 
@@ -71,6 +80,12 @@ presentation (Flutter + Riverpod)
   rebuild/recycling не перезапускают завершённое событие. One-shot события
   живут отдельно от persisted room state и удаляются по generation-aware
   cleanup после 2.73 s.
+- VIP jelly использует один общий clock и Flutter `CustomClipper<Path>` для
+  реально движущегося контура; один VIP не создаёт собственного ticker.
+- Donor-defaults сохранены точно: live cells `false`, spring intensity `0.72`,
+  VIP jelly `true` со speed `0.75`, VIP HDR `false`, status HDR pulse `false`.
+  Мёртвая donor-настройка spring speed не показана: в активном `squareGrid4`
+  Swift build 37 читает её, но не применяет.
 - Android и обычный iOS Simulator используют честный same-color SDR glow.
   Настоящий iPhone HDR/EDR остаётся узким platform-adapter checkpoint и не
   подменяется завышенной яркостью всего Flutter-дерева.

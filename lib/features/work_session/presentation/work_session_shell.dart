@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/appearance_summary_visual_policy.dart';
+import '../../settings/domain/models/appearance_settings.dart';
+import '../../settings/presentation/appearance_settings_screen.dart';
+import '../../settings/presentation/controllers/appearance_settings_controller.dart';
 import '../../summary/presentation/summary_screen.dart';
 import '../../work_setup/presentation/work_setup_screen.dart';
 import 'controllers/work_session_controller.dart';
@@ -11,9 +15,18 @@ final class WorkSessionShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(workSessionControllerProvider);
+    final appearance = ref.watch(appearanceSettingsControllerProvider);
+    final visualPolicy = AppearanceSummaryVisualPolicy.fromSettings(
+      appearance.value ?? AppearanceSettings.defaults,
+    );
     return state.when(
       data: (session) => session.workdayLocked
-          ? SummaryScreen(session: session, enableSchedulePolling: true)
+          ? SummaryScreen(
+              session: session,
+              enableSchedulePolling: true,
+              visualPolicy: visualPolicy,
+              onOpenSettings: () => _openSettings(context),
+            )
           : WorkSetupScreen(session: session),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('Margaritaville')),
@@ -49,6 +62,12 @@ final class WorkSessionShell extends ConsumerWidget {
       ),
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const AppearanceSettingsScreen()),
     );
   }
 }

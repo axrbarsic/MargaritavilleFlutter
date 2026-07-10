@@ -22,13 +22,16 @@ Image уже был установлен локально. Не создават
 
 ```bash
 emulator -list-avds
-emulator @margarita_pixel_8_api36 -no-snapshot-load -no-boot-anim
+emulator @margarita_pixel_8_api36 \
+  -no-snapshot-load -no-boot-anim -gpu host
 adb devices -l
 adb -s emulator-5554 shell getprop sys.boot_completed
 ```
 
+Для автономного headless QA к той же команде можно добавить `-no-window`.
 Если из-за нагрузки рантайм перешёл на software OpenGL, его можно использовать
-для layout/navigation QA, но нельзя считать FPS такого запуска эталонным.
+для layout/navigation QA, но нельзя считать FPS или cold start такого запуска
+эталонными.
 
 ## Установка только на Emulator
 
@@ -43,6 +46,23 @@ adb -s emulator-5554 shell am force-stop com.alex.margaritaville.flutter.beta
 adb -s emulator-5554 shell am start -W \
   -n com.alex.margaritaville.flutter.beta/.MainActivity
 ```
+
+Если streaming install завис на перегруженном AVD, не запускать параллельно
+новые `adb install`. Перезапустить transport/AVD или использовать один
+последовательный fallback:
+
+```bash
+adb -s emulator-5554 push build/app/outputs/flutter-apk/app-debug.apk \
+  /data/local/tmp/margaritaville.apk
+adb -s emulator-5554 shell pm install -r \
+  /data/local/tmp/margaritaville.apk
+adb -s emulator-5554 shell rm /data/local/tmp/margaritaville.apk
+```
+
+ANR на software-rendered AVD сначала сверять с system log: если Android сам
+задержал запуск процесса, focus event starved, а чистый host-GPU boot проходит,
+это emulator degradation. Реальный app regression можно исключать только после
+повторного cold start на чистом AVD и проверки `logcat`.
 
 ## Скриншот
 

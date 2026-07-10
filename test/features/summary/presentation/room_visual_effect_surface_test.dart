@@ -1,0 +1,105 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_pulse.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_tile.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
+import 'package:margaritaville_flutter/shared/visual_runtime/visual_frame_clock.dart';
+
+void main() {
+  testWidgets('VIP HDR setting owns the static SDR light fallback', (
+    tester,
+  ) async {
+    final selectedAt = DateTime(2027, 2, 10, 12);
+    final room = RoomState.pending(
+      roomNumber: '101',
+      selectedAt: selectedAt,
+    ).setVip(isVip: true, changedAt: selectedAt);
+    const policy = SummaryVisualPolicy(
+      framePolicy: VisualFramePolicy(maxFramesPerSecond: 30),
+      vipJellyEnabled: false,
+      vipHdrLightEnabled: true,
+    );
+
+    await tester.pumpWidget(_tile(room: room, policy: policy));
+
+    expect(find.byKey(const Key('vip-light-layer-101')), findsOneWidget);
+    expect(find.byKey(const Key('status-pulse-layer-101')), findsNothing);
+  });
+
+  testWidgets('live-cell physics bends without pretending to be HDR', (
+    tester,
+  ) async {
+    final startedAt = DateTime.now().subtract(
+      const Duration(milliseconds: 580),
+    );
+    final room = RoomState.pending(roomNumber: '102', selectedAt: startedAt);
+    final event = SummaryVisualPulseEvent(
+      generation: 1,
+      status: RoomDisplayStatus.pending,
+      startedAt: startedAt,
+    );
+    const policy = SummaryVisualPolicy(
+      framePolicy: VisualFramePolicy(maxFramesPerSecond: 30),
+      liveCellsEnabled: true,
+      statusPulseEnabled: false,
+    );
+
+    await tester.pumpWidget(
+      _tile(room: room, policy: policy, pulseEvent: event),
+    );
+
+    expect(find.byKey(const Key('status-pulse-layer-102')), findsNothing);
+  });
+
+  testWidgets('status HDR setting mounts the same-color pulse layer', (
+    tester,
+  ) async {
+    final startedAt = DateTime.now().subtract(
+      const Duration(milliseconds: 580),
+    );
+    final room = RoomState.pending(roomNumber: '103', selectedAt: startedAt);
+    final event = SummaryVisualPulseEvent(
+      generation: 1,
+      status: RoomDisplayStatus.pending,
+      startedAt: startedAt,
+    );
+    const policy = SummaryVisualPolicy(
+      framePolicy: VisualFramePolicy(maxFramesPerSecond: 30),
+      statusPulseEnabled: true,
+    );
+
+    await tester.pumpWidget(
+      _tile(room: room, policy: policy, pulseEvent: event),
+    );
+
+    expect(find.byKey(const Key('status-pulse-layer-103')), findsOneWidget);
+  });
+}
+
+Widget _tile({
+  required RoomState room,
+  required SummaryVisualPolicy policy,
+  SummaryVisualPulseEvent? pulseEvent,
+}) {
+  return MaterialApp(
+    home: Scaffold(
+      body: Center(
+        child: SizedBox(
+          width: 96,
+          height: 98,
+          child: RoomStatusTile(
+            room: room,
+            visualPolicy: policy,
+            pulseEvent: pulseEvent,
+            onAdvance: () {},
+            onReset: () {},
+            onToggleVip: () {},
+            onSchedule: () {},
+            onOpenMedia: () {},
+          ),
+        ),
+      ),
+    ),
+  );
+}

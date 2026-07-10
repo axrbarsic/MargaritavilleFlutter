@@ -94,7 +94,7 @@ extension _SummaryScreenActions on _SummaryScreenState {
   }
 
   void _recordCurrentPulse(String roomNumber) {
-    if (!mounted || !_visualPolicy.statusPulseEnabled) return;
+    if (!mounted || !widget.visualPolicy.transientPulseEnabled) return;
     final state = ref.read(workSessionControllerProvider);
     if (!state.hasValue || state.requireValue.id != widget.session.id) return;
     final room = state.requireValue.room(roomNumber);

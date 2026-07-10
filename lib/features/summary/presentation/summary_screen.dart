@@ -20,11 +20,15 @@ final class SummaryScreen extends ConsumerStatefulWidget {
   const SummaryScreen({
     required this.session,
     this.enableSchedulePolling = false,
+    this.visualPolicy = SummaryVisualPolicy.balanced,
+    this.onOpenSettings,
     super.key,
   });
 
   final WorkSession session;
   final bool enableSchedulePolling;
+  final SummaryVisualPolicy visualPolicy;
+  final VoidCallback? onOpenSettings;
 
   @override
   ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
@@ -34,7 +38,6 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
     with WidgetsBindingObserver {
   RoomDisplayStatus? _activeFilter;
   Timer? _scheduleTimer;
-  final _visualPolicy = SummaryVisualPolicy.balanced;
   late final SummaryVisualPulseCoordinator _visualPulses;
 
   @override
@@ -85,10 +88,12 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
         .where((section) => section.rooms.isNotEmpty)
         .toList();
     final hasActiveVisuals =
-        _visualPulses.hasEvents ||
-        widget.session.activeRooms.any((room) => room.isVip);
+        (widget.visualPolicy.transientPulseEnabled &&
+            _visualPulses.hasEvents) ||
+        (widget.visualPolicy.vipJellyEnabled &&
+            widget.session.activeRooms.any((room) => room.isVip));
     return VisualRuntimeScope(
-      policy: _visualPolicy.framePolicy,
+      policy: widget.visualPolicy.framePolicy,
       enabled: hasActiveVisuals,
       child: Scaffold(
         body: SafeArea(
@@ -104,7 +109,9 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
                   onFilterChanged: (status) {
                     setState(() => _activeFilter = status);
                   },
-                  onOpenSettings: () => _showSettingsNotice(context),
+                  onOpenSettings:
+                      widget.onOpenSettings ??
+                      () => _showSettingsNotice(context),
                   onOpenSelection: _unlockWorkday,
                 ),
                 const SizedBox(height: SummaryLayoutTokens.headerContentGap),
@@ -130,7 +137,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
                         onToggleVip: _toggleVip,
                         onSchedule: _openSchedule,
                         onOpenMedia: _showMediaNotice,
-                        visualPolicy: _visualPolicy,
+                        visualPolicy: widget.visualPolicy,
                         pulseEventFor: _visualPulses.eventFor,
                       );
                     },

@@ -190,3 +190,44 @@ haptics. Физический Pixel сейчас заблокирован, по�
   полный status transition комнаты 109 `pending -> open`: доменный статус и
   header counters изменились, immediate/tail screenshots показали расширение,
   same-color flash и охлаждение без fatal exception/layout overflow.
+
+## 2026-07-10 — Checkpoint 5: persisted visual Settings и живой VIP-контур
+
+- Read-only аудит Swift build 37 зафиксировал точный active contract категории
+  `Разработчик -> Экспериментальное`: labels, subtitles, ranges, reset values,
+  defaults и влияние каждого параметра на `squareGrid4`.
+- Tests-first добавлены pure-Dart `AppearanceSettings`, repository contract и
+  typed `SharedPreferencesAsync` adapter. Шесть значений сохраняются отдельно;
+  JSON blob и framework imports в settings domain запрещены architecture guard.
+- Donor-defaults совпадают: live cells выкл, spring intensity 72%, VIP jelly
+  вкл/0.75x, VIP HDR выкл, status HDR pulse выкл. Исторические Swift keys не
+  читаются: Flutter beta остаётся отдельным sandbox с namespaced keys.
+- Настройки открываются настоящим экраном из кнопки Summary, применяются через
+  app-level visual policy adapter и сохраняются до публикации нового UI state.
+  Reset возвращает только visual effects и не затрагивает рабочую смену.
+- Live cells дают rubber envelope без ложного HDR; status HDR имеет приоритет и
+  добавляет same-color flash; VIP HDR отвечает за отдельный статичный SDR light
+  fallback. Ранее смешанный пульсирующий glow удалён как расхождение с donor.
+- VIP jelly теперь действительно двигает контур через общий-clock
+  `CustomClipper<Path>` с stable seed, а не только масштабирует прямоугольник.
+  Два последовательных Pixel-кадра комнаты 106 показали разные живые края.
+- Мёртвый donor slider `Скорость пружины` не перенесён: Swift build 37 читает
+  его в `squareGrid4`, но не использует. Flutter не выдаёт неработающий control
+  за parity-функцию.
+- На Pixel 8 Emulator настройки включены, изменён jelly speed до 1.35x и после
+  force-stop/relaunch полностью восстановлены. Сильно деградировавший
+  software-rendered AVD однажды дал system-starvation ANR (process start был
+  задержан примерно на 14 s, focus event — на 7.3 s); после clean host-GPU boot
+  тот же APK стабильно стартовал за 2.140 s и 1.936 s без ANR, fatal exception
+  или overflow, idle process — 0% CPU.
+- Debug host-GPU Emulator с одним активным волнистым VIP держал 16-21% guest
+  process CPU. Это только ранний сигнал бюджета: profile/thermal/FPS gate на
+  физическом Pixel и iPhone обязателен до повышения frame rate или массового
+  VIP-сценария.
+- После добавления typed preferences собран iOS Simulator target: beta bundle
+  `com.alex.margaritaville.flutter.beta`, `0.1.0 (2)`, universal x86_64/arm64;
+  `shared_preferences_foundation.framework` реально встроен. Физический iPhone
+  и Swift donor data не затрагивались.
+
+Открытые части Settings parity: остальные категории, общий reset confirmation,
+нативный iPhone EDR bridge и физический performance gate.
