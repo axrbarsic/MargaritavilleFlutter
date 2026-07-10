@@ -5,6 +5,8 @@ import '../../../work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../../../work_session/domain/models/work_assignment.dart';
 import '../summary_layout_tokens.dart';
+import '../summary_visual_policy.dart';
+import '../summary_visual_pulse.dart';
 import 'room_status_tile.dart';
 
 final class SummaryAssignmentSection extends StatelessWidget {
@@ -16,6 +18,8 @@ final class SummaryAssignmentSection extends StatelessWidget {
     required this.onSchedule,
     required this.onOpenMedia,
     this.rooms,
+    this.visualPolicy = SummaryVisualPolicy.balanced,
+    this.pulseEventFor,
     super.key,
   });
 
@@ -26,6 +30,8 @@ final class SummaryAssignmentSection extends StatelessWidget {
   final ValueChanged<RoomState> onSchedule;
   final ValueChanged<RoomState> onOpenMedia;
   final List<RoomState>? rooms;
+  final SummaryVisualPolicy visualPolicy;
+  final SummaryVisualPulseEvent? Function(String roomNumber)? pulseEventFor;
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +129,8 @@ final class SummaryAssignmentSection extends StatelessWidget {
                 onToggleVip: () => onToggleVip(room),
                 onSchedule: () => onSchedule(room),
                 onOpenMedia: () => onOpenMedia(room),
+                visualPolicy: visualPolicy,
+                pulseEvent: pulseEventFor?.call(room.roomNumber),
               );
             },
           ),

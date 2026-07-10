@@ -166,3 +166,27 @@ haptics. Физический Pixel сейчас заблокирован, по�
 - `Голос/медиа` пока явно сообщает о следующем platform-services блоке и не
   выдаётся за готовую media parity-функцию. VIP persistence готов, его
   jelly/HDR/SDR presentation относится к следующему visual-runtime checkpoint.
+
+## 2026-07-10 — Checkpoint 4: общий visual runtime, VIP jelly и status pulse
+
+- По `shared-app-foundation` общий clock/lifecycle выделен как
+  `shared-foundation`, Summary visual policy — как `shared-parameterized`, а
+  room workflow/status mapping и persistence оставлены `app-specific`.
+- Добавлен один `VisualRuntimeScope` с единственным `AnimationController` на
+  весь Summary. Ячейки подписываются на общий throttled clock и не создают
+  собственные ticker/controller/timer; это закреплено architecture guard.
+- Runtime работает только при активном VIP или transient pulse, имеет balanced
+  budget 30 FPS и гаснет в background, reduced-motion и выключенном
+  `TickerMode`. Тяжёлого `BackdropFilter` поверх анимации нет.
+- VIP-ячейка получила детерминированные build 37 scale/offset формулы со stable
+  room seed и same-color SDR glow. Это перенос визуального контракта, а не
+  SwiftUI-кода; полный волнистый shape mask и настоящий iPhone EDR остаются
+  отдельными измеряемыми ступенями.
+- Status pulse повторяет donor timeline: 420 ms rise, пик до 580 ms, 2 s
+  cooling tail, cleanup 2.73 s, brightness multiplier 2 и rubber amplitude
+  1.7. События generation-aware и не записываются в Drift, поэтому старый pulse
+  не проигрывается после rebuild/relaunch.
+- На Pixel 8 Emulator подтверждены два разных живых VIP-кадра комнаты 106 и
+  полный status transition комнаты 109 `pending -> open`: доменный статус и
+  header counters изменились, immediate/tail screenshots показали расширение,
+  same-color flash и охлаждение без fatal exception/layout overflow.

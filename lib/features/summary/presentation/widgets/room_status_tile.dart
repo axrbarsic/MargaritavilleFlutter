@@ -7,6 +7,9 @@ import '../../../../design/margaritaville_colors.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../summary_layout_tokens.dart';
 import '../summary_swipe_commit_policy.dart';
+import '../summary_visual_policy.dart';
+import '../summary_visual_pulse.dart';
+import 'room_visual_effect_surface.dart';
 
 final class RoomStatusTile extends StatefulWidget {
   const RoomStatusTile({
@@ -16,6 +19,8 @@ final class RoomStatusTile extends StatefulWidget {
     required this.onToggleVip,
     required this.onSchedule,
     required this.onOpenMedia,
+    this.visualPolicy = SummaryVisualPolicy.balanced,
+    this.pulseEvent,
     super.key,
   });
 
@@ -25,6 +30,8 @@ final class RoomStatusTile extends StatefulWidget {
   final VoidCallback onToggleVip;
   final VoidCallback onSchedule;
   final VoidCallback onOpenMedia;
+  final SummaryVisualPolicy visualPolicy;
+  final SummaryVisualPulseEvent? pulseEvent;
 
   @override
   State<RoomStatusTile> createState() => _RoomStatusTileState();
@@ -80,48 +87,55 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
           }
           _horizontalDrag = 0;
         },
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(
-              SummaryLayoutTokens.tileCornerRadius,
+        child: RoomVisualEffectSurface(
+          room: room,
+          baseColor: color,
+          policy: widget.visualPolicy,
+          pulseEvent: widget.pulseEvent,
+          child: DecoratedBox(
+            key: Key('summary-room-surface-${room.roomNumber}'),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(
+                SummaryLayoutTokens.tileCornerRadius,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: FittedBox(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        room.roomNumber,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          color: MargaritavilleColors.roomForeground,
+                          fontSize: 44,
+                          fontWeight: FontWeight.w900,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      room.roomNumber,
+                      _time(_timestamp),
                       maxLines: 1,
                       style: const TextStyle(
                         color: MargaritavilleColors.roomForeground,
-                        fontSize: 44,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                         fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    _time(_timestamp),
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: MargaritavilleColors.roomForeground,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

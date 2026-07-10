@@ -40,6 +40,20 @@ if rg -n "com\.alex\.margaritaville\.margaritaville_flutter" android; then
   failed=1
 fi
 
+if rg -n "AnimationController|TickerProvider|Timer\.periodic" \
+  lib/features/summary/presentation/widgets/room_status_tile.dart \
+  lib/features/summary/presentation/widgets/room_visual_effect_surface.dart; then
+  echo "ERROR: room cells must use the shared visual runtime, not per-cell clocks"
+  failed=1
+fi
+
+visual_clock_files=$(rg -l "AnimationController" \
+  lib/shared/visual_runtime --glob '*.dart' | wc -l | tr -d ' ')
+if [[ "$visual_clock_files" != "1" ]]; then
+  echo "ERROR: shared visual runtime must own exactly one AnimationController"
+  failed=1
+fi
+
 if (( failed != 0 )); then
   exit 1
 fi

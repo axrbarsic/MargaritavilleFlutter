@@ -41,9 +41,8 @@ void main() {
       ),
     );
 
-    final tile = find.byKey(const Key('summary-room-101'));
     final decorated = tester.widget<DecoratedBox>(
-      find.descendant(of: tile, matching: find.byType(DecoratedBox)).first,
+      find.byKey(const Key('summary-room-surface-101')),
     );
     final decoration = decorated.decoration as BoxDecoration;
     expect(decoration.color, const Color(0xFFFFD83D));

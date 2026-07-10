@@ -10,9 +10,20 @@ Android shell использует тот же изолированный beta a
 platform adapter не должен ослаблять iPhone-first EDR/media архитектуру; для
 Apple-only возможностей вводятся явные Android fallback policies.
 
-По классификации `shared-app-foundation` текущая вертикаль является
-`app-specific`: hotel profile, simple-cycle, смена, назначения уборщиц, скрытые
-cart/work-block IDs и локальная база принадлежат именно Margaritaville.
+По классификации `shared-app-foundation` hotel profile, simple-cycle, смена,
+назначения уборщиц, скрытые cart/work-block IDs и локальная база являются
+`app-specific` и принадлежат именно Margaritaville. Visual runtime разделён
+явно:
+
+- `shared/visual_runtime` — `shared-foundation`: один frame clock, жизненный
+  цикл, frame budget и пауза в background/reduced-motion/TickerMode;
+- `SummaryVisualPolicy` и адаптация общего clock к ячейкам —
+  `shared-parameterized`: Flutter-механизм общий, но скорость, амплитуда,
+  палитра и LOD задаются профилем приложения;
+- соответствие room status, момент доменной мутации, VIP/schedule settings и
+  persistence — `app-specific`.
+
+Ни один из этих слоёв не импортирует код или storage соседнего приложения.
 
 ## Направление зависимостей
 
@@ -51,8 +62,18 @@ presentation (Flutter + Riverpod)
   label.
 - Рабочие мутации требуют long press; быстрые фильтры/навигация смогут оставаться
   обычным tap.
-- Эффекты не получают отдельный ticker на ячейку. Будущий visual runtime будет
-  единой управляемой точкой.
+- Эффекты не получают отдельный ticker на ячейку. Один
+  `VisualRuntimeScope` владеет единственным `AnimationController`, публикует
+  общий clock с frame budget 30 FPS и полностью останавливается, когда в
+  активной смене нет VIP/one-shot pulse, приложение ушло в background,
+  отключены анимации или предок выключил `TickerMode`.
+- VIP jelly и status pulse — чистая функция общего времени и stable room seed;
+  rebuild/recycling не перезапускают завершённое событие. One-shot события
+  живут отдельно от persisted room state и удаляются по generation-aware
+  cleanup после 2.73 s.
+- Android и обычный iOS Simulator используют честный same-color SDR glow.
+  Настоящий iPhone HDR/EDR остаётся узким platform-adapter checkpoint и не
+  подменяется завышенной яркостью всего Flutter-дерева.
 - VIP и schedule меняются отдельными versioned commands и сохраняют собственные
   field timestamps; они не кодируются внутри room status.
 - Проверка due schedule выполняется одним 15-second coordinator на Summary и
