@@ -100,6 +100,41 @@ void main() {
       expect(bridge.previews, [MargaritavilleSoundAsset.uiMenuOpen.id]);
     },
   );
+
+  test('routes full header hold phases and navigation sounds', () async {
+    final bridge = _FakeInteractionFeedbackBridge();
+    final controller = MargaritavilleFeedbackController(
+      runtime: InteractionFeedbackRuntime(bridge: bridge),
+    );
+    addTearDown(controller.dispose);
+    await controller.initialize();
+
+    controller.holdStart();
+    controller.holdWarning();
+    controller.holdCommit();
+    controller.settingsOpened();
+    controller.selectionOpened();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(bridge.requests.map((request) => request.cue), const [
+      InteractionFeedbackCue.holdStart,
+      InteractionFeedbackCue.holdWarning,
+      InteractionFeedbackCue.holdCommit,
+      InteractionFeedbackCue.none,
+      InteractionFeedbackCue.none,
+    ]);
+    expect(bridge.requests.map((request) => request.soundPriority), const [
+      20,
+      50,
+      60,
+      70,
+      70,
+    ]);
+    expect(
+      bridge.requests.map((request) => request.soundId),
+      everyElement(MargaritavilleSoundAsset.uiRolloverTick.id),
+    );
+  });
 }
 
 final class _FakeInteractionFeedbackBridge

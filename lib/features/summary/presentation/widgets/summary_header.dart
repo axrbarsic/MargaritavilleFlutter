@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
+import '../../../interaction/application/margaritaville_feedback_controller.dart';
+import '../../../interaction/presentation/hold_action_target.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../../../work_session/domain/models/work_session.dart';
+import '../summary_header_interaction_policy.dart';
 import '../summary_layout_tokens.dart';
 import 'summary_selection_puzzle_handle.dart';
 
-final class SummaryHeader extends StatelessWidget {
+final class SummaryHeader extends StatefulWidget {
   const SummaryHeader({
     required this.session,
     required this.activeFilter,
@@ -23,8 +27,16 @@ final class SummaryHeader extends StatelessWidget {
   final VoidCallback onOpenSelection;
 
   @override
+  State<SummaryHeader> createState() => _SummaryHeaderState();
+}
+
+final class _SummaryHeaderState extends State<SummaryHeader> {
+  var _selectionPuzzleProgress = 0.0;
+
+  @override
   Widget build(BuildContext context) {
-    final rooms = session.activeRooms.toList();
+    final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
+    final rooms = widget.session.activeRooms.toList();
     final completed = rooms
         .where((room) => room.phase == RoomPhase.ready)
         .length;
@@ -47,13 +59,18 @@ final class SummaryHeader extends StatelessWidget {
             padding: const EdgeInsets.only(left: 18, right: 10),
             child: Row(
               children: [
-                Semantics(
-                  button: true,
-                  label: 'Открыть настройки',
-                  child: InkResponse(
+                Opacity(
+                  key: const Key('summary-settings-opacity'),
+                  opacity: SummaryHeaderInteractionPolicy.settingsOpacity(
+                    _selectionPuzzleProgress,
+                  ),
+                  child: HoldActionTarget(
                     key: const Key('summary-open-settings'),
-                    onTap: onOpenSettings,
-                    radius: 24,
+                    semanticLabel: 'Открыть настройки',
+                    onHoldStart: feedback?.holdStart,
+                    onHoldWarning: feedback?.holdWarning,
+                    onHoldCommit: feedback?.holdCommit,
+                    onActivate: () => _openSettings(feedback),
                     child: const SizedBox.square(
                       dimension: 48,
                       child: Icon(
@@ -94,8 +111,9 @@ final class SummaryHeader extends StatelessWidget {
                           _StatusChip(
                             status: chip.status,
                             count: chip.count,
-                            activeFilter: activeFilter,
-                            onChanged: onFilterChanged,
+                            activeFilter: widget.activeFilter,
+                            onChanged: widget.onFilterChanged,
+                            feedback: feedback,
                           ),
                         ],
                       ],
@@ -107,7 +125,13 @@ final class SummaryHeader extends StatelessWidget {
             ),
           ),
           Positioned.fill(
-            child: SummarySelectionPuzzleHandle(onComplete: onOpenSelection),
+            child: SummarySelectionPuzzleHandle(
+              onProgressChanged: (progress) {
+                if (progress == _selectionPuzzleProgress) return;
+                setState(() => _selectionPuzzleProgress = progress);
+              },
+              onComplete: () => _openSelection(feedback),
+            ),
           ),
         ],
       ),
@@ -116,6 +140,17 @@ final class SummaryHeader extends StatelessWidget {
 
   int _count(List<RoomState> rooms, RoomDisplayStatus status) {
     return rooms.where((room) => room.displayStatus == status).length;
+  }
+
+  void _openSettings(MargaritavilleFeedbackController? feedback) {
+    feedback?.settingsOpened();
+    widget.onOpenSettings();
+  }
+
+  void _openSelection(MargaritavilleFeedbackController? feedback) {
+    feedback?.confirm();
+    feedback?.selectionOpened();
+    widget.onOpenSelection();
   }
 }
 
@@ -162,12 +197,14 @@ final class _StatusChip extends StatelessWidget {
     required this.count,
     required this.activeFilter,
     required this.onChanged,
+    required this.feedback,
   });
 
   final RoomDisplayStatus status;
   final int count;
   final RoomDisplayStatus? activeFilter;
   final ValueChanged<RoomDisplayStatus?> onChanged;
+  final MargaritavilleFeedbackController? feedback;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +217,10 @@ final class _StatusChip extends StatelessWidget {
       child: GestureDetector(
         key: Key('summary-filter-${status.name}'),
         behavior: HitTestBehavior.opaque,
-        onTap: () => onChanged(isActive ? null : status),
+        onTap: () {
+          feedback?.tap();
+          onChanged(isActive ? null : status);
+        },
         child: Container(
           constraints: const BoxConstraints(minWidth: 38, minHeight: 34),
           alignment: Alignment.center,

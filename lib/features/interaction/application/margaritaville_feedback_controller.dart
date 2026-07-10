@@ -30,6 +30,21 @@ final class MargaritavilleFeedbackController {
   void deselect() =>
       _emit(MargaritavilleSoundEvent.deselect, InteractionFeedbackCue.deselect);
 
+  void holdStart() => _emit(
+    MargaritavilleSoundEvent.holdStart,
+    InteractionFeedbackCue.holdStart,
+  );
+
+  void holdWarning() => _emit(
+    MargaritavilleSoundEvent.holdWarning,
+    InteractionFeedbackCue.holdWarning,
+  );
+
+  void holdCommit() => _emit(
+    MargaritavilleSoundEvent.holdCommit,
+    InteractionFeedbackCue.holdCommit,
+  );
+
   void holdStartHapticOnly() =>
       _runtime.emit(cue: InteractionFeedbackCue.holdStart);
 
@@ -41,6 +56,10 @@ final class MargaritavilleFeedbackController {
 
   void actionMenuOpened() =>
       _playSound(MargaritavilleSoundEvent.actionMenuOpen);
+
+  void settingsOpened() => _playSound(MargaritavilleSoundEvent.settingsOpen);
+
+  void selectionOpened() => _playSound(MargaritavilleSoundEvent.selectionOpen);
 
   void updateSoundAssignments(MargaritavilleSoundAssignments assignments) {
     _soundAssignments = assignments;

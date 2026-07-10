@@ -405,3 +405,42 @@ haptics. Физический Pixel сейчас заблокирован, по�
   embedded frameworks имеют `platform IOS`, deep codesign валиден. Build 12
   установлен на iPhone 17 Pro Max; автозапуск отклонён только из-за
   заблокированного экрана.
+
+## 2026-07-10 — Checkpoint 10: Summary header gesture state machines
+
+- Активный Swift build 37, commit `967bb2c`, повторно прочитан как
+  единственный источник timing/gesture-контракта. Цифры внесены сначала в
+  красные tests, а не подобраны по ощущению.
+- Settings теперь открываются только hold-жестом: полные
+  `holdStart` в `140 ms`, `holdWarning` в `330 ms`, `holdCommit` и activation
+  в `460 ms`; движение дальше `8 pt` отменяет все оставшиеся фазы.
+  Короткий tap ничего не открывает. После commit идёт sound-only
+  `settingsOpen` перед navigation callback.
+- Selection puzzle получил exact pointer-translation без Flutter drag slop:
+  start feedback после `2 pt`, warning при пересечении `82%`, commit при
+  `100%`, подтверждение только на release и reset ровно через `160 ms`.
+  Как и в текущем donor-коде, успешный release даёт два generic `confirm`,
+  затем sound-only `selectionOpen` и только потом unlock callback.
+- Внешний puzzle progress гасит Settings icon по exact-формуле
+  `1 - clamp(progress * 1.65, 0, 1)`. Track fade, socket `34 pt`, piece
+  `33 pt`, stroke alpha и тени сверены с активным SwiftUI-кодом.
+- Status filters перед изменением фильтра вызывают ровно один
+  `feedback.tap()`. Feedback controller получил тонкие full-hold и navigation
+  methods; shared Pigeon/runtime не изменялся.
+- Tests фиксируют exact timing boundaries, cue order/priorities, short tap,
+  movement cancellation, puzzle thresholds, double-confirm, icon opacity и delayed reset.
+  Полный software gate зелёный: format, analyze, `79 tests`, file-size и
+  architecture guards.
+- Android profile build `0.1.0 (13)` установлен на Pixel 8 Emulator. Живой
+  smoke подтвердил: short tap игнорируется; `520 ms` hold открывает
+  Settings; смещение больше `8 pt` отменяет; полный puzzle открывает
+  Work Setup; filter применяется и отменяется; вертикальный scroll через
+  ячейку не изменил counts/status. Тестовая смена после smoke снова
+  заблокирована; fatal exception/overflow в logcat нет.
+- Swift donor build 37 повторно запущен на разрешённом iPhone 17 Pro Max
+  Simulator; bundle version `37` и Summary header подтверждены снимком.
+- Physical iOS profile build `0.1.0 (13)` прошёл deep codesign и bundle guard
+  семи `platform IOS` frameworks, затем установлен на iPhone 17 Pro Max.
+  Экран iPhone остаётся заблокирован, поэтому реальные haptics/audio,
+  120 Hz и runtime smoke ещё не заявлены. Физический Pixel 8 также не виден в
+  ADB/mDNS; эмулятор не заменяет его haptics/audio/90 Hz gate.

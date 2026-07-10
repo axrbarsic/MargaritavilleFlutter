@@ -55,7 +55,7 @@ void main() {
     expect(find.byKey(const Key('summary-room-101')), findsOneWidget);
     expect(find.byKey(const Key('summary-total-count')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('summary-open-settings')));
+    await tester.longPress(find.byKey(const Key('summary-open-settings')));
     await tester.pumpAndSettle();
     expect(find.text('Экспериментальное'), findsOneWidget);
     final statusPulse = find.byKey(const Key('setting-status-hdr-pulse'));
