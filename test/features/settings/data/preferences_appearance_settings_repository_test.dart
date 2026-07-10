@@ -18,13 +18,14 @@ void main() {
       vipJellySpeed: 1.25,
       vipHdrLightEnabled: true,
       statusHdrPulseEnabled: true,
+      vividStatusPaletteEnabled: false,
       backgroundMode: AppBackgroundMode.off,
       matrixSpeed: 1.7,
     );
     await repository.save(expected);
 
     expect(await repository.load(), expected);
-    expect(store.values.length, 8);
+    expect(store.values.length, 9);
     expect(
       store.values.values,
       everyElement(isNot(isA<Map<Object?, Object?>>())),

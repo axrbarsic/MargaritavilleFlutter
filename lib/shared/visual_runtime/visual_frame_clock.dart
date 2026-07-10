@@ -2,17 +2,9 @@ import 'package:flutter/foundation.dart';
 
 @immutable
 final class VisualFramePolicy {
-  const VisualFramePolicy({
-    required this.maxFramesPerSecond,
-    this.enabled = true,
-  }) : assert(maxFramesPerSecond > 0);
+  const VisualFramePolicy({this.enabled = true});
 
-  final int maxFramesPerSecond;
   final bool enabled;
-
-  Duration get minimumFrameInterval {
-    return Duration(microseconds: 1000000 ~/ maxFramesPerSecond);
-  }
 }
 
 final class VisualFrameClock extends ChangeNotifier {
@@ -35,10 +27,7 @@ final class VisualFrameClock extends ChangeNotifier {
 
   bool publish(DateTime nextFrameAt) {
     if (!_policy.enabled) return false;
-    final elapsed = nextFrameAt.difference(_lastPublishedAt);
-    if (!elapsed.isNegative && elapsed < _policy.minimumFrameInterval) {
-      return false;
-    }
+    if (!nextFrameAt.isAfter(_lastPublishedAt)) return false;
     _now = nextFrameAt;
     _lastPublishedAt = nextFrameAt;
     notifyListeners();

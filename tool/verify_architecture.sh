@@ -79,6 +79,56 @@ if [[ "$visual_clock_files" != "1" ]]; then
   failed=1
 fi
 
+if rg -n "maxFramesPerSecond|minimumFrameInterval" \
+  lib/app lib/shared/visual_runtime --glob '*.dart'; then
+  echo "ERROR: shared visual runtime must follow OS vsync without an app FPS cap"
+  failed=1
+fi
+
+if rg -n "MethodChannel|BasicMessageChannel" \
+  lib/shared/edr ios/Runner \
+  --glob '*.dart' --glob 'Edr*.swift' \
+  --glob '!*.g.dart' --glob '!*.g.swift'; then
+  echo "ERROR: EDR bridge must remain generated and type-safe through Pigeon"
+  failed=1
+fi
+
+if rg -n "CADisplayLink|Timer\." ios/Runner/Edr*.swift; then
+  echo "ERROR: native EDR must use Core Animation, not its own frame ticker"
+  failed=1
+fi
+
+if rg -n "scaleForSectionWidth|geometryScale" \
+  lib/features/summary test/features/summary --glob '*.dart'; then
+  echo "ERROR: donor Summary geometry must stay fixed; only column width is flexible"
+  failed=1
+fi
+
+if rg -n "MethodChannel|BasicMessageChannel" \
+  packages/interaction_foundation/lib \
+  packages/interaction_foundation/ios/Classes \
+  packages/interaction_foundation/android/src/main \
+  --glob '*.dart' --glob '*.swift' --glob '*.kt' \
+  --glob '!*.g.dart' --glob '!*.g.swift' --glob '!*.g.kt'; then
+  echo "ERROR: interaction feedback bridge must remain generated through Pigeon"
+  failed=1
+fi
+
+if rg -n "Margaritaville|RoomDisplayStatus|com\.alex\.margaritaville" \
+  packages/interaction_foundation/lib \
+  packages/interaction_foundation/ios/Classes \
+  packages/interaction_foundation/android/src/main \
+  --glob '*.dart' --glob '*.swift' --glob '*.kt'; then
+  echo "ERROR: shared interaction foundation contains app-specific policy or identity"
+  failed=1
+fi
+
+if ! rg -q "RGBA16Float" ios/Runner/EdrFillView.swift || \
+   ! rg -q "preferredDynamicRange = \.high" ios/Runner/EdrFillView.swift; then
+  echo "ERROR: native iOS EDR surface lost its 16-bit/high-range contract"
+  failed=1
+fi
+
 if (( failed != 0 )); then
   exit 1
 fi

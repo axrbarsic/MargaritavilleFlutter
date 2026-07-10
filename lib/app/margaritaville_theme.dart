@@ -1,9 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../design/margaritaville_colors.dart';
 
 abstract final class MargaritavilleTheme {
   static ThemeData get dark {
+    final roundedFamily = switch (defaultTargetPlatform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => '.AppleSystemUIFontRounded',
+      _ => 'MargaritavilleRounded',
+    };
     final scheme = ColorScheme.fromSeed(
       seedColor: MargaritavilleColors.accent,
       brightness: Brightness.dark,
@@ -13,7 +18,7 @@ abstract final class MargaritavilleTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: Colors.transparent,
-      fontFamily: 'MargaritavilleRounded',
+      fontFamily: roundedFamily,
       fontFamilyFallback: const ['Roboto', 'sans-serif'],
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,

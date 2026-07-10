@@ -158,6 +158,16 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
             onChanged: (value) =>
                 unawaited(controller.setStatusHdrPulseEnabled(value)),
           ),
+          AppearanceSettingToggleRow(
+            key: const Key('setting-vivid-status-palette'),
+            title: 'Сочная палитра',
+            subtitle:
+                'Фиксирует яркие цвета ячеек как на текущем скриншоте Swift-донора.',
+            icon: Icons.palette_rounded,
+            value: settings.vividStatusPaletteEnabled,
+            onChanged: (value) =>
+                unawaited(controller.setVividStatusPaletteEnabled(value)),
+          ),
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerLeft,

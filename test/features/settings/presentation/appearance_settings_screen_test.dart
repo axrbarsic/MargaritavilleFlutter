@@ -22,6 +22,7 @@ void main() {
     expect(find.text('Скорость желе'), findsOneWidget);
     expect(find.text('VIP HDR-свет'), findsOneWidget);
     expect(find.text('HDR-всплеск статуса'), findsOneWidget);
+    expect(find.text('Сочная палитра'), findsOneWidget);
     expect(find.text('Скорость пружины'), findsNothing);
     expect(find.text('Фон приложения'), findsOneWidget);
     expect(find.text('Matrix'), findsOneWidget);
@@ -34,6 +35,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.value.statusHdrPulseEnabled, isTrue);
+
+    final vividPalette = find.byKey(const Key('setting-vivid-status-palette'));
+    await tester.ensureVisible(vividPalette);
+    await tester.pumpAndSettle();
+    await tester.tap(vividPalette);
+    await tester.pumpAndSettle();
+
+    expect(repository.value.vividStatusPaletteEnabled, isFalse);
   });
 
   testWidgets('settings stay intact at physical Pixel width and font scale', (

@@ -1,11 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:margaritaville_flutter/design/margaritaville_colors.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_pulse.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_light_painter.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_tile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
 
 void main() {
+  testWidgets('effect stack paints the full grid slot, not child intrinsics', (
+    tester,
+  ) async {
+    final selectedAt = DateTime(2027, 2, 10, 12);
+    final room = RoomState.pending(roomNumber: '1', selectedAt: selectedAt);
+
+    await tester.pumpWidget(
+      _tile(room: room, policy: const SummaryVisualPolicy()),
+    );
+
+    expect(
+      tester.getSize(find.byKey(const Key('summary-room-surface-1'))),
+      const Size(96, 98),
+    );
+  });
+
   testWidgets('VIP HDR setting owns the static SDR light fallback', (
     tester,
   ) async {
@@ -23,6 +41,12 @@ void main() {
 
     expect(find.byKey(const Key('vip-light-layer-101')), findsOneWidget);
     expect(find.byKey(const Key('status-pulse-layer-101')), findsNothing);
+    final light = tester.widget<CustomPaint>(
+      find.byKey(const Key('vip-light-layer-101')),
+    );
+    final painter = light.painter! as RoomStatusLightPainter;
+    expect(painter.color, MargaritavilleColors.vividStatus(room.displayStatus));
+    expect(painter.fullFill, isFalse);
   });
 
   testWidgets('live-cell physics bends without pretending to be HDR', (
@@ -68,6 +92,12 @@ void main() {
     );
 
     expect(find.byKey(const Key('status-pulse-layer-103')), findsOneWidget);
+    final light = tester.widget<CustomPaint>(
+      find.byKey(const Key('status-pulse-layer-103')),
+    );
+    final painter = light.painter! as RoomStatusLightPainter;
+    expect(painter.color, MargaritavilleColors.vividStatus(event.status));
+    expect(painter.fullFill, isTrue);
   });
 }
 

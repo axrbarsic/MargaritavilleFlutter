@@ -2,12 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../../design/margaritaville_colors.dart';
 import '../../../../shared/visual_runtime/visual_runtime_activity.dart';
 import '../../../../shared/visual_runtime/visual_runtime_scope.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../summary_layout_tokens.dart';
 import '../summary_visual_policy.dart';
 import '../summary_visual_pulse.dart';
+import 'room_status_light_painter.dart';
 import 'vip_jelly_shape_clipper.dart';
 
 final class RoomVisualEffectSurface extends StatelessWidget {
@@ -17,6 +19,7 @@ final class RoomVisualEffectSurface extends StatelessWidget {
     required this.policy,
     required this.child,
     this.pulseEvent,
+    this.nativeEdrActive = false,
     super.key,
   });
 
@@ -24,6 +27,7 @@ final class RoomVisualEffectSurface extends StatelessWidget {
   final Color baseColor;
   final SummaryVisualPolicy policy;
   final SummaryVisualPulseEvent? pulseEvent;
+  final bool nativeEdrActive;
   final Widget child;
 
   @override
@@ -58,58 +62,51 @@ final class RoomVisualEffectSurface extends StatelessWidget {
         pulseHeat * SummaryStatusPulseTiming.rubberAmplitudeMultiplier;
     final pulseScale = 1 + 0.10 * policy.springIntensity * pulseRubber;
     final pulseOffsetY = -7.5 * policy.springIntensity * pulseRubber;
-    final brightColor = Color.lerp(baseColor, Colors.white, 0.48)!;
-    final vipGlow = vipLightActive && policy.sdrGlowEnabled ? 0.34 : 0.0;
-    final pulseGlow = policy.sdrGlowEnabled && policy.statusPulseEnabled
+    final pulseColor = pulseEvent == null
+        ? baseColor
+        : MargaritavilleColors.vividStatus(pulseEvent!.status);
+    final vipGlow = !nativeEdrActive && vipLightActive && policy.sdrGlowEnabled
+        ? 0.34
+        : 0.0;
+    final pulseGlow =
+        !nativeEdrActive && policy.sdrGlowEnabled && policy.statusPulseEnabled
         ? pulseHeat * 0.58
         : 0.0;
     final glow = math.max(vipGlow, pulseGlow).clamp(0.0, 0.72).toDouble();
+    final glowColor = pulseGlow > vipGlow ? pulseColor : baseColor;
 
     final effectContent = Stack(
+      fit: StackFit.expand,
       children: [
         child,
-        if (vipLightActive && policy.sdrGlowEnabled)
+        if (!nativeEdrActive && vipLightActive && policy.sdrGlowEnabled)
           Positioned.fill(
             child: IgnorePointer(
-              child: DecoratedBox(
+              child: CustomPaint(
                 key: Key('vip-light-layer-${room.roomNumber}'),
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(
-                      -0.40 + 0.16 * math.sin(seed * math.pi * 2),
-                      -0.56,
-                    ),
-                    radius: 0.90,
-                    colors: [
-                      brightColor.withValues(alpha: 0.34),
-                      brightColor.withValues(alpha: 0.10),
-                      Colors.transparent,
-                    ],
-                    stops: const [0, 0.46, 1],
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    SummaryLayoutTokens.tileCornerRadius,
-                  ),
+                painter: RoomStatusLightPainter(
+                  color: baseColor,
+                  intensity: 1,
+                  seed: seed,
+                  cornerRadius: SummaryLayoutTokens.tileCornerRadius,
                 ),
+                child: const SizedBox.expand(),
               ),
             ),
           ),
-        if (pulseHeat > 0 && policy.statusPulseEnabled)
+        if (!nativeEdrActive && pulseHeat > 0 && policy.statusPulseEnabled)
           Positioned.fill(
             child: IgnorePointer(
-              child: DecoratedBox(
+              child: CustomPaint(
                 key: Key('status-pulse-layer-${room.roomNumber}'),
-                decoration: BoxDecoration(
-                  color: brightColor.withValues(
-                    alpha: (pulseHeat * 0.50).clamp(0, 0.50).toDouble(),
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: pulseHeat * 0.45),
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    SummaryLayoutTokens.tileCornerRadius,
-                  ),
+                painter: RoomStatusLightPainter(
+                  color: pulseColor,
+                  intensity: pulseHeat,
+                  seed: seed,
+                  cornerRadius: SummaryLayoutTokens.tileCornerRadius,
+                  fullFill: true,
                 ),
+                child: const SizedBox.expand(),
               ),
             ),
           ),
@@ -148,7 +145,7 @@ final class RoomVisualEffectSurface extends StatelessWidget {
                   ? null
                   : [
                       BoxShadow(
-                        color: brightColor.withValues(alpha: glow),
+                        color: glowColor.withValues(alpha: glow),
                         blurRadius: 8 + 12 * glow,
                         spreadRadius: 0.5 + 1.5 * glow,
                       ),

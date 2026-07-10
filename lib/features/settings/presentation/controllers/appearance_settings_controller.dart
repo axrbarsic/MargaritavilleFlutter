@@ -53,6 +53,12 @@ final class AppearanceSettingsController
     return _update((value) => value.copyWith(statusHdrPulseEnabled: enabled));
   }
 
+  Future<void> setVividStatusPaletteEnabled(bool enabled) {
+    return _update(
+      (value) => value.copyWith(vividStatusPaletteEnabled: enabled),
+    );
+  }
+
   Future<void> resetVisualEffects() {
     return _update((_) => AppearanceSettings.defaults);
   }

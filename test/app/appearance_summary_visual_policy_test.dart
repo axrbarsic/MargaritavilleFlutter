@@ -11,6 +11,7 @@ void main() {
       vipJellySpeed: 1.25,
       vipHdrLightEnabled: true,
       statusHdrPulseEnabled: true,
+      vividStatusPaletteEnabled: false,
     );
 
     final policy = AppearanceSummaryVisualPolicy.fromSettings(settings);
@@ -21,6 +22,7 @@ void main() {
     expect(policy.vipJellySpeed, 1.25);
     expect(policy.vipHdrLightEnabled, isTrue);
     expect(policy.statusPulseEnabled, isTrue);
+    expect(policy.vividStatusPaletteEnabled, isFalse);
     expect(policy.transientPulseEnabled, isTrue);
   });
 }

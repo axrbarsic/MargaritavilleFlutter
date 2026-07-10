@@ -8,6 +8,7 @@ final class AppearanceSettings {
     required this.vipJellySpeed,
     required this.vipHdrLightEnabled,
     required this.statusHdrPulseEnabled,
+    required this.vividStatusPaletteEnabled,
     this.backgroundMode = AppBackgroundMode.matrixRain,
     this.matrixSpeed = 1,
   });
@@ -19,6 +20,7 @@ final class AppearanceSettings {
     vipJellySpeed: 0.75,
     vipHdrLightEnabled: false,
     statusHdrPulseEnabled: false,
+    vividStatusPaletteEnabled: true,
     backgroundMode: AppBackgroundMode.matrixRain,
     matrixSpeed: 1,
   );
@@ -29,6 +31,7 @@ final class AppearanceSettings {
   final double vipJellySpeed;
   final bool vipHdrLightEnabled;
   final bool statusHdrPulseEnabled;
+  final bool vividStatusPaletteEnabled;
   final AppBackgroundMode backgroundMode;
   final double matrixSpeed;
 
@@ -39,6 +42,7 @@ final class AppearanceSettings {
     double? vipJellySpeed,
     bool? vipHdrLightEnabled,
     bool? statusHdrPulseEnabled,
+    bool? vividStatusPaletteEnabled,
     AppBackgroundMode? backgroundMode,
     double? matrixSpeed,
   }) {
@@ -50,6 +54,8 @@ final class AppearanceSettings {
       vipHdrLightEnabled: vipHdrLightEnabled ?? this.vipHdrLightEnabled,
       statusHdrPulseEnabled:
           statusHdrPulseEnabled ?? this.statusHdrPulseEnabled,
+      vividStatusPaletteEnabled:
+          vividStatusPaletteEnabled ?? this.vividStatusPaletteEnabled,
       backgroundMode: backgroundMode ?? this.backgroundMode,
       matrixSpeed: matrixSpeed ?? this.matrixSpeed,
     );
@@ -72,6 +78,7 @@ final class AppearanceSettings {
         other.vipJellySpeed == vipJellySpeed &&
         other.vipHdrLightEnabled == vipHdrLightEnabled &&
         other.statusHdrPulseEnabled == statusHdrPulseEnabled &&
+        other.vividStatusPaletteEnabled == vividStatusPaletteEnabled &&
         other.backgroundMode == backgroundMode &&
         other.matrixSpeed == matrixSpeed;
   }
@@ -84,6 +91,7 @@ final class AppearanceSettings {
     vipJellySpeed,
     vipHdrLightEnabled,
     statusHdrPulseEnabled,
+    vividStatusPaletteEnabled,
     backgroundMode,
     matrixSpeed,
   );

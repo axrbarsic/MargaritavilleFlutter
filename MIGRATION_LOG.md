@@ -269,3 +269,77 @@ haptics. Физический Pixel сейчас заблокирован, по�
   300-line size guards. Дополнительно собран unsigned physical iOS profile
   artifact `0.1.0 (2)`: arm64 и beta bundle
   `com.alex.margaritaville.flutter.beta`.
+
+## 2026-07-10 — Решение Alex: максимум аппаратной частоты кадров
+
+- Для Flutter и Swift закреплён общий жёсткий инвариант: никаких app-side
+  ограничений 30/60 FPS. Все анимации и эффекты должны динамически работать на
+  максимальной частоте, которую ОС реально предоставляет устройству —
+  60/90/120 Гц и будущих значениях.
+- Допустимо только системное снижение cadence из-за Low Power Mode, thermal
+  state, background/inactive lifecycle или планировщика ОС. Adaptive LOD должен
+  уменьшать стоимость кадра, а не искусственно ограничивать общий vsync clock.
+- Единственный process-wide visual runtime/frame clock остаётся обязательным;
+  per-cell/per-effect ticker, controller, periodic timer и fixed-frame throttle
+  запрещены. Указанный выше 30 FPS budget Checkpoint 4/6 теперь считается
+  историческим состоянием и подлежит устранению.
+- Performance/parity-гейт проводится на физических iPhone и Pixel; simulator и
+  emulator не принимаются как доказательство фактических 90/120 FPS.
+
+## 2026-07-10 — Checkpoint 7: точная Summary-геометрия, native EDR jelly и feedback foundation
+
+- Alex подтвердил на физическом iPhone 17 Pro Max, что нативный EDR/HDR-всплеск
+  Flutter по реальной яркости полностью совпал со Swift build 37. Это
+  подтверждение относится только к iOS; Android HDR-паритет не заявлен.
+- Источник расхождения шрифтов найден измерением, а не подбором размера. Donor
+  базово использует `44 pt` для номера и `16 pt` для времени; эти значения в
+  Flutter сохранены. Удалено ошибочное глобальное масштабирование высоты,
+  padding, gap и radius на ширинах меньше 424 pt: теперь фиксированы donor
+  `98 / 4 / 10 / 6 / 8 / 14 / 16`, меняется только ширина четырёх колонок.
+- Имя уборщицы получило точный `minimumScaleFactor 0.62`, compressible layout и
+  центрированный `1.5 pt` stroke без перекрытия последней буквы. Переполнение
+  после minimum scale теперь клипуется, а не рисуется поверх соседнего UI.
+- Screenshot-измерение iOS build 9 против donor показало одинаковые
+  нормализованные ink-bounds: номер `0.315` против `0.308` высоты ячейки,
+  timestamp `0.1208` против `0.1203`. Базовые `44/16` запрещено менять без
+  нового измерительного доказательства.
+- Исчезновение VIP-кляксы при native EDR устранено правильной двухслойной
+  композицией: внешний native tile владеет одноразовым status rubber pulse,
+  внутренний контейнер — EDR base/vip/pulse, build-37 jelly mask и transform.
+  Flutter-текст и native fill используют одну формулу и Unix wall clock.
+- Нативная jelly-маска работает через Core Animation animatable property и
+  compositor-driven keyframes, без `CADisplayLink`, Timer и кадровых Pigeon
+  сообщений. XCTest закрепляет детерминированный room-101 vector; два
+  simulator-кадра дали `18 617` изменившихся silhouette pixels при сохранённом
+  EDR-слое.
+- По `shared-app-foundation` создан локальный reusable Flutter plugin
+  `packages/interaction_foundation`: типизированный Pigeon API, независимые
+  Swift/Kotlin adapters, audio context и best-effort degradation без влияния на
+  domain mutation. App-specific room/status routing остаётся в Margaritaville.
+- Перенесены 13 CC0/public-domain donor sounds вместе с лицензиями. Первый
+  feedback slice повторяет три donor bucket: общий UI — rollover tick, обычная
+  ячейка/action menu — confirm glass, зелёная ячейка — front desk bell.
+  Нативный coalescer использует окно 45 ms, priority 20...80 и last-wins при
+  равном приоритете.
+- iOS adapter повторяет UIKit V2 cue/intensity, режим
+  `AVAudioSession .ambient + mixWithOthers`, four-player pools,
+  stop-before-play и custom volume `0.30`.
+  Android adapter использует `SoundPool` sonification/maxStreams 1 и
+  API-aware system haptics с fallback; его физическая калибровка остаётся
+  обязательной на Pixel 8.
+- iOS `0.1.0 (9)` собран, установлен и запущен на физическом iPhone. Android
+  profile APK build 9 собран и установлен на Pixel 8 Emulator; plugin стартует
+  без fatal exception, sound assets присутствуют в обоих bundles. Физический
+  Pixel сейчас отсутствует в `adb devices`/mDNS, поэтому установка и perceptual
+  проверка Android отложены до его подключения.
+- Обнаружен и устранён device-install дефект Flutter 3.41.9 native assets:
+  `objective_c.framework` после `embed_and_thin` оставался с ad-hoc подписью,
+  хотя Runner и App.framework были подписаны Apple Development. Отдельная
+  Xcode-фаза теперь после Thin Binary подписывает только framework без Team ID
+  через `EXPANDED_CODE_SIGN_IDENTITY`; повторная физическая установка build 9
+  успешно прошла проверку целостности и приложение запустилось.
+- Полный gate зелёный после модульного разбиения oversized room tile: format,
+  analyze, 66 tests, 300-line size guard, architecture guard, native EDR
+  XCTest, iOS device build и Android profile build. Физическое подтверждение
+  новых VIP jelly, звука и haptics build 9 остаётся открытым пользовательским
+  гейтом; подтверждённым пока является EDR build 8.

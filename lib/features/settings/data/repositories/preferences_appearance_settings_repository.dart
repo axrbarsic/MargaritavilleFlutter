@@ -19,6 +19,8 @@ final class PreferencesAppearanceSettingsRepository
       'margaritaville.appearance.vip_hdr_light_enabled.v1';
   static const statusHdrPulseEnabledKey =
       'margaritaville.appearance.status_hdr_pulse_enabled.v1';
+  static const vividStatusPaletteEnabledKey =
+      'margaritaville.appearance.vivid_status_palette_enabled.v1';
   static const backgroundModeKey =
       'margaritaville.appearance.background_mode.v1';
   static const matrixSpeedKey = 'margaritaville.appearance.matrix_speed.v1';
@@ -45,6 +47,9 @@ final class PreferencesAppearanceSettingsRepository
       statusHdrPulseEnabled:
           await _store.readBool(statusHdrPulseEnabledKey) ??
           defaults.statusHdrPulseEnabled,
+      vividStatusPaletteEnabled:
+          await _store.readBool(vividStatusPaletteEnabledKey) ??
+          defaults.vividStatusPaletteEnabled,
       backgroundMode: _backgroundMode(
         await _store.readString(backgroundModeKey),
       ),
@@ -63,6 +68,10 @@ final class PreferencesAppearanceSettingsRepository
       _store.writeDouble(vipJellySpeedKey, value.vipJellySpeed),
       _store.writeBool(vipHdrLightEnabledKey, value.vipHdrLightEnabled),
       _store.writeBool(statusHdrPulseEnabledKey, value.statusHdrPulseEnabled),
+      _store.writeBool(
+        vividStatusPaletteEnabledKey,
+        value.vividStatusPaletteEnabled,
+      ),
       _store.writeString(backgroundModeKey, value.backgroundMode.name),
       _store.writeDouble(matrixSpeedKey, value.matrixSpeed),
     ]);

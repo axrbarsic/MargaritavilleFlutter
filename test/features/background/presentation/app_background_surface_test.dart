@@ -10,7 +10,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: VisualRuntimeScope(
-          policy: const VisualFramePolicy(maxFramesPerSecond: 30),
+          policy: const VisualFramePolicy(),
           enabled: true,
           child: const AppBackgroundSurface(
             mode: AppBackgroundMode.matrixRain,

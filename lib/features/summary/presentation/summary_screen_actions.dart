@@ -10,7 +10,7 @@ extension _SummaryScreenActions on _SummaryScreenState {
         .read(workSessionControllerProvider.notifier)
         .advanceRoom(room.roomNumber);
     if (result == WorkSessionMutationStatus.changed) {
-      _recordCurrentPulse(room.roomNumber);
+      _recordStatusFeedbackAndPulse(room.roomNumber);
     }
   }
 
@@ -23,7 +23,7 @@ extension _SummaryScreenActions on _SummaryScreenState {
         .read(workSessionControllerProvider.notifier)
         .resetRoom(room.roomNumber);
     if (result == WorkSessionMutationStatus.changed) {
-      _recordCurrentPulse(room.roomNumber);
+      _recordStatusFeedbackAndPulse(room.roomNumber);
     }
   }
 
@@ -60,11 +60,17 @@ extension _SummaryScreenActions on _SummaryScreenState {
     String roomNumber, {
     required DateTime? scheduledFor,
   }) async {
+    final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
+    if (scheduledFor == null) {
+      feedback?.deselect();
+    } else {
+      feedback?.confirm();
+    }
     final result = await ref
         .read(workSessionControllerProvider.notifier)
         .setRoomSchedule(roomNumber, scheduledFor: scheduledFor);
     if (result == WorkSessionMutationStatus.changed) {
-      _recordCurrentPulse(roomNumber);
+      _recordStatusFeedbackAndPulse(roomNumber);
     }
   }
 
@@ -89,8 +95,20 @@ extension _SummaryScreenActions on _SummaryScreenState {
         .advanceScheduledRooms();
     if (result != WorkSessionMutationStatus.changed) return;
     for (final roomNumber in dueRoomNumbers) {
-      _recordCurrentPulse(roomNumber);
+      _recordStatusFeedbackAndPulse(roomNumber);
     }
+  }
+
+  void _recordStatusFeedbackAndPulse(String roomNumber) {
+    if (!mounted) return;
+    final state = ref.read(workSessionControllerProvider);
+    if (!state.hasValue || state.requireValue.id != widget.session.id) return;
+    final room = state.requireValue.room(roomNumber);
+    if (room == null) return;
+    MargaritavilleFeedbackScope.maybeControllerOf(
+      context,
+    )?.roomStatusChanged(room.displayStatus);
+    _recordCurrentPulse(roomNumber);
   }
 
   void _recordCurrentPulse(String roomNumber) {

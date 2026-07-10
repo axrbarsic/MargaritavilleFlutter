@@ -5,9 +5,11 @@ import '../../../work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../../../work_session/domain/models/work_assignment.dart';
 import '../summary_layout_tokens.dart';
+import '../summary_typography.dart';
 import '../summary_visual_policy.dart';
 import '../summary_visual_pulse.dart';
 import 'room_status_tile.dart';
+import 'summary_minimum_scale_text.dart';
 
 final class SummaryAssignmentSection extends StatelessWidget {
   const SummaryAssignmentSection({
@@ -40,101 +42,97 @@ final class SummaryAssignmentSection extends StatelessWidget {
     final palette = MargaritavilleColors.housekeeper(
       assignment.housekeeper.paletteKey,
     );
-    return Padding(
-      padding: const EdgeInsets.all(SummaryLayoutTokens.sectionPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                flex: 1,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color.alphaBlend(
-                      Colors.black.withValues(alpha: 0.34),
-                      palette.withValues(alpha: 0.20),
-                    ),
-                    border: Border.all(
-                      color: palette.withValues(alpha: 0.72),
-                      width: 1.5,
-                    ),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    assignment.housekeeper.displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.fade,
-                    softWrap: false,
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w900,
-                      color: palette,
-                      shadows: const [
-                        Shadow(
-                          color: Color(0xEB000000),
-                          blurRadius: 3.2,
-                          offset: Offset(0, 1),
+    return MediaQuery.withNoTextScaling(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tileWidth = SummaryLayoutTokens.tileWidthForSection(
+            constraints.maxWidth,
+          );
+          return Padding(
+            padding: const EdgeInsets.all(SummaryLayoutTokens.sectionPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: DecoratedBox(
+                        key: Key(
+                          'summary-housekeeper-name-${assignment.housekeeper.id}',
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      _territoryLabel(visibleRooms),
-                      maxLines: 1,
-                      textAlign: TextAlign.end,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
+                        decoration: BoxDecoration(
+                          color: Color.alphaBlend(
+                            Colors.black.withValues(alpha: 0.34),
+                            palette.withValues(alpha: 0.20),
+                          ),
+                          border: Border.all(
+                            color: palette.withValues(alpha: 0.72),
+                            width: 1.5,
+                            strokeAlign: BorderSide.strokeAlignCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: SummaryMinimumScaleText(
+                            text: assignment.housekeeper.displayName,
+                            style: SummaryTypography.housekeeperName(palette),
+                            minimumScaleFactor: 0.62,
+                            alignment: Alignment.centerLeft,
+                            textAlign: TextAlign.start,
+                            shrinkWrap: true,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: SummaryMinimumScaleText(
+                          text: _territoryLabel(visibleRooms),
+                          style: SummaryTypography.territory,
+                          minimumScaleFactor: 0.58,
+                          alignment: Alignment.centerRight,
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: SummaryLayoutTokens.sectionHeaderGridGap),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: visibleRooms.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: SummaryLayoutTokens.gridColumns,
-              crossAxisSpacing: SummaryLayoutTokens.gridSpacing,
-              mainAxisSpacing: SummaryLayoutTokens.gridSpacing,
-              mainAxisExtent: SummaryLayoutTokens.tileHeight,
+                const SizedBox(
+                  height: SummaryLayoutTokens.sectionHeaderGridGap,
+                ),
+                Wrap(
+                  spacing: SummaryLayoutTokens.gridSpacing,
+                  runSpacing: SummaryLayoutTokens.gridSpacing,
+                  children: [
+                    for (final room in visibleRooms)
+                      SizedBox(
+                        width: tileWidth,
+                        height: SummaryLayoutTokens.tileHeight,
+                        child: RoomStatusTile(
+                          room: room,
+                          onAdvance: () => onAdvance(room),
+                          onReset: () => onReset(room),
+                          onToggleVip: () => onToggleVip(room),
+                          onSchedule: () => onSchedule(room),
+                          onOpenMedia: () => onOpenMedia(room),
+                          visualPolicy: visualPolicy,
+                          pulseEvent: pulseEventFor?.call(room.roomNumber),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
-            itemBuilder: (context, index) {
-              final room = visibleRooms[index];
-              return RoomStatusTile(
-                room: room,
-                onAdvance: () => onAdvance(room),
-                onReset: () => onReset(room),
-                onToggleVip: () => onToggleVip(room),
-                onSchedule: () => onSchedule(room),
-                onOpenMedia: () => onOpenMedia(room),
-                visualPolicy: visualPolicy,
-                pulseEvent: pulseEventFor?.call(room.roomNumber),
-              );
-            },
-          ),
-        ],
+          );
+        },
       ),
     );
   }

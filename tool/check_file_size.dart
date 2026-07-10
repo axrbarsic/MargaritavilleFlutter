@@ -4,7 +4,13 @@ const _lineLimit = 300;
 
 Future<void> main() async {
   final oversized = <String, int>{};
-  for (final root in [Directory('lib'), Directory('test')]) {
+  for (final root in [
+    Directory('lib'),
+    Directory('test'),
+    Directory('packages/interaction_foundation/lib'),
+    Directory('packages/interaction_foundation/test'),
+  ]) {
+    if (!root.existsSync()) continue;
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is! File || !_isHandwrittenDart(entity.path)) continue;
       final lineCount = await entity.readAsLines().then(

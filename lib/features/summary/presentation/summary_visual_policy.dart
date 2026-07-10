@@ -4,6 +4,7 @@ final class SummaryVisualPolicy {
     this.vipJellyEnabled = true,
     this.vipHdrLightEnabled = false,
     this.statusPulseEnabled = false,
+    this.vividStatusPaletteEnabled = true,
     this.sdrGlowEnabled = true,
     this.vipJellySpeed = 0.75,
     this.springIntensity = 0.72,
@@ -15,6 +16,7 @@ final class SummaryVisualPolicy {
   final bool vipJellyEnabled;
   final bool vipHdrLightEnabled;
   final bool statusPulseEnabled;
+  final bool vividStatusPaletteEnabled;
   final bool sdrGlowEnabled;
   final double vipJellySpeed;
   final double springIntensity;

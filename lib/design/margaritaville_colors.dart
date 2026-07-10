@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../features/work_session/domain/models/room_state.dart';
+
 abstract final class MargaritavilleColors {
   static const background = Color(0xFF040805);
   static const surface = Color(0xFF020402);
@@ -12,6 +14,24 @@ abstract final class MargaritavilleColors {
   static const open = Color(0xFFFF3B30);
   static const ready = Color(0xFF25D366);
   static const scheduled = Color(0xFFFF4DB8);
+
+  static Color vividStatus(RoomDisplayStatus status) {
+    return switch (status) {
+      RoomDisplayStatus.pending => const Color(0xFFFFC400),
+      RoomDisplayStatus.open => const Color(0xFFFF1208),
+      RoomDisplayStatus.ready => const Color(0xFF00E524),
+      RoomDisplayStatus.scheduled => const Color(0xFFFF31B8),
+    };
+  }
+
+  static Color status(RoomDisplayStatus status) {
+    return switch (status) {
+      RoomDisplayStatus.pending => pending,
+      RoomDisplayStatus.open => open,
+      RoomDisplayStatus.ready => ready,
+      RoomDisplayStatus.scheduled => scheduled,
+    };
+  }
 
   static Color housekeeper(String paletteKey) {
     return switch (paletteKey) {

@@ -8,6 +8,7 @@ abstract final class AppearanceSummaryVisualPolicy {
       vipJellyEnabled: settings.vipJellyEnabled,
       vipHdrLightEnabled: settings.vipHdrLightEnabled,
       statusPulseEnabled: settings.statusHdrPulseEnabled,
+      vividStatusPaletteEnabled: settings.vividStatusPaletteEnabled,
       vipJellySpeed: settings.vipJellySpeed,
       springIntensity: settings.cellSpringIntensity,
     );
