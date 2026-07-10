@@ -42,9 +42,9 @@ void main() {
     await tester.longPress(find.byKey(const Key('lock-workday')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Текущая смена'), findsOneWidget);
+    expect(find.byKey(const Key('summary-header')), findsOneWidget);
     expect(find.byKey(const Key('summary-room-101')), findsOneWidget);
-    expect(find.text('Всего 1'), findsOneWidget);
+    expect(find.byKey(const Key('summary-total-count')), findsOneWidget);
 
     await tester.longPress(find.byKey(const Key('summary-room-101')));
     await tester.pumpAndSettle();

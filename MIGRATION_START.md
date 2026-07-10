@@ -35,7 +35,10 @@ iOS-приложения Margaritaville с нативного Swift/SwiftUI на
   - Xcode UDID: `00008150-001418301E68C01C`.
 - Android-track открыт Alex 2026-07-09. Физический Pixel 8 для проверки:
   - ADB serial: `44171FDJH003R5`;
-  - Android Emulator без прямого разрешения не использовать.
+  - для ежедневного visual/navigation QA Alex разрешил AVD
+    `margarita_pixel_8_api36`, Android 16/API 36, обычно `emulator-5554`;
+  - Emulator не заменяет физический Pixel для density/font-scale, performance,
+    thermal и финального interaction QA.
 - Для повседневного visual/navigation baseline Swift-донора Alex разрешил
   iPhone 17 Pro Max Simulator:
   - UDID: `BE4AB2BD-CD2A-4D0F-A73C-B31E8E2D6C0B`;
@@ -60,6 +63,8 @@ project-local `AGENTS.md`. Не создавай его заново: снача
    summary UI, visual effects, media и interaction infrastructure Swift-проекта.
 8. `/Users/alex/Developer/MargaritavilleFlutter/Docs/DonorSimulatorRunbook.md`
    перед повторной сборкой Swift-донора на Simulator.
+9. `/Users/alex/Developer/MargaritavilleFlutter/Docs/AndroidEmulatorRunbook.md`
+   перед созданием второго Android AVD или переустановкой emulator fixture.
 
 Некоторые старые документы могут содержать устаревшие номера build. Текущий
 код, git log и build 37 приоритетнее старых снимков.

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../design/margaritaville_colors.dart';
 import '../../../work_session/domain/models/room_state.dart';
+import '../summary_layout_tokens.dart';
 
-final class RoomStatusTile extends StatelessWidget {
+final class RoomStatusTile extends StatefulWidget {
   const RoomStatusTile({
     required this.room,
     required this.onAdvance,
@@ -15,12 +17,20 @@ final class RoomStatusTile extends StatelessWidget {
   final VoidCallback onReset;
 
   @override
+  State<RoomStatusTile> createState() => _RoomStatusTileState();
+}
+
+final class _RoomStatusTileState extends State<RoomStatusTile> {
+  var _horizontalDrag = 0.0;
+
+  @override
   Widget build(BuildContext context) {
+    final room = widget.room;
     final color = switch (room.displayStatus) {
-      RoomDisplayStatus.pending => const Color(0xFFE4C33F),
-      RoomDisplayStatus.open => const Color(0xFFE95757),
-      RoomDisplayStatus.ready => const Color(0xFF38B96E),
-      RoomDisplayStatus.scheduled => const Color(0xFFE15B9D),
+      RoomDisplayStatus.pending => MargaritavilleColors.pending,
+      RoomDisplayStatus.open => MargaritavilleColors.open,
+      RoomDisplayStatus.ready => MargaritavilleColors.ready,
+      RoomDisplayStatus.scheduled => MargaritavilleColors.scheduled,
     };
     final label = switch (room.displayStatus) {
       RoomDisplayStatus.pending => 'ожидает',
@@ -36,80 +46,93 @@ final class RoomStatusTile extends StatelessWidget {
       hint: 'Удерживайте для следующего статуса',
       child: GestureDetector(
         key: Key('summary-room-${room.roomNumber}'),
-        onLongPress: onAdvance,
+        behavior: HitTestBehavior.opaque,
+        onLongPress: widget.onAdvance,
+        onHorizontalDragStart: (_) => _horizontalDrag = 0,
+        onHorizontalDragUpdate: (details) {
+          _horizontalDrag = (_horizontalDrag + details.delta.dx).clamp(
+            0,
+            double.infinity,
+          );
+        },
+        onHorizontalDragEnd: (_) {
+          if (_horizontalDrag >= 48 && _canReset) {
+            _showActionMenu(context);
+          }
+          _horizontalDrag = 0;
+        },
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: room.isVip ? const Color(0xFFFFE88C) : Colors.white24,
-              width: room.isVip ? 3 : 1,
+            borderRadius: BorderRadius.circular(
+              SummaryLayoutTokens.tileCornerRadius,
             ),
-            boxShadow: room.isVip
-                ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.55),
-                      blurRadius: 13,
-                    ),
-                  ]
-                : null,
           ),
-          child: Stack(
-            children: [
-              Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
                     child: Text(
                       room.roomNumber,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            color: const Color(0xFF08120F),
-                            fontWeight: FontWeight.w900,
-                          ),
-                    ),
-                  ),
-                ),
-              ),
-              if (room.displayStatus == RoomDisplayStatus.scheduled)
-                Positioned(
-                  left: 7,
-                  right: 7,
-                  bottom: 5,
-                  child: Text(
-                    _time(room.scheduledFor!),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: const Color(0xFF08120F),
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              if (room.phase == RoomPhase.ready)
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: Semantics(
-                    button: true,
-                    label: 'Сбросить номер ${room.roomNumber}',
-                    hint: 'Удерживайте для явного сброса',
-                    child: GestureDetector(
-                      key: Key('reset-room-${room.roomNumber}'),
-                      onLongPress: onReset,
-                      child: const Padding(
-                        padding: EdgeInsets.all(6),
-                        child: Icon(
-                          Icons.restart_alt_rounded,
-                          size: 17,
-                          color: Color(0xFF08120F),
-                        ),
+                      maxLines: 1,
+                      style: const TextStyle(
+                        color: MargaritavilleColors.roomForeground,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w900,
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                   ),
                 ),
-            ],
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _time(_timestamp),
+                    maxLines: 1,
+                    style: const TextStyle(
+                      color: MargaritavilleColors.roomForeground,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  DateTime get _timestamp {
+    if (widget.room.displayStatus == RoomDisplayStatus.scheduled) {
+      return widget.room.scheduledFor!;
+    }
+    return widget.room.timestamps.phaseUpdatedAt;
+  }
+
+  bool get _canReset =>
+      widget.room.phase != RoomPhase.pending ||
+      widget.room.scheduledFor != null;
+
+  Future<void> _showActionMenu(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: MargaritavilleColors.surface,
+      builder: (context) => SafeArea(
+        child: ListTile(
+          leading: const Icon(Icons.restart_alt_rounded),
+          title: const Text('Вернуть в жёлтый'),
+          onTap: () {
+            Navigator.pop(context);
+            widget.onReset();
+          },
         ),
       ),
     );

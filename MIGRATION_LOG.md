@@ -100,3 +100,37 @@ housekeeper/work-block workflow и history/event/outbox projection, затем
 - Simulator проверяет layout, navigation, gestures, state и SDR fallback. EDR
   headroom, точные haptics, camera/mic/Speech, thermal и 120 Hz performance
   остаются обязательными гейтами физического iPhone.
+
+## 2026-07-09 — Checkpoint 2: donor Summary contract и Pixel 8 Emulator
+
+- Репозиторий опубликован как public backup:
+  `https://github.com/axrbarsic/MargaritavilleFlutter`; `origin` настроен,
+  `main` и рабочая ветка `codex/flutter-migration-foundation` отправлены.
+- По прямому разрешению Alex создан AVD `margarita_pixel_8_api36` без скачивания
+  нового image: Pixel 8, Android 16/API 36 ARM64, 1080 x 2400, 420 dpi. Flutter
+  beta установлена только на `emulator-5554`; физический Pixel не затронут.
+- Зафиксированы тестами и реализованы первые Swift build 37 visual tokens:
+  почти чёрный фон, status palette, housekeeper palette, компактный header,
+  progress counts, status filters, puzzle unlock, 4-column grid, tile 98 pt,
+  radius 16, rounded black typography и timestamp на каждом номере.
+- Чтобы Swift `.rounded` не заменялся разным системным шрифтом на iOS/Android,
+  дизайн-система получила единый variable Nunito Sans из официального
+  `google/fonts`; лицензия OFL 1.1 сохранена рядом с font asset.
+- Generic Material AppBar, большие отдельные count cards, instruction block,
+  outer section card, inline reset icon и ложные borders/shadows удалены с
+  основного Summary. Сброс сохранён в right-swipe action sheet.
+- Status chips реально фильтруют секции; puzzle требует завершённого жеста
+  справа налево и возвращает в выбор комнат. Контракт закреплён отдельными
+  geometry/color/type/interaction widget tests.
+- На Pixel 8 Emulator создан рабочий fixture из 20 комнат и сделан screenshot
+  baseline `build/qa/pixel8-emulator-summary-20.png`; Swift donor fixture из
+  27 комнат повторно снят как `build/qa/swift-donor-current-27.png`.
+- Emulator перешёл на software OpenGL из-за текущего давления на RAM, поэтому
+  его FPS не считается baseline. После сборок disk guard показывает warning:
+  свободно 23 GiB; до следующих тяжёлых артефактов нужна безопасная уборка.
+
+Открытые части Summary parity: настоящий settings flow, полный room action
+menu (VIP/schedule/media), Matrix background/общий visual runtime, HDR/EDR и
+haptics. Физический Pixel сейчас заблокирован, поэтому финальный visual/gesture
+прогон этого checkpoint накоплен как отдельный гейт после разблокировки; ADB,
+сборки и автоматические проверки от блокировки не зависят.

@@ -34,7 +34,11 @@
 - Основная iOS parity/performance-проверка — физический iPhone 17 Pro Max:
   `00008150-001418301E68C01C`.
 - Android-track явно открыт Alex 2026-07-09. Проверять на физическом Pixel 8:
-  `44171FDJH003R5`; Android Emulator не использовать без прямого разрешения.
+  `44171FDJH003R5`.
+- Alex 2026-07-09 разрешил Pixel 8 Emulator для ежедневного visual/navigation
+  QA: AVD `margarita_pixel_8_api36`, Android 16/API 36, обычно
+  `emulator-5554`. Он не заменяет физический Pixel для density/font-scale,
+  performance, thermal и длительных interaction-проверок.
 - Для ежедневного чтения Swift-донора Alex явно разрешил iPhone 17 Pro Max
   Simulator `BE4AB2BD-CD2A-4D0F-A73C-B31E8E2D6C0B`. Он подходит для
   экранов/жестов/screenshot baseline, но не заменяет физический iPhone для

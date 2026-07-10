@@ -6,74 +6,86 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../work_session/domain/models/room_state.dart';
 import '../../work_session/domain/models/work_session.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
+import 'summary_layout_tokens.dart';
 import 'widgets/summary_assignment_section.dart';
-import 'widgets/summary_counts.dart';
+import 'widgets/summary_header.dart';
 
-final class SummaryScreen extends ConsumerWidget {
+final class SummaryScreen extends ConsumerStatefulWidget {
   const SummaryScreen({required this.session, super.key});
 
   final WorkSession session;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final assignments = session.activeAssignments
-        .where((assignment) => assignment.activeRooms.isNotEmpty)
+  ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
+}
+
+final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
+  RoomDisplayStatus? _activeFilter;
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = widget.session.activeAssignments
+        .map((assignment) {
+          final rooms = assignment.activeRooms
+              .where(
+                (room) =>
+                    _activeFilter == null ||
+                    room.displayStatus == _activeFilter,
+              )
+              .toList();
+          return (assignment: assignment, rooms: rooms);
+        })
+        .where((section) => section.rooms.isNotEmpty)
         .toList();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Текущая смена'),
-        actions: [
-          Tooltip(
-            message: 'Удерживайте для редактирования смены',
-            child: Semantics(
-              button: true,
-              label: 'Редактировать смену',
-              hint: 'Удерживайте',
-              child: GestureDetector(
-                key: const Key('unlock-workday'),
-                onLongPress: () {
-                  unawaited(
-                    ref
-                        .read(workSessionControllerProvider.notifier)
-                        .unlockWorkday(),
-                  );
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(
+            top: SummaryLayoutTokens.screenTopPadding,
+          ),
+          child: Column(
+            children: [
+              SummaryHeader(
+                session: widget.session,
+                activeFilter: _activeFilter,
+                onFilterChanged: (status) {
+                  setState(() => _activeFilter = status);
                 },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 18),
-                  child: Icon(Icons.edit_calendar_rounded),
+                onOpenSettings: () => _showSettingsNotice(context),
+                onOpenSelection: _unlockWorkday,
+              ),
+              const SizedBox(height: SummaryLayoutTokens.headerContentGap),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    SummaryLayoutTokens.contentHorizontalPadding,
+                    0,
+                    SummaryLayoutTokens.contentHorizontalPadding,
+                    SummaryLayoutTokens.contentBottomPadding,
+                  ),
+                  itemCount: sections.length,
+                  separatorBuilder: (_, _) => const SizedBox(
+                    height: SummaryLayoutTokens.sectionSpacing,
+                  ),
+                  itemBuilder: (context, index) {
+                    final section = sections[index];
+                    return SummaryAssignmentSection(
+                      assignment: section.assignment,
+                      rooms: section.rooms,
+                      onAdvance: _advanceRoom,
+                      onReset: _resetRoom,
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-          itemCount: assignments.length + 2,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            if (index == 0) return SummaryCountsView(session: session);
-            if (index == 1) {
-              return Text(
-                'Удерживайте номер: жёлтый → красный → зелёный.',
-                style: Theme.of(context).textTheme.bodySmall,
-              );
-            }
-            final assignment = assignments[index - 2];
-            return SummaryAssignmentSection(
-              assignment: assignment,
-              onAdvance: (room) => _advanceRoom(ref, room),
-              onReset: (room) => _resetRoom(ref, room),
-            );
-          },
         ),
       ),
     );
   }
 
-  void _advanceRoom(WidgetRef ref, RoomState room) {
+  void _advanceRoom(RoomState room) {
     unawaited(
       ref
           .read(workSessionControllerProvider.notifier)
@@ -81,11 +93,29 @@ final class SummaryScreen extends ConsumerWidget {
     );
   }
 
-  void _resetRoom(WidgetRef ref, RoomState room) {
+  void _resetRoom(RoomState room) {
     unawaited(
       ref
           .read(workSessionControllerProvider.notifier)
           .resetRoom(room.roomNumber),
     );
+  }
+
+  void _unlockWorkday() {
+    unawaited(ref.read(workSessionControllerProvider.notifier).unlockWorkday());
+  }
+
+  void _showSettingsNotice(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Настройки — следующий parity-блок. Выбор комнат открывается пазлом справа налево.',
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
   }
 }

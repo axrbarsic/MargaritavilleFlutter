@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../design/margaritaville_colors.dart';
+
 abstract final class MargaritavilleTheme {
   static ThemeData get dark {
     final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF27C4A6),
+      seedColor: MargaritavilleColors.accent,
       brightness: Brightness.dark,
-      surface: const Color(0xFF07140F),
+      surface: MargaritavilleColors.surface,
     );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: const Color(0xFF07140F),
+      scaffoldBackgroundColor: MargaritavilleColors.background,
+      fontFamily: 'MargaritavilleRounded',
+      fontFamilyFallback: const ['Roboto', 'sans-serif'],
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF07140F),
+        backgroundColor: MargaritavilleColors.background,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
       ),
