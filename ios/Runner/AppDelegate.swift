@@ -12,10 +12,7 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    if let registrar = engineBridge.pluginRegistry.registrar(
-      forPlugin: "EdrOverlayPlugin"
-    ) {
-      EdrOverlayPlugin.register(with: registrar)
-    }
+    // The native EDR prototype stays unregistered until it can render without
+    // introducing a Platform View into the scrolling Summary composition.
   }
 }

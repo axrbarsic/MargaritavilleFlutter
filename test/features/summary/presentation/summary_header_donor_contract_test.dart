@@ -3,15 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_theme.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
-import 'package:margaritaville_flutter/features/summary/presentation/summary_scroll_physics.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_overlay_surface.dart';
 
 import 'support/summary_test_fixture.dart';
 
 void main() {
-  test('Android keeps its own platform scroll physics', () {
-    expect(summaryScrollPhysicsFor(TargetPlatform.android), isNull);
-  });
-
   testWidgets('summary replaces Material app bar with donor header', (
     tester,
   ) async {
@@ -39,7 +35,7 @@ void main() {
     expect(find.byKey(const Key('summary-filter-pending')), findsOneWidget);
   });
 
-  testWidgets('short iOS summary keeps the native elastic scroll contract', (
+  testWidgets('summary restores the original platform scroll behavior', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(440, 1200);
@@ -58,16 +54,10 @@ void main() {
       ),
     );
 
-    final scrollView = tester.widget<SingleChildScrollView>(
-      find.byType(SingleChildScrollView),
-    );
-    final physics = scrollView.physics;
-    expect(physics, isA<BouncingScrollPhysics>());
-    expect(
-      (physics! as BouncingScrollPhysics).decelerationRate,
-      ScrollDecelerationRate.normal,
-    );
-    expect(physics.parent, isA<AlwaysScrollableScrollPhysics>());
+    expect(find.byType(SingleChildScrollView), findsNothing);
+    final listView = tester.widget<ListView>(find.byType(ListView));
+    expect(listView.physics, isA<AlwaysScrollableScrollPhysics>());
+    expect(find.byType(EdrOverlaySurface), findsNothing);
   });
 
   testWidgets('summary stays intact at physical Pixel width and font scale', (

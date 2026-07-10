@@ -59,7 +59,7 @@ void main() {
     );
     await binding.delayed(const Duration(seconds: 3));
 
-    final scrollable = find.byType(SingleChildScrollView);
+    final scrollable = find.byType(ListView);
     expect(scrollable, findsOneWidget);
     await _exerciseScroll(tester, binding, passes: 2);
 
@@ -116,7 +116,7 @@ Future<void> _exerciseScroll(
   required int passes,
   Duration passDuration = const Duration(milliseconds: 600),
 }) async {
-  final scrollable = find.byType(SingleChildScrollView);
+  final scrollable = find.byType(ListView);
   for (var pass = 0; pass < passes; pass++) {
     await tester.fling(scrollable, Offset(0, pass.isEven ? -900 : 900), 2800);
     await binding.delayed(passDuration);

@@ -3,15 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/edr/edr_overlay_controller.dart';
-import '../../../shared/edr/edr_overlay_scope.dart';
-import '../../../shared/edr/edr_overlay_surface.dart';
 import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../work_session/domain/models/room_state.dart';
 import '../../work_session/domain/models/work_session.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
 import 'summary_layout_tokens.dart';
-import 'summary_scroll_physics.dart';
 import 'summary_visual_policy.dart';
 import 'summary_visual_pulse.dart';
 import 'widgets/room_schedule_sheet.dart';
@@ -43,14 +39,12 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
   RoomDisplayStatus? _activeFilter;
   Timer? _scheduleTimer;
   late final SummaryVisualPulseCoordinator _visualPulses;
-  late final EdrOverlayController _edrOverlay;
 
   @override
   void initState() {
     super.initState();
     _visualPulses = SummaryVisualPulseCoordinator()
       ..addListener(_onVisualEventsChanged);
-    _edrOverlay = EdrOverlayController();
     if (!widget.enableSchedulePolling) return;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,7 +62,6 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
     _visualPulses
       ..removeListener(_onVisualEventsChanged)
       ..dispose();
-    _edrOverlay.dispose();
     super.dispose();
   }
 
@@ -114,64 +107,31 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
               ),
               const SizedBox(height: SummaryLayoutTokens.headerContentGap),
               Expanded(
-                child: SingleChildScrollView(
-                  physics: summaryScrollPhysicsFor(Theme.of(context).platform),
+                child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(
                     SummaryLayoutTokens.contentHorizontalPadding,
                     0,
                     SummaryLayoutTokens.contentHorizontalPadding,
                     SummaryLayoutTokens.contentBottomPadding,
                   ),
-                  child: EdrOverlayScope(
-                    controller: _edrOverlay,
-                    child: Stack(
-                      key: _edrOverlay.contentKey,
-                      clipBehavior: Clip.none,
-                      children: [
-                        ListenableBuilder(
-                          listenable: _edrOverlay,
-                          builder: (context, _) {
-                            final bounds = _edrOverlay.overlayBounds;
-                            if (bounds == null) {
-                              return const SizedBox.shrink(
-                                key: Key('summary-edr-overlay-inactive'),
-                              );
-                            }
-                            return Positioned.fromRect(
-                              rect: bounds,
-                              child: EdrOverlaySurface(controller: _edrOverlay),
-                            );
-                          },
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (
-                              var index = 0;
-                              index < sections.length;
-                              index++
-                            ) ...[
-                              if (index > 0)
-                                const SizedBox(
-                                  height: SummaryLayoutTokens.sectionSpacing,
-                                ),
-                              SummaryAssignmentSection(
-                                assignment: sections[index].assignment,
-                                rooms: sections[index].rooms,
-                                onAdvance: _advanceRoom,
-                                onReset: _resetRoom,
-                                onToggleVip: _toggleVip,
-                                onSchedule: _openSchedule,
-                                onOpenMedia: _showMediaNotice,
-                                visualPolicy: widget.visualPolicy,
-                                pulseEventFor: _visualPulses.eventFor,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
+                  itemCount: sections.length,
+                  separatorBuilder: (_, _) => const SizedBox(
+                    height: SummaryLayoutTokens.sectionSpacing,
                   ),
+                  itemBuilder: (context, index) {
+                    final section = sections[index];
+                    return SummaryAssignmentSection(
+                      assignment: section.assignment,
+                      rooms: section.rooms,
+                      onAdvance: _advanceRoom,
+                      onReset: _resetRoom,
+                      onToggleVip: _toggleVip,
+                      onSchedule: _openSchedule,
+                      onOpenMedia: _showMediaNotice,
+                      visualPolicy: widget.visualPolicy,
+                      pulseEventFor: _visualPulses.eventFor,
+                    );
+                  },
                 ),
               ),
             ],

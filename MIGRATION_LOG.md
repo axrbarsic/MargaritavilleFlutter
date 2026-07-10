@@ -444,3 +444,60 @@ haptics. Физический Pixel сейчас заблокирован, по�
   Экран iPhone остаётся заблокирован, поэтому реальные haptics/audio,
   120 Hz и runtime smoke ещё не заявлены. Физический Pixel 8 также не виден в
   ADB/mDNS; эмулятор не заменяет его haptics/audio/90 Hz gate.
+
+## 2026-07-10 — Checkpoint 11: возврат ListView и безопасный отказ от production EDR
+
+- Красными widget-тестами доказано, что обычный `GestureDetector` ячейки
+  нарушал donor-контракт сразу в пяти местах: long press срабатывал в `500 ms`
+  вместо `460 ms`, не отменялся после `8 pt`, диагональный вертикальный жест
+  выигрывала ячейка вместо списка, invalid diagonal открывал action menu, а
+  прямой прыжок за threshold ошибочно воспроизводил warning.
+- Ячейка переведена на отдельный gesture-arena target: long press
+  `460 ms / 8 pt`, horizontal recognition от `28 pt`, правый intent от
+  `38 pt`, update dominance `2.8`, finish dominance `2.5` и точный порядок
+  haptic thresholds. Вертикальный/диагональный scroll, левый swipe и все
+  границы закреплены восемью widget-тестами.
+- Build 14 доказал исправление gesture arena, но Alex подтвердил, что приятный
+  iOS-отскок всё ещё отсутствует. Build 15 вернул implicit platform physics
+  до изменения `d8c0aef`, но пользовательский perceptual gate снова был
+  красным.
+- Git-аудит нашёл настоящий структурный регресс в `b02899f`: ради нативного
+  EDR прежний `ListView.separated` был заменён на
+  `SingleChildScrollView + Column`. Build 16 вернул исходный ListView; Alex
+  сразу подтвердил, что нормальный скролл и отскок вернулись.
+- Попытка сохранять EDR через снятие/повторное монтирование `UiKitView` на
+  ScrollStart/ScrollEnd дала мерцание, скачки яркости VIP и остановки около
+  подсветки. Alex отклонил этот вариант и выбрал стабильный baseline до
+  настоящего HDR/EDR.
+- В production Summary полностью удалены `EdrOverlayScope`,
+  `EdrOverlaySurface` и регистрация ячеек. `EdrOverlayPlugin` больше не
+  регистрируется в `AppDelegate`. Нативный прототип остаётся в исходниках
+  только для будущего изолированного исследования; архитектурный guard падает,
+  если platform-view снова попадёт в Summary или будет зарегистрирован.
+- Build 17 сохраняет старый `ListView.separated`, Flutter jelly/rubber,
+  SDR-подсветку, точные шрифты, звуки/haptics и новые жесты, но намеренно не
+  включает настоящий EDR. Он прошёл iOS bundle guard семи `platform IOS`
+  frameworks и установлен на iPhone; автозапуск отклонён только заблокированным
+  экраном. Android profile build 17 установлен на Pixel 8 Emulator без
+  fatal/exception/overflow.
+- Полный software gate зелёный: format, analyze, `82 tests`, file-size и
+  architecture guards. Дополнительный test-support вынесен отдельно, чтобы
+  gesture suite оставался ниже лимита `300` строк.
+- Profile integration harness также возвращён с устаревшего finder
+  `SingleChildScrollView` на `ListView`. На Pixel 8 Emulator сценарий с
+  36 комнатами прошёл с `280` measured frames при `60 Hz`, p95 build
+  `3.585 ms` и p95 raster `17.507 ms`. Функциональный non-strict gate зелёный;
+  raster пока на `0.841 ms` выше 60-Hz бюджета, поэтому это не принимается как
+  физическое доказательство 90/120 Hz и остаётся performance debt.
+- Онлайн-аудит подтвердил выбранное направление. [Официальная документация
+  Flutter по iOS Platform Views](https://docs.flutter.dev/platform-integration/ios/platform-views)
+  предупреждает о performance trade-offs и советует placeholder texture на
+  время Dart-анимаций. [Apple Explore EDR on
+  iOS](https://developer.apple.com/videos/play/wwdc2022/10113/) требует для
+  настоящего EDR отдельный `CAMetalLayer`,
+  `wantsExtendedDynamicRangeContent`, FP16/10-bit формат и extended color
+  space. Следующий HDR spike не должен возвращать прокручиваемый `UiKitView`:
+  исследовать root-level native Metal layer либо
+  [FlutterTextureRegistry](https://api.flutter.dev/ios-embedder/protocol_flutter_texture_registry-p.html)
+  отдельным экспериментом с обязательным физическим scroll/HDR gate до
+  подключения к Summary.

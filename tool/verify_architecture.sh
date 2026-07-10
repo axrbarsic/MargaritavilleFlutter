@@ -98,6 +98,17 @@ if rg -n "CADisplayLink|Timer\." ios/Runner/Edr*.swift; then
   failed=1
 fi
 
+if rg -n "shared/edr|EdrOverlay(Scope|Surface)" \
+  lib/features/summary --glob '*.dart'; then
+  echo "ERROR: dormant native EDR must not enter the production Summary scroll tree"
+  failed=1
+fi
+
+if rg -n "EdrOverlayPlugin\.register" ios/Runner/AppDelegate.swift; then
+  echo "ERROR: dormant native EDR plugin must stay unregistered"
+  failed=1
+fi
+
 if rg -n "scaleForSectionWidth|geometryScale" \
   lib/features/summary test/features/summary --glob '*.dart'; then
   echo "ERROR: donor Summary geometry must stay fixed; only column width is flexible"
