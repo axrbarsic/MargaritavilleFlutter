@@ -27,3 +27,15 @@
 Открытый следующий critical path: расширить setup до полного редактируемого
 housekeeper/work-block workflow и history/event/outbox projection, затем
 закрепить ранний EDR overlay spike до тяжёлых визуальных эффектов.
+
+## 2026-07-09 — Signing blocker устранён
+
+- Apple Account заново подключён в Xcode; для team `J6MW4855LU` создан
+  Xcode-managed development profile именно для
+  `com.alex.margaritaville.flutter.beta`.
+- Beta identity не менялась и не подменялась bundle ID соседних приложений.
+- Debug build успешно подписался и установился, но `flutter run` не смог
+  подключиться к Dart VM из-за отсутствия Local Network permission у Terminal.
+- Для независимой device-проверки собран подписанный profile build `0.1.0 (2)`.
+- Profile app установлено через `devicectl`, запущено на физическом iPhone 17
+  Pro Max и подтверждено живым процессом `/Runner.app/Runner`.
