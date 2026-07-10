@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 2,
+  "id": "session-2027-02-10",
+  "hotel": {
+    "id": "margaritaville",
+    "name": "Margaritaville",
+    "workflow": "simpleCycle"
+  },
+  "startedAt": "2027-02-10T12:00:00.123Z",
+  "updatedAt": "2027-02-10T12:30:00.123Z",
+  "workdayLocked": true,
+  "lockUpdatedAt": "2027-02-10T12:02:00.123Z",
+  "assignments": [
+    {
+      "id": "cart-1",
+      "cartNumber": 1,
+      "housekeeper": {
+        "id": "ketty",
+        "displayName": "Ketty",
+        "paletteKey": "lagoon",
+        "updatedAt": "2027-02-10T12:00:00.123Z",
+        "deletedAt": null
+      },
+      "assignedAt": "2027-02-10T12:00:00.123Z",
+      "updatedAt": "2027-02-10T12:30:00.123Z",
+      "deletedAt": null,
+      "rooms": [
+        {
+          "roomNumber": "101",
+          "phase": "open",
+          "isVip": true,
+          "scheduledFor": null,
+          "deletedAt": null,
+          "timestamps": {
+            "selectedAt": "2027-02-10T12:01:00.123Z",
+            "phaseUpdatedAt": "2027-02-10T12:05:00.123Z",
+            "openedAt": "2027-02-10T12:05:00.123Z",
+            "completedAt": null,
+            "vipUpdatedAt": "2027-02-10T12:06:00.123Z",
+            "scheduledUpdatedAt": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "cart-2",
+      "cartNumber": 2,
+      "housekeeper": {
+        "id": "omelene-pm",
+        "displayName": "Omelene PM",
+        "paletteKey": "sunset",
+        "updatedAt": "2027-02-10T12:00:00.123Z",
+        "deletedAt": null
+      },
+      "assignedAt": "2027-02-10T12:00:00.123Z",
+      "updatedAt": "2027-02-10T12:10:00.123Z",
+      "deletedAt": null,
+      "rooms": [
+        {
+          "roomNumber": "143",
+          "phase": "pending",
+          "isVip": false,
+          "scheduledFor": "2027-02-10T14:00:00.123Z",
+          "deletedAt": null,
+          "timestamps": {
+            "selectedAt": "2027-02-10T12:10:00.123Z",
+            "phaseUpdatedAt": "2027-02-10T12:10:00.123Z",
+            "openedAt": null,
+            "completedAt": null,
+            "vipUpdatedAt": null,
+            "scheduledUpdatedAt": "2027-02-10T12:10:00.123Z"
+          }
+        }
+      ]
+    }
+  ]
+}

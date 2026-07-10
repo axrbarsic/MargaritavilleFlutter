@@ -1,0 +1,60 @@
+import 'package:drift/drift.dart';
+
+import 'work_session_tables.dart';
+
+@DataClassName('HistoryEventRow')
+class HistoryEventRecords extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId =>
+      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  TextColumn get commandId => text()();
+  TextColumn get eventType => text()();
+  IntColumn get eventVersion => integer().withDefault(const Constant(1))();
+  TextColumn get payloadJson => text()();
+  DateTimeColumn get happenedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('SyncOutboxRow')
+class SyncOutboxRecords extends Table {
+  TextColumn get eventId => text()();
+  TextColumn get sessionId =>
+      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get nextAttemptAt => dateTime().nullable()();
+  DateTimeColumn get acknowledgedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {eventId};
+}
+
+@DataClassName('SyncInboxRow')
+class SyncInboxRecords extends Table {
+  TextColumn get eventId => text()();
+  TextColumn get checksum => text()();
+  DateTimeColumn get receivedAt => dateTime()();
+  DateTimeColumn get appliedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {eventId};
+}
+
+@DataClassName('MediaManifestRow')
+class MediaManifestRecords extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId =>
+      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  TextColumn get assignmentId => text().nullable()();
+  TextColumn get roomNumber => text().nullable()();
+  TextColumn get kind => text()();
+  TextColumn get relativePath => text()();
+  TextColumn get checksumSha256 => text()();
+  TextColumn get originDeviceId => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
