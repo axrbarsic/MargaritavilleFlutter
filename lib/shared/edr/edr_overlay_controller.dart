@@ -6,6 +6,8 @@ import 'package:flutter/widgets.dart';
 import 'edr_overlay_bridge.dart';
 import 'generated/edr_overlay_api.g.dart';
 
+part 'edr_overlay_measurement.dart';
+
 final class EdrOverlayController extends ChangeNotifier {
   EdrOverlayController({EdrOverlayBridge? bridge, bool? supported})
     : _bridge = bridge ?? PigeonEdrOverlayBridge(),
@@ -14,14 +16,21 @@ final class EdrOverlayController extends ChangeNotifier {
 
   final EdrOverlayBridge _bridge;
   final bool supported;
+  final GlobalKey contentKey = GlobalKey(debugLabel: 'summary-edr-content');
   final GlobalKey surfaceKey = GlobalKey(debugLabel: 'summary-edr-overlay');
   final Map<String, _EdrTileEntry> _entries = {};
   Set<String> _renderedRoomIds = const {};
+  Rect? _overlayBounds;
   int? _viewId;
   bool _syncScheduled = false;
   bool _syncInProgress = false;
   bool _syncAgain = false;
   bool _disposed = false;
+
+  static const double horizontalEffectBleed = 11;
+  static const double verticalEffectBleed = 24;
+
+  Rect? get overlayBounds => _overlayBounds;
 
   bool isTileRendered(String roomId) {
     return supported && _renderedRoomIds.contains(roomId);
@@ -116,39 +125,24 @@ final class EdrOverlayController extends ChangeNotifier {
 
   Future<void> _sendCurrentSnapshot() async {
     final viewId = _viewId;
-    final surface = surfaceKey.currentContext?.findRenderObject();
-    if (_disposed ||
-        viewId == null ||
-        surface is! RenderBox ||
-        !surface.hasSize) {
+    if (_disposed) return;
+    final measuredTiles = _measureTiles();
+    final nextBounds = _effectBounds(measuredTiles);
+    if (_replaceOverlayBounds(nextBounds)) {
+      if (nextBounds == null && viewId != null) {
+        await _bridge.clearTiles(viewId);
+        _replaceRenderedIds(const {});
+      }
+      _scheduleSync();
       return;
     }
+    final surface = surfaceKey.currentContext?.findRenderObject();
+    if (viewId == null || surface is! RenderBox || !surface.hasSize) return;
     final surfaceOrigin = surface.localToGlobal(Offset.zero);
-    final tiles = <EdrTileSnapshot>[];
-    for (final MapEntry(key: roomId, value: entry) in _entries.entries) {
-      final renderObject = entry.renderKey.currentContext?.findRenderObject();
-      if (renderObject is! RenderBox || !renderObject.hasSize) continue;
-      final globalOrigin = renderObject.localToGlobal(Offset.zero);
-      final origin = globalOrigin - surfaceOrigin;
-      tiles.add(
-        EdrTileSnapshot(
-          roomId: roomId,
-          left: origin.dx,
-          top: origin.dy,
-          width: renderObject.size.width,
-          height: renderObject.size.height,
-          cornerRadius: entry.cornerRadius,
-          baseColorArgb: entry.baseColorArgb,
-          vipHdrEnabled: entry.vipHdrEnabled,
-          vipJellyEnabled: entry.vipJellyEnabled,
-          vipJellySpeed: entry.vipJellySpeed,
-          pulseGeneration: entry.pulseGeneration,
-          pulseColorArgb: entry.pulseColorArgb,
-          pulseStartedAtMicros: entry.pulseStartedAtMicros,
-          springIntensity: entry.springIntensity,
-        ),
-      );
-    }
+    final tiles = <EdrTileSnapshot>[
+      for (final measured in measuredTiles)
+        measured.snapshot(relativeTo: surfaceOrigin),
+    ];
     try {
       if (tiles.isEmpty) {
         await _bridge.clearTiles(viewId);
@@ -162,6 +156,55 @@ final class EdrOverlayController extends ChangeNotifier {
     }
     if (_disposed || _viewId != viewId) return;
     _replaceRenderedIds({for (final tile in tiles) tile.roomId});
+  }
+
+  List<_MeasuredEdrTile> _measureTiles() {
+    final content = contentKey.currentContext?.findRenderObject();
+    final fallbackSurface = surfaceKey.currentContext?.findRenderObject();
+    final coordinateSpace = content is RenderBox && content.hasSize
+        ? content
+        : fallbackSurface is RenderBox && fallbackSurface.hasSize
+        ? fallbackSurface
+        : null;
+    if (coordinateSpace == null) return const [];
+    final coordinateOrigin = coordinateSpace.localToGlobal(Offset.zero);
+    final tiles = <_MeasuredEdrTile>[];
+    for (final MapEntry(key: roomId, value: entry) in _entries.entries) {
+      final renderObject = entry.renderKey.currentContext?.findRenderObject();
+      if (renderObject is! RenderBox || !renderObject.hasSize) continue;
+      final globalOrigin = renderObject.localToGlobal(Offset.zero);
+      final origin = globalOrigin - coordinateOrigin;
+      tiles.add(
+        _MeasuredEdrTile(
+          roomId: roomId,
+          globalOrigin: globalOrigin,
+          bounds: origin & renderObject.size,
+          entry: entry,
+        ),
+      );
+    }
+    return tiles;
+  }
+
+  Rect? _effectBounds(List<_MeasuredEdrTile> tiles) {
+    if (tiles.isEmpty) return null;
+    var union = tiles.first.bounds;
+    for (final tile in tiles.skip(1)) {
+      union = union.expandToInclude(tile.bounds);
+    }
+    return Rect.fromLTRB(
+      union.left - horizontalEffectBleed,
+      union.top - verticalEffectBleed,
+      union.right + horizontalEffectBleed,
+      union.bottom + verticalEffectBleed,
+    );
+  }
+
+  bool _replaceOverlayBounds(Rect? next) {
+    if (_overlayBounds == next) return false;
+    _overlayBounds = next;
+    notifyListeners();
+    return true;
   }
 
   void _replaceRenderedIds(Set<String> next) {

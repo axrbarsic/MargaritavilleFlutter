@@ -378,3 +378,30 @@ haptics. Физический Pixel сейчас заблокирован, по�
   отклонён заблокированным экраном, поэтому perceptual scroll-гейт остаётся за
   ручным открытием build 11. Полный software gate зелёный: analyze, 71 test,
   format, file-size и architecture guards.
+
+## 2026-07-10 — Checkpoint 9: cropped EDR composition для плавного скролла
+
+- После восстановления `AlwaysScrollable`-пружины Alex подтвердил,
+  что само прокручивание всё ещё ощущается грубо. Физика сверена с
+  donor: Swift build 37 использует обычный `ScrollView` без кастомной
+  deceleration/spring, что совпадает с Flutter `BouncingScrollPhysics.normal`.
+- Найден рендерный источник грубости: единый iOS `UiKitView` для HDR
+  всегда занимал всю высоту Summary, даже когда не было ни одной
+  активной EDR-ячейки. При скролле iOS композировала этот нативный
+  слой и Flutter-overlay поверх почти всей ленты.
+- Overlay теперь монтируется только при активном VIP HDR или status
+  pulse. Его bounds вычисляются как union реальных layout bounds только
+  активных ячеек плюс точный worst-case bleed `11 pt` по X и `24 pt` по Y
+  для 1.7x rubber, jelly transform и волнистой маски.
+- Widget-тесты закрепляют отсутствие platform surface без EDR, bounds
+  `Rect(9, 6, 127, 152)` для ячейки `96x98` в `(20, 30)` и нативную локальную
+  координату ячейки `(11, 24)`, поэтому обрезка не сдвигает HDR.
+- Добавлен profile integration benchmark с 36 комнатами, Matrix, jelly и
+  одним VIP HDR. На iPhone 17 Pro Max Simulator после warm-up он зафиксировал
+  `p95 build 3.271 ms`, `p95 raster 5.807 ms` при 60 Hz. Это зелёный
+  функциональный и симуляторный бюджет-гейт, но не доказательство 120 Hz:
+  жёсткий performance-гейт остаётся на физическом iPhone после разблокировки.
+- Physical iOS profile build `0.1.0 (12)` прошёл bundle guard: все семь
+  embedded frameworks имеют `platform IOS`, deep codesign валиден. Build 12
+  установлен на iPhone 17 Pro Max; автозапуск отклонён только из-за
+  заблокированного экрана.

@@ -78,11 +78,104 @@ void main() {
     expect(snapshot.pulseStartedAtMicros, startedAt.microsecondsSinceEpoch);
     expect(snapshot.vipJellyEnabled, isFalse);
     expect(snapshot.vipJellySpeed, 0.75);
+    expect(controller.overlayBounds, const Rect.fromLTRB(9, 6, 127, 152));
 
     final surface = tester.widget<DecoratedBox>(
       find.byKey(const Key('summary-room-surface-147')),
     );
     expect((surface.decoration as BoxDecoration).color, Colors.transparent);
+  });
+
+  testWidgets('keeps the platform surface absent without active EDR tiles', (
+    tester,
+  ) async {
+    final bridge = _FakeEdrOverlayBridge();
+    final controller = EdrOverlayController(bridge: bridge, supported: true);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(key: controller.contentKey, width: 220, height: 240),
+      ),
+    );
+
+    controller.attachView(19);
+    await tester.pumpAndSettle();
+
+    expect(controller.overlayBounds, isNull);
+    expect(bridge.lastTiles, isEmpty);
+  });
+
+  testWidgets('crops the native surface to the active tile effect bounds', (
+    tester,
+  ) async {
+    final bridge = _FakeEdrOverlayBridge();
+    final controller = EdrOverlayController(bridge: bridge, supported: true);
+    addTearDown(controller.dispose);
+    final startedAt = DateTime.now().subtract(
+      const Duration(milliseconds: 580),
+    );
+    final room = RoomState.pending(roomNumber: '147', selectedAt: startedAt);
+    final pulse = SummaryVisualPulseEvent(
+      generation: 5,
+      status: room.displayStatus,
+      startedAt: startedAt,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EdrOverlayScope(
+          controller: controller,
+          child: SizedBox(
+            width: 220,
+            height: 240,
+            child: Stack(
+              key: controller.contentKey,
+              clipBehavior: Clip.none,
+              children: [
+                ListenableBuilder(
+                  listenable: controller,
+                  builder: (context, _) {
+                    final bounds = controller.overlayBounds;
+                    if (bounds == null) return const SizedBox.shrink();
+                    return Positioned.fromRect(
+                      rect: bounds,
+                      child: SizedBox.expand(key: controller.surfaceKey),
+                    );
+                  },
+                ),
+                Positioned(
+                  left: 20,
+                  top: 30,
+                  width: 96,
+                  height: 98,
+                  child: RoomStatusTile(
+                    room: room,
+                    pulseEvent: pulse,
+                    visualPolicy: const SummaryVisualPolicy(
+                      statusPulseEnabled: true,
+                    ),
+                    onAdvance: () {},
+                    onReset: () {},
+                    onToggleVip: () {},
+                    onSchedule: () {},
+                    onOpenMedia: () {},
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    controller.attachView(20);
+    await tester.pumpAndSettle();
+
+    expect(controller.overlayBounds, const Rect.fromLTRB(9, 6, 127, 152));
+    expect(bridge.lastTiles, hasLength(1));
+    expect(bridge.lastTiles.single.left, closeTo(11, 0.01));
+    expect(bridge.lastTiles.single.top, closeTo(24, 0.01));
   });
 
   testWidgets('keeps VIP jelly geometry active over native EDR', (

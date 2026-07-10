@@ -125,9 +125,23 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
                   child: EdrOverlayScope(
                     controller: _edrOverlay,
                     child: Stack(
+                      key: _edrOverlay.contentKey,
+                      clipBehavior: Clip.none,
                       children: [
-                        Positioned.fill(
-                          child: EdrOverlaySurface(controller: _edrOverlay),
+                        ListenableBuilder(
+                          listenable: _edrOverlay,
+                          builder: (context, _) {
+                            final bounds = _edrOverlay.overlayBounds;
+                            if (bounds == null) {
+                              return const SizedBox.shrink(
+                                key: Key('summary-edr-overlay-inactive'),
+                              );
+                            }
+                            return Positioned.fromRect(
+                              rect: bounds,
+                              child: EdrOverlaySurface(controller: _edrOverlay),
+                            );
+                          },
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
