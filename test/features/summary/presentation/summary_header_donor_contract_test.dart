@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_theme.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
-import 'package:margaritaville_flutter/shared/edr/edr_overlay_surface.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_window_surface.dart';
+
+import '../../../../integration_test/support/summary_performance_fixture.dart';
 
 import 'support/summary_test_fixture.dart';
 
@@ -56,18 +59,20 @@ void main() {
     );
 
     expect(find.byType(SingleChildScrollView), findsNothing);
-    final listView = tester.widget<ListView>(find.byType(ListView));
-    expect(listView.physics, isA<AlwaysScrollableScrollPhysics>());
-    expect(find.byType(EdrViewportSurface), findsNothing);
+    final scrollView = tester.widget<ListView>(find.byType(ListView));
+    expect(scrollView.physics, isA<AlwaysScrollableScrollPhysics>());
+    expect(find.byType(EdrWindowSurface), findsNothing);
   });
 
-  testWidgets('EDR viewport is fixed outside the original ListView', (
+  testWidgets('one stable EDR window runtime stays outside the scroll tree', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(440, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
 
     await tester.pumpWidget(
       ProviderScope(
@@ -84,16 +89,51 @@ void main() {
       ),
     );
 
-    final viewport = find.byType(EdrViewportSurface);
+    final surface = find.byType(EdrWindowSurface);
     final list = find.byType(ListView);
-    expect(viewport, findsOneWidget);
+    expect(surface, findsOneWidget);
     expect(list, findsOneWidget);
     expect(
-      find.ancestor(of: viewport, matching: find.byType(ListView)),
+      find.ancestor(of: surface, matching: find.byType(ListView)),
       findsNothing,
     );
-    expect(tester.getTopLeft(viewport), tester.getTopLeft(list));
-    expect(tester.getSize(viewport), tester.getSize(list));
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('complete hotel owns exactly one stable EDR window runtime', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(440, 956);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    final session = summaryPerformanceSession(
+      vipRoomCount: summaryPerformanceRoomCount,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: MargaritavilleTheme.dark,
+          home: SummaryScreen(
+            session: session,
+            visualPolicy: const SummaryVisualPolicy(
+              vipHdrLightEnabled: true,
+              vipJellyEnabled: true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(EdrWindowSurface), findsOneWidget);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -1600));
+    await tester.pump();
+    expect(find.byType(EdrWindowSurface), findsOneWidget);
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('summary stays intact at physical Pixel width and font scale', (

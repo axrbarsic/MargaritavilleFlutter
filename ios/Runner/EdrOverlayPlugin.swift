@@ -1,283 +1,141 @@
 import Flutter
+import QuartzCore
+import SharedAppFoundation
 import UIKit
 
+/// Keeps the historical plugin registration name while routing every visual
+/// tile through one window-level runtime outside Flutter Platform Views.
 enum EdrViewportPlugin {
-  static let viewType = "margaritaville/edr-viewport"
-
+  @MainActor
   static func register(with registrar: FlutterPluginRegistrar) {
-    let registry = EdrViewportViewRegistry.shared
-    registrar.register(
-      EdrViewportViewFactory(registry: registry),
-      withId: viewType
+    let adapter = EdrWindowRuntimeAdapter(
+      binaryMessenger: registrar.messenger()
     )
     EdrOverlayHostApiSetup.setUp(
       binaryMessenger: registrar.messenger(),
-      api: EdrOverlayHostApiImplementation(registry: registry)
+      api: adapter
     )
   }
 }
 
-private final class EdrOverlayHostApiImplementation: EdrOverlayHostApi {
-  init(registry: EdrViewportViewRegistry) {
-    self.registry = registry
+@MainActor
+private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
+  init(binaryMessenger: FlutterBinaryMessenger) {
+    flutterApi = EdrOverlayFlutterApi(binaryMessenger: binaryMessenger)
+    overlay.onFirstFrameReady = { [weak self] readiness in
+      self?.flutterApi.windowReady(revision: Int64(readiness.revision)) { _ in }
+    }
   }
 
-  private let registry: EdrViewportViewRegistry
+  private let flutterApi: EdrOverlayFlutterApi
+  private let overlay = VisualRuntimeWindowOverlayView(frame: .zero)
+  private let viewportMask = CAShapeLayer()
 
-  func configureViewport(
-    viewId: Int64,
+  func configureWindow(
     revision: Int64,
-    scrollOffset: Double,
+    viewportLeft: Double,
+    viewportTop: Double,
+    viewportWidth: Double,
+    viewportHeight: Double,
     tiles: [EdrTileSnapshot]
   ) throws {
-    onMain {
-      self.registry.view(viewId)?.configure(
-        revision: revision,
-        scrollOffset: scrollOffset,
-        snapshots: tiles
+    guard revision >= 0 else { return }
+    try installOverlayIfNeeded()
+    let viewportOrigin = CGPoint(x: viewportLeft, y: viewportTop)
+    updateViewportMask(
+      CGRect(
+        x: viewportLeft,
+        y: viewportTop,
+        width: viewportWidth,
+        height: viewportHeight
       )
+    )
+    let descriptors = tiles.compactMap {
+      descriptor(snapshot: $0, viewportOrigin: viewportOrigin)
     }
+    overlay.apply(revision: UInt64(revision), descriptors: descriptors)
   }
 
-  func updateScrollOffset(
-    viewId: Int64,
-    revision: Int64,
-    sequence: Int64,
-    scrollOffset: Double
-  ) throws {
-    onMain {
-      self.registry.view(viewId)?.updateScrollOffset(
-        revision: revision,
-        sequence: sequence,
-        scrollOffset: scrollOffset
-      )
+  func clearWindow(revision: Int64) throws {
+    guard revision >= 0 else { return }
+    overlay.clear(revision: UInt64(revision))
+    viewportMask.path = nil
+  }
+
+  private func installOverlayIfNeeded() throws {
+    guard let window = activeWindow else {
+      throw EdrWindowRuntimeError.windowUnavailable
     }
+    guard overlay.superview !== window else { return }
+    overlay.install(in: window)
+    viewportMask.frame = overlay.bounds
+    overlay.layer.mask = viewportMask
   }
 
-  func clearViewport(viewId: Int64, revision: Int64) throws {
-    onMain { self.registry.view(viewId)?.clear(revision: revision) }
-  }
-
-  private func onMain(_ operation: @escaping () -> Void) {
-    if Thread.isMainThread {
-      operation()
-    } else {
-      DispatchQueue.main.sync(execute: operation)
-    }
-  }
-}
-
-private final class EdrViewportViewFactory: NSObject, FlutterPlatformViewFactory {
-  init(registry: EdrViewportViewRegistry) {
-    self.registry = registry
-  }
-
-  private let registry: EdrViewportViewRegistry
-
-  func create(
-    withFrame frame: CGRect,
-    viewIdentifier viewId: Int64,
-    arguments args: Any?
-  ) -> FlutterPlatformView {
-    EdrViewportPlatformView(frame: frame, viewId: viewId, registry: registry)
-  }
-}
-
-private final class EdrViewportPlatformView: NSObject, FlutterPlatformView {
-  init(frame: CGRect, viewId: Int64, registry: EdrViewportViewRegistry) {
-    self.rootView = EdrViewportRootView(frame: frame)
-    self.viewId = viewId
-    self.registry = registry
-    super.init()
-    registry.insert(rootView, for: viewId)
-  }
-
-  private let rootView: EdrViewportRootView
-  private let viewId: Int64
-  private let registry: EdrViewportViewRegistry
-
-  func view() -> UIView { rootView }
-
-  deinit {
-    registry.remove(viewId)
-  }
-}
-
-private final class WeakEdrViewportView {
-  weak var value: EdrViewportRootView?
-
-  init(_ value: EdrViewportRootView) {
-    self.value = value
-  }
-}
-
-private final class EdrViewportViewRegistry {
-  static let shared = EdrViewportViewRegistry()
-
-  private var views: [Int64: WeakEdrViewportView] = [:]
-
-  func insert(_ view: EdrViewportRootView, for viewId: Int64) {
-    views[viewId] = WeakEdrViewportView(view)
-  }
-
-  func view(_ viewId: Int64) -> EdrViewportRootView? {
-    views[viewId]?.value
-  }
-
-  func remove(_ viewId: Int64) {
-    views.removeValue(forKey: viewId)
-  }
-}
-
-private final class EdrViewportRootView: UIView {
-  private struct PendingScroll {
-    let revision: Int64
-    let sequence: Int64
-    let offset: Double
-  }
-
-  private var tiles: [String: EdrTileView] = [:]
-  private let tileContainer = UIView(frame: .zero)
-  private var activationObserver: NSObjectProtocol?
-  private var layoutRevision: Int64 = -1
-  private var scrollSequence: Int64 = -1
-  private var anchorScrollOffset = 0.0
-  private var currentScrollOffset = 0.0
-  private var pendingScroll: PendingScroll?
-
-  override init(frame: CGRect) {
-    super.init(frame: frame)
-    isOpaque = false
-    isUserInteractionEnabled = false
-    backgroundColor = .clear
-    clipsToBounds = true
-    tileContainer.isOpaque = false
-    tileContainer.isUserInteractionEnabled = false
-    tileContainer.backgroundColor = .clear
-    tileContainer.clipsToBounds = false
-    addSubview(tileContainer)
-    activationObserver = NotificationCenter.default.addObserver(
-      forName: UIApplication.didBecomeActiveNotification,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      self?.tiles.values.forEach { $0.resynchronizeEffects() }
-    }
-  }
-
-  @available(*, unavailable)
-  required init?(coder: NSCoder) {
-    nil
-  }
-
-  deinit {
-    if let activationObserver {
-      NotificationCenter.default.removeObserver(activationObserver)
-    }
-  }
-
-  override func layoutSubviews() {
-    super.layoutSubviews()
+  private func updateViewportMask(_ viewport: CGRect) {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
-    tileContainer.layer.bounds = bounds
-    tileContainer.layer.position = CGPoint(x: bounds.midX, y: bounds.midY)
-    applyScrollTransform()
+    viewportMask.frame = overlay.bounds
+    viewportMask.path = CGPath(rect: viewport, transform: nil)
     CATransaction.commit()
   }
 
-  func configure(
-    revision: Int64,
-    scrollOffset: Double,
-    snapshots: [EdrTileSnapshot]
-  ) {
-    guard revision >= layoutRevision else { return }
-    layoutRevision = revision
-    anchorScrollOffset = scrollOffset
-    currentScrollOffset = scrollOffset
-    let activeIds = Set(snapshots.map(\.roomId))
-    let staleIds = tiles.keys.filter { !activeIds.contains($0) }
-    for roomId in staleIds {
-      tiles.removeValue(forKey: roomId)?.removeFromSuperview()
-    }
-    for snapshot in snapshots {
-      let tile = tiles[snapshot.roomId] ?? makeTile(snapshot.roomId)
-      CATransaction.begin()
-      CATransaction.setDisableActions(true)
-      tile.frame = CGRect(
-        x: snapshot.left,
-        y: snapshot.top,
-        width: snapshot.width,
-        height: snapshot.height
-      )
-      CATransaction.commit()
-      tile.apply(snapshot)
-      tileContainer.bringSubviewToFront(tile)
-    }
-    if let pendingScroll, pendingScroll.revision == revision {
-      self.pendingScroll = nil
-      applyScroll(
-        sequence: pendingScroll.sequence,
-        scrollOffset: pendingScroll.offset
-      )
-    } else {
-      if let pendingScroll, pendingScroll.revision < revision {
-        self.pendingScroll = nil
-      }
-      CATransaction.begin()
-      CATransaction.setDisableActions(true)
-      applyScrollTransform()
-      CATransaction.commit()
-    }
+  private func descriptor(
+    snapshot: EdrTileSnapshot,
+    viewportOrigin: CGPoint
+  ) -> VisualTileDescriptor? {
+    let frame = CGRect(
+      x: viewportOrigin.x + snapshot.left,
+      y: viewportOrigin.y + snapshot.top,
+      width: snapshot.width,
+      height: snapshot.height
+    )
+    guard frame.origin.x.isFinite,
+          frame.origin.y.isFinite,
+          frame.width.isFinite,
+          frame.height.isFinite,
+          frame.width > 0,
+          frame.height > 0
+    else { return nil }
+
+    return VisualTileDescriptor(
+      stableID: snapshot.roomId,
+      frame: frame,
+      cornerRadius: snapshot.cornerRadius,
+      baseColor: VisualRuntimeColor(
+        argb: UInt32(truncatingIfNeeded: snapshot.baseColorArgb)
+      ),
+      labels: VisualRuntimeLabels(
+        primaryText: snapshot.roomId,
+        secondaryText: snapshot.timeText
+      ),
+      effectSeed: stableSeed(snapshot.roomId),
+      highDynamicRangeEnabled: snapshot.vipHdrEnabled,
+      jelly: snapshot.vipJellyEnabled
+        ? VisualRuntimeJelly(speed: snapshot.vipJellySpeed)
+        : nil,
+      pulse: pulse(snapshot),
+      lod: .full
+    )
   }
 
-  func updateScrollOffset(
-    revision: Int64,
-    sequence: Int64,
-    scrollOffset: Double
-  ) {
-    guard revision >= layoutRevision, sequence > scrollSequence else { return }
-    guard revision == layoutRevision else {
-      if pendingScroll == nil || sequence > pendingScroll!.sequence {
-        pendingScroll = PendingScroll(
-          revision: revision,
-          sequence: sequence,
-          offset: scrollOffset
-        )
-      }
-      return
-    }
-    applyScroll(sequence: sequence, scrollOffset: scrollOffset)
-  }
-
-  func clear(revision: Int64) {
-    guard revision >= layoutRevision else { return }
-    layoutRevision = revision
-    tiles.values.forEach { $0.removeFromSuperview() }
-    tiles.removeAll()
-    pendingScroll = nil
-  }
-
-  private func makeTile(_ roomId: String) -> EdrTileView {
-    let tile = EdrTileView(frame: .zero, seed: stableSeed(roomId))
-    tileContainer.addSubview(tile)
-    tiles[roomId] = tile
-    return tile
-  }
-
-  private func applyScroll(sequence: Int64, scrollOffset: Double) {
-    scrollSequence = sequence
-    currentScrollOffset = scrollOffset
-    CATransaction.begin()
-    CATransaction.setDisableActions(true)
-    applyScrollTransform()
-    CATransaction.commit()
-  }
-
-  private func applyScrollTransform() {
-    let translation = anchorScrollOffset - currentScrollOffset
-    tileContainer.layer.setAffineTransform(
-      CGAffineTransform(translationX: 0, y: translation)
+  private func pulse(_ snapshot: EdrTileSnapshot) -> VisualRuntimePulse? {
+    guard let generation = snapshot.pulseGeneration,
+          generation >= 0,
+          let color = snapshot.pulseColorArgb,
+          let additiveColor = snapshot.pulseBoostColorArgb,
+          let startedAtMicros = snapshot.pulseStartedAtMicros
+    else { return nil }
+    return VisualRuntimePulse(
+      generation: UInt64(generation),
+      startedAt: Date(
+        timeIntervalSince1970: Double(startedAtMicros) / 1_000_000
+      ),
+      color: VisualRuntimeColor(argb: UInt32(truncatingIfNeeded: color)),
+      additiveColor: VisualRuntimeColor(
+        argb: UInt32(truncatingIfNeeded: additiveColor)
+      ),
+      springIntensity: snapshot.springIntensity
     )
   }
 
@@ -288,5 +146,20 @@ private final class EdrViewportRootView: UIView {
       hash = hash &* 16_777_619
     }
     return Double(hash & 0xFFFF) / Double(0xFFFF)
+  }
+
+  private var activeWindow: UIWindow? {
+    UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .flatMap(\.windows)
+      .first { $0.isKeyWindow }
+  }
+}
+
+private enum EdrWindowRuntimeError: LocalizedError {
+  case windowUnavailable
+
+  var errorDescription: String? {
+    "Оконный EDR runtime пока не получил активное UIWindow"
   }
 }

@@ -604,3 +604,233 @@ haptics. Физический Pixel сейчас заблокирован, по�
   Android Choreographer на холодном старте сообщил два bursts `Skipped 50` и
   `Skipped 74 frames`; это зафиксировано как отдельный startup performance debt
   Pixel 5 и не смешивается с iOS steady-state EDR/jelly результатом.
+- Physical build 20 выявил отдельную recycling race: после быстрого возврата к
+  верхнему краю несколько VIP backgrounds появлялись примерно через полсекунды,
+  а одна ячейка могла остаться визуально пустой. Flutter foreground фактически
+  оставался, но чёрный текст становился невидимым, потому что stale native
+  acknowledgement прежнего widget-generation уже сделал его фон прозрачным.
+- Build 21 хранит native ownership не только по `roomId`, а по паре
+  `roomId + GlobalKey` конкретного поколения. Поздний `dispose` удаляет запись
+  только при совпадении ключа; любой entry/geometry change увеличивает content
+  revision; ответ старой revision не может включить прозрачность и немедленно
+  запускает следующий snapshot. Детерминированный deferred-bridge test
+  воспроизводит замену виджета во время незавершённого configure и закрепляет
+  fallback до acknowledgement нового поколения.
+- Build 21 прошёл analyze, `90 tests`, file-size/architecture guards, physical
+  iOS bundle guard 7 frameworks и установлен на iPhone. Финальный perceptual
+  gate быстрого scroll/rebound после пользовательского screenshot пока открыт;
+  checkpoint нельзя отправлять в GitHub до его подтверждения.
+- Пользовательская 19.12-секундная HEVC screen recording build 21 дала более
+  сильное доказательство, чем одиночный screenshot. При 60 FPS action sheet
+  открывается как «Комната 111», то есть Flutter widget/gesture существует, но
+  его чёрный foreground невидим без native background. Во время свайпов EDR
+  fills отделяются от ячеек и видны полосами у верхнего края, затем после
+  остановки возвращаются. Значит, оставшийся дефект — geometry/scroll anchor,
+  а не потеря domain room, jelly path или ListView recycling.
+- Build 22 добавляет controller-owned `ScrollController` и передаёт в EDR
+  controller живой `ScrollPosition.pixels`. Полный snapshot теперь считывает
+  этот offset в том же post-frame, где измеряет `RenderBox` global coordinates,
+  очищает более старый pending offset и только затем создаёт layout revision.
+  Это исключает повторное применение scroll delta к уже экранным coordinates.
+- Собственный controller первоначально снял implicit primary-scroll
+  `AlwaysScrollableScrollPhysics`; существующий donor-contract test это сразу
+  поймал. Build 22 задаёт physics явно, поэтому anchor fix не откатывает
+  подтверждённый нативный bounce. Targeted controller/header tests и analyze
+  зелёные; physical iOS profile build 22 прошёл 7-framework bundle guard,
+  установлен и запущен. Повторный пользовательский video/perceptual gate открыт.
+- Пользовательская 9.82-секундная запись build 22 при фактических `59.99 FPS`
+  доказала, что offset reanchor уменьшил, но не устранил дефект: во время
+  инерционного scroll нативные EDR-fills всё ещё на несколько кадров оставались
+  в прежних координатах, образовывали цветные полосы у верхней границы и
+  оставляли чёрный Flutter foreground без фона. Причина архитектурная: fixed
+  UIKit viewport и Flutter ListView двигались двумя асинхронными clocks через
+  Pigeon, поэтому никакая очередная поправка offset не могла дать frame-exact
+  композицию.
+- Build 23 переносит единственный нативный EDR background layer внутрь того же
+  scroll-content `Stack`, где находятся Flutter labels и gestures. Теперь UIKit
+  fills и Flutter foreground получают один compositor transform от исходного
+  `ListView`; per-frame Pigeon scroll API, native pending-scroll queue и второй
+  affine scroll transform удалены полностью. `AlwaysScrollableScrollPhysics`
+  сохранён, поэтому подтверждённый bounce остаётся владельцем Flutter, а
+  настоящее EDR и jelly по-прежнему рисуются нативными Core Animation layers.
+- Полный software gate build 23 зелёный: Pigeon/codegen, format, analyze,
+  `91 tests`, file-size `300` и architecture guards. Physical iOS profile
+  artifact `0.1.0 (23)` прошёл deep codesign и guard семи embedded frameworks
+  как `platform IOS`, затем установлен на iPhone 17 Pro Max. Автозапуск был
+  отклонён исключительно состоянием `Locked`; финальный быстрый scroll/bounce
+  perceptual gate остаётся за разблокированным физическим устройством.
+- Пользовательская 12.55-секундная physical screen recording build 23 при
+  `59.99 FPS` подтвердила frame-exact совместное движение native fills и Flutter
+  labels: прежнего независимого geometry lag больше нет. Но cold launch открыл
+  следующий bottleneck: VIP-ячейки оставались чёрными примерно `1.5 s`, пока
+  main thread последовательно строил `20` сложных path-keyframes для каждой
+  уникальной jelly mask. При полной VIP-нагрузке это воспроизводит прежнюю
+  activation freeze даже без scroll-channel.
+- Build 24 переводит построение donor jelly paths с `UIBezierPath` на чистый
+  `CGMutablePath` и выполняет cache misses в ограниченной двухпоточной
+  `OperationQueue`. На main thread каждая VIP-ячейка немедленно получает
+  округлый EDR fallback path, поэтому фон никогда не исчезает; готовая точная
+  wave-анимация атомарно заменяет fallback только при совпадении generation.
+  Старый async-result не может примениться после resize/recycle/disable.
+- Physical all-184-VIP probe build 24 подтвердил, что Flutter pipeline сам по
+  себе быстрый: p99 build/raster `3.42/3.56 ms`, `0` over-budget frames. Но
+  постановка jelly-path jobs сразу для всех 184 комнат дала лишь `87.30 FPS`
+  и `510` больших vsync gaps. Контрольный EDR-without-jelly прогон на той же
+  scroll-content архитектуре дал `114.18 FPS`, p99 `2.00/4.22 ms` и только
+  `61` gap. Значит, cadence терялась не из-за большого PlatformView или Flutter
+  layout, а из-за бессмысленного cold-cache расчёта 184 offscreen масок.
+- Build 25 добавляет отдельный fixed viewport key и держит в native EDR runtime
+  только реально видимые tiles плюс точный вертикальный preload `240 pt`.
+  PlatformView всё ещё находится в том же scroll-content и поэтому не теряет
+  frame-exact геометрию; scroll notifications лишь коалесцируют membership
+  snapshots, не двигают слой через channel. Если buffered room-set и content
+  revision не изменились, bridge-вызов полностью пропускается. Offscreen cells
+  остаются с Flutter fallback, поэтому recycling и быстрый fling не создают
+  чёрных дыр, а cold queue больше не строит 184 jelly timelines одновременно.
+- Physical probe build 25 показал, что один global `InheritedNotifier`
+  перестраивал все 184 room widgets при каждом изменении buffered ownership:
+  p99 build вырос до `13.65 ms`, `146` кадров вышли за бюджет. Build 26 заменил
+  глобальное уведомление на tile-local `ValueNotifier`; это убрало rebuild
+  fan-out, но выявило второй bottleneck: offscreen Flutter fallbacks всё ещё
+  клиповали 184 jelly contours на общем frame clock.
+- Build 27 делает iOS fallback намеренно статическим до native acknowledgement
+  и полностью снимает offscreen tiles с visual clock; на Android Flutter jelly
+  остаётся полноценным. Только принятые нативным viewport ячейки анимируют
+  синхронный foreground, поэтому быстрый fling не создаёт ни чёрных holes, ни
+  скрытой работы вне экрана.
+- Финальный physical all-184-VIP probe build 27 при `120 Hz` дал `113.16 FPS`,
+  p99 build/raster `3.43/3.77 ms`, max `5.44/6.77 ms`, `0` over-budget frames и
+  `108` больших vsync gaps. Это практически совпадает с контрольным EDR без
+  jelly (`114.18 FPS`) и радикально лучше промежуточного build 26 (`69.48 FPS`,
+  `57` over-budget, `813` gaps). Перфоманс checkpoint по Flutter pipeline зелён;
+  остаётся короткий physical perceptual gate cold launch + fast rebound.
+- Build 28 восстановил точный двухслойный donor pulse внутри одной нативной
+  `RGBA16Float / extendedLinearDisplayP3` поверхности: отдельный SDR
+  `plusLighter` boost и отдельный EDR fill, а также donor transform
+  `scaleCoefficient=0.09`, `verticalOffset=7`. Однако fixed content overlay всё
+  ещё зависел от асинхронного ownership при recycling, поэтому физический
+  perceptual gate остался красным.
+- Build 29 перенёс native EDR surface непосредственно в каждый виртуализированный
+  room slot. Это окончательно устранило пропадающие VIP-фоны при запуске и
+  быстром возврате к началу, но создало две новые измеренные регрессии:
+  прямоугольный Flutter fallback просвечивал под прозрачными краями jelly mask,
+  а пользовательская HEVC-запись показала фактические `41.99 FPS`. Причина —
+  hybrid-composition `UiKitView` на каждую видимую ячейку, а не Flutter layout.
+- Build 30 ввёл узкий `CAMetalLayer` runtime с `rgba16Float`,
+  `extendedLinearDisplayP3`, `wantsExtendedDynamicRangeContent`, аппаратным EDR
+  headroom и единым `CADisplayLink` только на время transient pulse. Runtime
+  успешно поднялся на физическом iPhone (`MARGARITAVILLE_EDR_METAL_RUNTIME_READY`),
+  но per-cell platform-view topology всё ещё не могла вернуть 120-Hz scroll.
+- Build 31 группирует четыре комнаты в один виртуализированный native row view.
+  Flutter держит непрозрачный безопасный fallback до подтверждения первого
+  завершённого Metal-кадра всех ячеек строки, затем атомарно снимает его: поэтому
+  нет ни чёрной дыры до готовности GPU, ни цветного прямоугольника под рваными
+  краями после готовности. Foreground/gestures остаются Flutter и получают тот
+  же scroll transform, а Metal-ячейки внутри строки используют общий runtime.
+- Контрактный тест полного каталога закрепляет, что `184` rooms не создают `46`
+  platform views сразу: существуют только строки в sliver viewport. Physical
+  all-184-VIP probe build 31 с EDR+jelly при `120 Hz` дал `119.99 FPS`, p95
+  build/raster `1.72/2.69 ms`, p99 `1.84/3.88 ms`, max `2.27/5.26 ms`,
+  `0` over-budget frames и `0` больших vsync gaps. После probe обычный profile
+  build 31 прошёл guard семи embedded iOS frameworks, установлен и запущен на
+  iPhone 17 Pro Max. Открыт только финальный пользовательский perceptual gate:
+  отсутствие подложки и идентичность EDR/jelly донору на физическом дисплее.
+- Пользовательский physical gate build 31 немедленно опроверг synthetic
+  Flutter FrameTiming: при реальном fling native row backgrounds отрывались от
+  Flutter foreground, обрезались верхней границей и оставляли чёрные номера без
+  фона. В 15.58-секундной HEVC-записи видно несколько кадров, где цветные дуги
+  от rows находятся над заголовком следующей секции. Значит, `119.99 FPS`
+  измеряли только Flutter pipeline и не доказывали корректность UIKit hybrid
+  composition.
+- Upstream-аудит подтвердил этот класс дефектов: Flutter iOS использует только
+  Hybrid Composition, `SliverList` уничтожает offscreen state, а открытые
+  flutter/flutter `#176473`, `#119485` и `#142801` воспроизводят неправильную
+  позицию и вспышки `UiKitView` у верхней границы scroll/sliver. Поэтому
+  per-cell/per-row PlatformView признан архитектурным тупиком, а не кандидатом
+  на очередной offset/keep-alive patch.
+- Build 32 полностью удаляет production topology `UiKitView` на ячейку/строку,
+  оба Dart surface, standalone Swift factory и лишние Pigeon host methods. Один
+  стабильный content-sized EDR PlatformView живёт внутри единственного child
+  обычного `ListView`; Flutter content и native surface получают один compositor
+  transform, что уже было физически подтверждено build 23, но теперь fill
+  рисуется Metal вместо CoreGraphics.
+- Flutter fallback каждой комнаты остаётся непрозрачным до callback первого
+  завершённого Metal command buffer всех активных ячеек текущей revision.
+  Только затем tile-local notifier делает Flutter background прозрачным.
+  Stale GPU acknowledgement не может получить ownership новой generation.
+  Старый CoreGraphics fallback и новый Metal runtime используют ровно один
+  общий transient `EdrPulseFrameClock`; архитектурный guard закрепляет единственный
+  native `CADisplayLink` вместо конкурирующих clocks.
+- Software gate build 32 зелёный: codegen, format, analyze, `90 tests`, file-size
+  и architecture guards. Physical profile artifact прошёл deep codesign и guard
+  семи embedded iOS frameworks, установлен и запущен на iPhone 17 Pro Max.
+  Финальный fast-scroll/rebound perceptual gate build 32 остаётся открытым.
+
+## 2026-07-10 — Checkpoint 6: оконный VisualRuntime вместо PlatformView
+
+- Physical build 32 опроверг гипотезу, что один большой content-sized
+  PlatformView достаточно стабилен: all-184 probe дал лишь `13.56 FPS`, p95
+  build/raster `10.51/6.14 ms`, p99 `21.86/7.18 ms`. Build 33 разбил его на
+  section-sized views, но cold launch не завершил warm-up даже за 45 секунд.
+  После per-cell, per-row, content-sized и per-section вариантов весь
+  `UiKitView/FlutterPlatformView` путь признан запрещённым для EDR Summary.
+- Upstream-сверка дала прямое архитектурное объяснение: iOS Platform Views
+  работают через Hybrid Composition, а открытые Flutter issues `#176473`,
+  `#119485`, `#142801` и performance issue `#107486` описывают те же scroll,
+  top-edge, mask и moving-view дефекты. Новая защита CI падает при возвращении
+  PlatformView в EDR adapter.
+- Общий `shared-parameterized` runtime выделен в соседний Swift Package
+  `SharedAppFoundation/VisualRuntime`. В нём нет Flutter, Pigeon, bundle ID или
+  гостиничного домена: только `VisualTileDescriptor`, labels, jelly, pulse,
+  LOD, readiness и оконный renderer. Runner остаётся тонким typed Pigeon
+  adapter и закрепляет публичный package точной remote revision
+  `ceba87f54ce550a24def006b1a1638c5d23ed90a`, поэтому отдельный clone/CI не
+  зависит от соседней папки на Mac.
+- Runtime устанавливает один прозрачный неинтерактивный sibling в `UIWindow`,
+  за пределами Flutter PlatformView compositor. Он получает одним snapshot
+  только видимые VIP/pulse bounds, ограничивается точной маской Summary
+  viewport и подтверждает ownership лишь после первого завершённого GPU-кадра.
+  До acknowledgement Flutter продолжает рисовать полный безопасный fallback;
+  stale revision не может скрыть новое поколение комнаты.
+- Primary path использует `CAMetalLayer` с `rgba16Float`, extended-linear
+  Display P3, high dynamic range/headroom и одним process-wide max-vsync
+  `CADisplayLink`. Если Metal/drawable недоступен, включается не SDR-заглушка,
+  а CoreGraphics EDR leaf с `RGBA16Float`, `setEDRTargetHeadroom`, тем же radial
+  lift и двухслойным donor pulse. Оба leaf находятся под одной jelly-mask;
+  прямоугольной цветной подложки под волнистыми краями нет.
+- Native слой теперь рисует и фон, и donor labels (`SF Rounded Black`, room
+  `44 pt`, time `16 pt`, tabular digits, insets `4/10`, gap `6`), поэтому один
+  оконный sibling не разделяет cell foreground/background между двумя
+  compositor clocks. Flutter сохраняет gestures, semantics и domain state.
+- Build 34 проходит generic physical-iOS Swift 6 build общего package, точный
+  Metal shader compile, Pigeon codegen, Dart analyze и targeted widget/controller
+  tests. Подписанная обычная build 34 установлена и запущена на физическом
+  iPhone 17 Pro Max.
+- Новый all-184-VIP physical profile с Matrix + EDR + jelly дал при `120 Hz`:
+  p95 build/raster `2.06/2.28 ms`, p99 `4.21/3.14 ms`, max `4.65/6.92 ms` и
+  `0` кадров тяжелее бюджета `8.33 ms`. Callback cadence составила `85.34 Hz`
+  при `204` больших vsync gaps; поэтому frame-time gate зелёный, но cadence и
+  финальный fast-scroll perceptual gate пока открыты. `flutter drive` через
+  mDNS отдельно заблокирован локальным сетевым разрешением macOS; standalone
+  probe и `devicectl` продолжают работать без этого разрешения.
+- Системный iPhone Mirroring дал независимый end-to-end gate обычной profile
+  build 34: сохранённые `42` комнаты/`2` назначения открылись из Drift, все
+  видимые VIP backgrounds и native labels появились без чёрных дыр. При
+  открытии action sheet runtime атомарно очистился, Flutter fallback корректно
+  оказался под модалью; после закрытия новая revision вернула EDR/jelly без
+  stale ownership. Общая route/TickerMode visibility закреплена controller
+  test и применяется ко всем modal/push, а не только к меню комнаты.
+- После первого cadence probe найден остаточный native main-thread расход:
+  точный jelly `CGPath` пересчитывался каждой видимой VIP на каждом display
+  tick. В общем package добавлены ограниченная двухпоточная подготовка,
+  generation-safe cache `256/32 MiB` и `CAKeyframeAnimation` для path, scale и
+  offset. Первый точный волнистый path ставится синхронно, затем Core Animation
+  интерполирует build-37 keyframes; process-wide `CADisplayLink` теперь активен
+  только до first-frame readiness и во время transient pulse, а не постоянно
+  ради jelly.
+- Pure Swift package получил постоянный XCTest target с golden-векторами pulse,
+  jelly transform, sample counts `12/20/66` и ARGB contract. Generic physical
+  iOS `build-for-testing` проходит в Swift 6 без предупреждений нового runtime.
+  Повторный all-184 cadence probe подготовлен, но запуск был отклонён внешним
+  состоянием `Locked`; тестовый harness сразу заменён на обычную подписанную
+  profile build 34, которая установлена на iPhone и не требует Flutter tooling.

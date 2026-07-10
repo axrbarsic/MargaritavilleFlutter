@@ -5,9 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/edr/edr_overlay_controller.dart';
 import '../../../shared/edr/edr_overlay_scope.dart';
-import '../../../shared/edr/edr_overlay_surface.dart';
+import '../../../shared/edr/edr_window_surface.dart';
 import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../work_session/domain/models/room_state.dart';
+import '../../work_session/domain/models/work_assignment.dart';
 import '../../work_session/domain/models/work_session.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
 import 'summary_layout_tokens.dart';
@@ -44,14 +45,18 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
   RoomDisplayStatus? _activeFilter;
   Timer? _scheduleTimer;
   late final SummaryVisualPulseCoordinator _visualPulses;
-  late final EdrOverlayController _edrViewport;
+  late final EdrOverlayController _edrWindow;
+  late final ScrollController _scrollController;
+  late final bool _ownsScrollController;
 
   @override
   void initState() {
     super.initState();
+    _ownsScrollController = widget.scrollController == null;
+    _scrollController = widget.scrollController ?? ScrollController();
     _visualPulses = SummaryVisualPulseCoordinator()
       ..addListener(_onVisualEventsChanged);
-    _edrViewport = EdrOverlayController();
+    _edrWindow = EdrOverlayController();
     if (!widget.enableSchedulePolling) return;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -69,7 +74,8 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
     _visualPulses
       ..removeListener(_onVisualEventsChanged)
       ..dispose();
-    _edrViewport.dispose();
+    _edrWindow.dispose();
+    if (_ownsScrollController) _scrollController.dispose();
     super.dispose();
   }
 
@@ -116,42 +122,43 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
               const SizedBox(height: SummaryLayoutTokens.headerContentGap),
               Expanded(
                 child: EdrViewportScope(
-                  controller: _edrViewport,
+                  controller: _edrWindow,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (_nativeEdrRequested)
-                        EdrViewportSurface(controller: _edrViewport),
+                      if (_nativeEdrRequested && EdrWindowSurface.supported)
+                        EdrWindowSurface(controller: _edrWindow),
                       NotificationListener<ScrollMetricsNotification>(
                         onNotification: _synchronizeEdrViewport,
                         child: NotificationListener<ScrollNotification>(
-                          onNotification: _synchronizeEdrViewport,
-                          child: ListView.separated(
-                            controller: widget.scrollController,
+                          onNotification: _synchronizeEdrVisibility,
+                          child: ListView(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.fromLTRB(
                               SummaryLayoutTokens.contentHorizontalPadding,
                               0,
                               SummaryLayoutTokens.contentHorizontalPadding,
                               SummaryLayoutTokens.contentBottomPadding,
                             ),
-                            itemCount: sections.length,
-                            separatorBuilder: (_, _) => const SizedBox(
-                              height: SummaryLayoutTokens.sectionSpacing,
-                            ),
-                            itemBuilder: (context, index) {
-                              final section = sections[index];
-                              return SummaryAssignmentSection(
-                                assignment: section.assignment,
-                                rooms: section.rooms,
-                                onAdvance: _advanceRoom,
-                                onReset: _resetRoom,
-                                onToggleVip: _toggleVip,
-                                onSchedule: _openSchedule,
-                                onOpenMedia: _showMediaNotice,
-                                visualPolicy: widget.visualPolicy,
-                                pulseEventFor: _visualPulses.eventFor,
-                              );
-                            },
+                            children: [
+                              Column(
+                                children: [
+                                  for (
+                                    var index = 0;
+                                    index < sections.length;
+                                    index++
+                                  ) ...[
+                                    if (index > 0)
+                                      const SizedBox(
+                                        height:
+                                            SummaryLayoutTokens.sectionSpacing,
+                                      ),
+                                    _edrSection(sections[index]),
+                                  ],
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -170,23 +177,35 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
     if (mounted) setState(() {});
   }
 
-  bool _synchronizeEdrViewport(Notification notification) {
-    switch (notification) {
-      case ScrollNotification(:final metrics):
-        _edrViewport.updateScrollOffset(metrics.pixels);
-        if (notification is ScrollEndNotification) {
-          _edrViewport.requestGeometrySync();
-        }
-      case ScrollMetricsNotification(:final metrics):
-        _edrViewport.updateScrollOffset(metrics.pixels);
-        _edrViewport.requestGeometrySync();
-      default:
-        break;
-    }
+  bool _synchronizeEdrViewport(ScrollMetricsNotification notification) {
+    _edrWindow.requestGeometrySync();
     return false;
+  }
+
+  bool _synchronizeEdrVisibility(ScrollNotification notification) {
+    _edrWindow.requestVisibilitySync();
+    return false;
+  }
+
+  Widget _edrSection(
+    ({WorkAssignment assignment, List<RoomState> rooms}) section,
+  ) {
+    final assignment = section.assignment;
+    return SummaryAssignmentSection(
+      assignment: assignment,
+      rooms: section.rooms,
+      onAdvance: _advanceRoom,
+      onReset: _resetRoom,
+      onToggleVip: _toggleVip,
+      onSchedule: _openSchedule,
+      onOpenMedia: _showMediaNotice,
+      visualPolicy: widget.visualPolicy,
+      pulseEventFor: _visualPulses.eventFor,
+    );
   }
 
   bool get _nativeEdrRequested =>
       widget.visualPolicy.vipHdrLightEnabled ||
+      widget.visualPolicy.vipJellyEnabled ||
       widget.visualPolicy.statusPulseEnabled;
 }

@@ -44,13 +44,17 @@ final class RoomStatusTile extends StatefulWidget {
 
 final class _RoomStatusTileState extends State<RoomStatusTile> {
   final GlobalKey _edrRenderKey = GlobalKey();
+  final ValueNotifier<bool> _nativeEdrActive = ValueNotifier(false);
   EdrOverlayController? _edrController;
   String? _edrRoomId;
 
   @override
   void dispose() {
     final roomId = _edrRoomId;
-    if (roomId != null) _edrController?.removeTile(roomId);
+    if (roomId != null) {
+      _edrController?.removeTile(roomId, renderKey: _edrRenderKey);
+    }
+    _nativeEdrActive.dispose();
     super.dispose();
   }
 
@@ -62,9 +66,16 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
         : MargaritavilleColors.status(room.displayStatus);
     final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
     final edrController = EdrViewportScope.maybeControllerOf(context);
+    final pulse = widget.visualPolicy.transientPulseEnabled
+        ? widget.pulseEvent
+        : null;
+    final nativeEdrManaged =
+        edrController?.supported == true &&
+        ((room.isVip &&
+                (widget.visualPolicy.vipHdrLightEnabled ||
+                    widget.visualPolicy.vipJellyEnabled)) ||
+            (pulse != null && widget.visualPolicy.statusPulseEnabled));
     _updateEdrRegistration(edrController, room.roomNumber, color);
-    final nativeEdrActive =
-        edrController?.isTileRendered(room.roomNumber) ?? false;
     final label = switch (room.displayStatus) {
       RoomDisplayStatus.pending => 'ожидает',
       RoomDisplayStatus.open => 'открыт',
@@ -72,68 +83,77 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
       RoomDisplayStatus.scheduled => 'назначен',
     };
 
-    return KeyedSubtree(
-      key: _edrRenderKey,
-      child: Semantics(
-        button: true,
-        label: 'Номер ${room.roomNumber}',
-        value: '$label${room.isVip ? ', VIP' : ''}',
-        hint:
-            'Удерживайте для следующего статуса, свайпните вправо для действий',
-        child: RoomGestureArenaTarget(
-          key: Key('summary-room-${room.roomNumber}'),
-          onHoldCommit: () {
-            feedback?.holdCommitHapticOnly();
-            widget.onAdvance();
-          },
-          onSwipeStart: () => feedback?.holdStartHapticOnly(),
-          onSwipeWarning: () => feedback?.holdWarningHapticOnly(),
-          onSwipeCommit: () => feedback?.holdCommitHapticOnly(),
-          onOpenActions: () {
-            feedback?.actionMenuOpened();
-            unawaited(_showActionMenu(context));
-          },
-          child: SizedBox.expand(
-            child: RoomVisualEffectSurface(
-              room: room,
-              baseColor: color,
-              policy: widget.visualPolicy,
-              pulseEvent: widget.pulseEvent,
-              nativeEdrActive: nativeEdrActive,
-              child: DecoratedBox(
-                key: Key('summary-room-surface-${room.roomNumber}'),
-                decoration: BoxDecoration(
-                  color: nativeEdrActive ? Colors.transparent : color,
-                  borderRadius: BorderRadius.circular(
-                    SummaryLayoutTokens.tileCornerRadius,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 10,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: SummaryMinimumScaleText(
-                          key: Key(
-                            'summary-room-number-text-${room.roomNumber}',
+    return ValueListenableBuilder<bool>(
+      valueListenable: _nativeEdrActive,
+      builder: (context, nativeEdrActive, _) => KeyedSubtree(
+        key: _edrRenderKey,
+        child: Semantics(
+          button: true,
+          label: 'Номер ${room.roomNumber}',
+          value: '$label${room.isVip ? ', VIP' : ''}',
+          hint:
+              'Удерживайте для следующего статуса, свайпните вправо для действий',
+          child: RoomGestureArenaTarget(
+            key: Key('summary-room-${room.roomNumber}'),
+            onHoldCommit: () {
+              feedback?.holdCommitHapticOnly();
+              widget.onAdvance();
+            },
+            onSwipeStart: () => feedback?.holdStartHapticOnly(),
+            onSwipeWarning: () => feedback?.holdWarningHapticOnly(),
+            onSwipeCommit: () => feedback?.holdCommitHapticOnly(),
+            onOpenActions: () {
+              feedback?.actionMenuOpened();
+              unawaited(_showActionMenu(context));
+            },
+            child: SizedBox.expand(
+              child: RoomVisualEffectSurface(
+                room: room,
+                baseColor: color,
+                policy: widget.visualPolicy,
+                pulseEvent: widget.pulseEvent,
+                nativeEdrActive: nativeEdrActive,
+                nativeEdrManaged: nativeEdrManaged,
+                child: Opacity(
+                  opacity: nativeEdrActive ? 0 : 1,
+                  child: DecoratedBox(
+                    key: Key('summary-room-surface-${room.roomNumber}'),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(
+                        SummaryLayoutTokens.tileCornerRadius,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 10,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: SummaryMinimumScaleText(
+                              key: Key(
+                                'summary-room-number-text-${room.roomNumber}',
+                              ),
+                              text: room.roomNumber,
+                              style: SummaryTypography.roomNumber,
+                              minimumScaleFactor: 0.50,
+                            ),
                           ),
-                          text: room.roomNumber,
-                          style: SummaryTypography.roomNumber,
-                          minimumScaleFactor: 0.50,
-                        ),
+                          const SizedBox(height: 6),
+                          SummaryMinimumScaleText(
+                            key: Key(
+                              'summary-room-time-text-${room.roomNumber}',
+                            ),
+                            text: _time(_timestamp),
+                            style: SummaryTypography.roomTime,
+                            minimumScaleFactor: 0.62,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 6),
-                      SummaryMinimumScaleText(
-                        key: Key('summary-room-time-text-${room.roomNumber}'),
-                        text: _time(_timestamp),
-                        style: SummaryTypography.roomTime,
-                        minimumScaleFactor: 0.62,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -151,7 +171,9 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
   ) {
     if (_edrController != controller || _edrRoomId != roomId) {
       final oldRoomId = _edrRoomId;
-      if (oldRoomId != null) _edrController?.removeTile(oldRoomId);
+      if (oldRoomId != null) {
+        _edrController?.removeTile(oldRoomId, renderKey: _edrRenderKey);
+      }
       _edrController = controller;
       _edrRoomId = roomId;
     }
@@ -160,15 +182,24 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
         ? widget.pulseEvent
         : null;
     final wantsNativeViewport =
-        widget.visualPolicy.vipHdrLightEnabled ||
-        widget.visualPolicy.statusPulseEnabled;
+        (widget.room.isVip &&
+            (widget.visualPolicy.vipHdrLightEnabled ||
+                widget.visualPolicy.vipJellyEnabled)) ||
+        (pulse != null && widget.visualPolicy.statusPulseEnabled);
     if (!wantsNativeViewport) {
-      controller.removeTile(roomId);
+      controller.removeTile(roomId, renderKey: _edrRenderKey);
       return;
     }
+    final pulseColor = pulse == null
+        ? null
+        : widget.visualPolicy.vividStatusPaletteEnabled
+        ? MargaritavilleColors.vividStatus(pulse.status)
+        : MargaritavilleColors.status(pulse.status);
     controller.upsertTile(
       roomId: roomId,
+      timeText: _time(_timestamp),
       renderKey: _edrRenderKey,
+      renderState: _nativeEdrActive,
       baseColorArgb: baseColor.toARGB32(),
       cornerRadius: SummaryLayoutTokens.tileCornerRadius,
       vipHdrEnabled:
@@ -176,7 +207,11 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
       vipJellyEnabled: widget.room.isVip && widget.visualPolicy.vipJellyEnabled,
       vipJellySpeed: widget.visualPolicy.vipJellySpeed,
       pulseGeneration: pulse?.generation,
-      pulseColorArgb: widget.visualPolicy.statusPulseEnabled && pulse != null
+      pulseColorArgb: widget.visualPolicy.statusPulseEnabled
+          ? pulseColor?.toARGB32()
+          : null,
+      pulseBoostColorArgb:
+          widget.visualPolicy.statusPulseEnabled && pulse != null
           ? MargaritavilleColors.vividStatus(pulse.status).toARGB32()
           : null,
       pulseStartedAtMicros: pulse?.startedAt.microsecondsSinceEpoch,

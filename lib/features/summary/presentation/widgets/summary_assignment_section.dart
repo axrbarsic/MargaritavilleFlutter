@@ -39,9 +39,6 @@ final class SummaryAssignmentSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final visibleRooms = (rooms ?? assignment.activeRooms.toList()).toList()
       ..sort((first, second) => first.roomNumber.compareTo(second.roomNumber));
-    final palette = MargaritavilleColors.housekeeper(
-      assignment.housekeeper.paletteKey,
-    );
     return MediaQuery.withNoTextScaling(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -53,57 +50,9 @@ final class SummaryAssignmentSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Flexible(
-                      child: DecoratedBox(
-                        key: Key(
-                          'summary-housekeeper-name-${assignment.housekeeper.id}',
-                        ),
-                        decoration: BoxDecoration(
-                          color: Color.alphaBlend(
-                            Colors.black.withValues(alpha: 0.34),
-                            palette.withValues(alpha: 0.20),
-                          ),
-                          border: Border.all(
-                            color: palette.withValues(alpha: 0.72),
-                            width: 1.5,
-                            strokeAlign: BorderSide.strokeAlignCenter,
-                          ),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          child: SummaryMinimumScaleText(
-                            text: assignment.housekeeper.displayName,
-                            style: SummaryTypography.housekeeperName(palette),
-                            minimumScaleFactor: 0.62,
-                            alignment: Alignment.centerLeft,
-                            textAlign: TextAlign.start,
-                            shrinkWrap: true,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: SummaryMinimumScaleText(
-                          text: _territoryLabel(visibleRooms),
-                          style: SummaryTypography.territory,
-                          minimumScaleFactor: 0.58,
-                          alignment: Alignment.centerRight,
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ),
-                  ],
+                SummaryAssignmentHeader(
+                  assignment: assignment,
+                  rooms: visibleRooms,
                 ),
                 const SizedBox(
                   height: SummaryLayoutTokens.sectionHeaderGridGap,
@@ -134,6 +83,71 @@ final class SummaryAssignmentSection extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+final class SummaryAssignmentHeader extends StatelessWidget {
+  const SummaryAssignmentHeader({
+    required this.assignment,
+    required this.rooms,
+    super.key,
+  });
+
+  final WorkAssignment assignment;
+  final List<RoomState> rooms;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = MargaritavilleColors.housekeeper(
+      assignment.housekeeper.paletteKey,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Flexible(
+          child: DecoratedBox(
+            key: Key('summary-housekeeper-name-${assignment.housekeeper.id}'),
+            decoration: BoxDecoration(
+              color: Color.alphaBlend(
+                Colors.black.withValues(alpha: 0.34),
+                palette.withValues(alpha: 0.20),
+              ),
+              border: Border.all(
+                color: palette.withValues(alpha: 0.72),
+                width: 1.5,
+                strokeAlign: BorderSide.strokeAlignCenter,
+              ),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: SummaryMinimumScaleText(
+                text: assignment.housekeeper.displayName,
+                style: SummaryTypography.housekeeperName(palette),
+                minimumScaleFactor: 0.62,
+                alignment: Alignment.centerLeft,
+                textAlign: TextAlign.start,
+                shrinkWrap: true,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: SummaryMinimumScaleText(
+              text: _territoryLabel(rooms),
+              style: SummaryTypography.territory,
+              minimumScaleFactor: 0.58,
+              alignment: Alignment.centerRight,
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

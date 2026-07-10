@@ -2,16 +2,22 @@ import 'package:flutter/widgets.dart';
 
 import 'edr_overlay_controller.dart';
 
-final class EdrViewportScope extends InheritedNotifier<EdrOverlayController> {
+final class EdrViewportScope extends InheritedWidget {
   const EdrViewportScope({
-    required EdrOverlayController controller,
+    required this.controller,
     required super.child,
     super.key,
-  }) : super(notifier: controller);
+  });
+
+  final EdrOverlayController controller;
 
   static EdrOverlayController? maybeControllerOf(BuildContext context) {
     return context
         .dependOnInheritedWidgetOfExactType<EdrViewportScope>()
-        ?.notifier;
+        ?.controller;
   }
+
+  @override
+  bool updateShouldNotify(EdrViewportScope oldWidget) =>
+      !identical(controller, oldWidget.controller);
 }

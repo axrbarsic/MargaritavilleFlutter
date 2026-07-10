@@ -1,205 +1,216 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:margaritaville_flutter/design/margaritaville_colors.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
-import 'package:margaritaville_flutter/features/summary/presentation/widgets/room_status_tile.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_pulse.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
 import 'package:margaritaville_flutter/shared/edr/edr_overlay_bridge.dart';
 import 'package:margaritaville_flutter/shared/edr/edr_overlay_controller.dart';
-import 'package:margaritaville_flutter/shared/edr/edr_overlay_scope.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_ready_router.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_tile_snapshot_factory.dart';
 import 'package:margaritaville_flutter/shared/edr/generated/edr_overlay_api.g.dart';
 
 void main() {
-  testWidgets('fixed viewport owns every visible background without a pulse', (
-    tester,
-  ) async {
-    final bridge = _RecordingEdrBridge();
-    final controller = EdrOverlayController(bridge: bridge, supported: true);
-    addTearDown(controller.dispose);
-    final room = RoomState.pending(
-      roomNumber: '147',
-      selectedAt: DateTime(2027, 2, 10, 20, 47),
+  test('row snapshot keeps donor EDR and additive colors separate', () {
+    final startedAt = DateTime(2027, 2, 10, 20, 47);
+    final room = RoomState.pending(roomNumber: '209', selectedAt: startedAt);
+    final pulse = SummaryVisualPulseEvent(
+      generation: 7,
+      status: RoomDisplayStatus.ready,
+      startedAt: startedAt,
     );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: EdrViewportScope(
-          controller: controller,
-          child: SizedBox(
-            width: 220,
-            height: 240,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: SizedBox.expand(key: controller.surfaceKey),
-                ),
-                Positioned(
-                  left: 20,
-                  top: 30,
-                  width: 96,
-                  height: 98,
-                  child: _tile(
-                    room,
-                    policy: const SummaryVisualPolicy(statusPulseEnabled: true),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+    final snapshot = EdrTileSnapshotFactory.create(
+      room: room,
+      policy: const SummaryVisualPolicy(
+        statusPulseEnabled: true,
+        vividStatusPaletteEnabled: false,
       ),
+      pulseEvent: pulse,
+      left: 20,
+      width: 96,
     );
 
-    controller.attachView(17);
-    await tester.pumpAndSettle();
-
-    expect(bridge.lastViewId, 17);
-    expect(bridge.lastRevision, 1);
-    expect(bridge.lastAnchorScrollOffset, 0);
-    expect(bridge.lastTiles, hasLength(1));
-    final snapshot = bridge.lastTiles.single;
-    expect(snapshot.roomId, '147');
-    expect(snapshot.left, closeTo(20, 0.01));
-    expect(snapshot.top, closeTo(30, 0.01));
-    expect(snapshot.width, closeTo(96, 0.01));
-    expect(snapshot.height, closeTo(98, 0.01));
-    expect(snapshot.vipHdrEnabled, isFalse);
-    expect(snapshot.pulseGeneration, isNull);
-
-    final surface = tester.widget<DecoratedBox>(
-      find.byKey(const Key('summary-room-surface-147')),
+    expect(snapshot.left, 20);
+    expect(snapshot.width, 96);
+    expect(snapshot.pulseGeneration, 7);
+    expect(
+      snapshot.pulseColorArgb,
+      MargaritavilleColors.status(RoomDisplayStatus.ready).toARGB32(),
     );
-    expect((surface.decoration as BoxDecoration).color, Colors.transparent);
+    expect(
+      snapshot.pulseBoostColorArgb,
+      MargaritavilleColors.vividStatus(RoomDisplayStatus.ready).toARGB32(),
+    );
   });
 
-  testWidgets('scroll sends one scalar then reanchors geometry at rest', (
+  testWidgets('stale acknowledgement cannot own a recycled tile generation', (
     tester,
   ) async {
-    final bridge = _RecordingEdrBridge();
+    final bridge = _DeferredEdrBridge();
     final controller = EdrOverlayController(bridge: bridge, supported: true);
-    final scrollController = ScrollController();
+    final firstRenderKey = GlobalKey();
+    final secondRenderKey = GlobalKey();
     addTearDown(controller.dispose);
-    addTearDown(scrollController.dispose);
-    final room = RoomState.pending(
-      roomNumber: '101',
-      selectedAt: DateTime(2027, 2, 10, 20, 47),
-    ).setVip(isVip: true, changedAt: DateTime(2027, 2, 10, 20, 48));
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: EdrViewportScope(
-          controller: controller,
-          child: SizedBox(
-            width: 220,
-            height: 240,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                SizedBox.expand(key: controller.surfaceKey),
-                ListView(
-                  controller: scrollController,
-                  children: [
-                    const SizedBox(height: 40),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 96,
-                        height: 98,
-                        child: _tile(
-                          room,
-                          policy: const SummaryVisualPolicy(
-                            vipHdrLightEnabled: true,
-                            vipJellyEnabled: true,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 500),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    await tester.pumpWidget(_controllerHost(controller, firstRenderKey));
+    _registerTile(controller, firstRenderKey);
+    controller.attachWindow();
+    await tester.pump();
+    expect(bridge.pendingCount, 1);
 
-    controller.attachView(18);
-    await tester.pumpAndSettle();
-    final initialTop = bridge.lastTiles.single.top;
-    final initialConfigurationCount = bridge.configurationCount;
+    await tester.pumpWidget(_controllerHost(controller, secondRenderKey));
+    _registerTile(controller, secondRenderKey);
+    controller.removeTile('101', renderKey: firstRenderKey);
+    await tester.pump();
+    expect(controller.isTileRendered('101', secondRenderKey), isFalse);
 
-    scrollController.jumpTo(24);
-    controller.updateScrollOffset(24);
-    await tester.pumpAndSettle();
+    bridge.completeOldest();
+    await tester.pump();
+    EdrReadyRouter.instance.windowReady(1);
+    await tester.pump();
+    expect(controller.isTileRendered('101', secondRenderKey), isFalse);
+    expect(bridge.pendingCount, 1);
+    expect(bridge.lastTiles.single.roomId, '101');
 
-    expect(bridge.configurationCount, initialConfigurationCount);
-    expect(bridge.scrollUpdates.last.offset, 24);
-    expect(bridge.scrollUpdates.last.revision, bridge.lastRevision);
-
-    controller.requestGeometrySync();
-    await tester.pumpAndSettle();
-
-    expect(bridge.configurationCount, initialConfigurationCount + 1);
-    expect(bridge.lastAnchorScrollOffset, 24);
-    expect(bridge.lastTiles.single.top, closeTo(initialTop - 24, 0.01));
-    expect(bridge.lastTiles.single.vipHdrEnabled, isTrue);
-    expect(bridge.lastTiles.single.vipJellyEnabled, isTrue);
+    bridge.completeOldest();
+    await tester.pump();
+    EdrReadyRouter.instance.windowReady(2);
+    await tester.pump();
+    expect(controller.isTileRendered('101', secondRenderKey), isTrue);
   });
+
+  testWidgets(
+    'modal visibility clears native ownership and restores it fresh',
+    (tester) async {
+      final bridge = _RecordingEdrBridge();
+      final controller = EdrOverlayController(bridge: bridge, supported: true);
+      final renderKey = GlobalKey();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_controllerHost(controller, renderKey));
+      _registerTile(controller, renderKey);
+      controller.attachWindow();
+      await tester.pump();
+      EdrReadyRouter.instance.windowReady(1);
+      await tester.pump();
+      expect(controller.isTileRendered('101', renderKey), isTrue);
+
+      controller.setWindowVisible(false);
+      await tester.pump();
+      expect(controller.isTileRendered('101', renderKey), isFalse);
+      expect(bridge.lastTiles, isEmpty);
+
+      controller.setWindowVisible(true);
+      await tester.pump();
+      expect(bridge.lastRevision, 3);
+      EdrReadyRouter.instance.windowReady(3);
+      await tester.pump();
+      expect(controller.isTileRendered('101', renderKey), isTrue);
+    },
+  );
 }
 
-Widget _tile(RoomState room, {required SummaryVisualPolicy policy}) {
-  return RoomStatusTile(
-    room: room,
-    visualPolicy: policy,
-    onAdvance: () {},
-    onReset: () {},
-    onToggleVip: () {},
-    onSchedule: () {},
-    onOpenMedia: () {},
+Widget _controllerHost(EdrOverlayController controller, GlobalKey renderKey) {
+  return MaterialApp(
+    home: SizedBox(
+      key: controller.surfaceKey,
+      width: 220,
+      height: 240,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 20,
+            top: 30,
+            width: 96,
+            height: 98,
+            child: SizedBox.expand(key: renderKey),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void _registerTile(EdrOverlayController controller, GlobalKey renderKey) {
+  controller.upsertTile(
+    roomId: '101',
+    timeText: '8:17 PM',
+    renderKey: renderKey,
+    renderState: ValueNotifier(false),
+    baseColorArgb: 0xFF00E524,
+    cornerRadius: 16,
+    vipHdrEnabled: true,
+    vipJellyEnabled: true,
+    vipJellySpeed: 0.75,
+    springIntensity: 0.72,
   );
 }
 
 final class _RecordingEdrBridge implements EdrOverlayBridge {
-  int? lastViewId;
   int? lastRevision;
-  double? lastAnchorScrollOffset;
+  Rect? lastViewport;
   int configurationCount = 0;
   List<EdrTileSnapshot> lastTiles = const [];
-  final scrollUpdates = <({int revision, int sequence, double offset})>[];
 
   @override
-  Future<void> clearViewport(int viewId, int revision) async {
-    lastViewId = viewId;
+  Future<void> clearWindow(int revision) async {
     lastRevision = revision;
+    lastViewport = null;
     lastTiles = const [];
   }
 
   @override
-  Future<void> configureViewport(
-    int viewId,
+  Future<void> configureWindow(
     int revision,
-    double scrollOffset,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
     List<EdrTileSnapshot> tiles,
   ) async {
-    lastViewId = viewId;
     lastRevision = revision;
-    lastAnchorScrollOffset = scrollOffset;
+    lastViewport = Rect.fromLTWH(
+      viewportLeft,
+      viewportTop,
+      viewportWidth,
+      viewportHeight,
+    );
     configurationCount++;
     lastTiles = List.of(tiles);
   }
+}
+
+final class _DeferredEdrBridge extends _RecordingEdrBridge {
+  final _pending = <Completer<void>>[];
+
+  int get pendingCount => _pending.length;
+
+  void completeOldest() {
+    _pending.removeAt(0).complete();
+  }
 
   @override
-  Future<void> updateScrollOffset(
-    int viewId,
+  Future<void> configureWindow(
     int revision,
-    int sequence,
-    double scrollOffset,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
+    List<EdrTileSnapshot> tiles,
   ) async {
-    lastViewId = viewId;
-    scrollUpdates.add((
-      revision: revision,
-      sequence: sequence,
-      offset: scrollOffset,
-    ));
+    await super.configureWindow(
+      revision,
+      viewportLeft,
+      viewportTop,
+      viewportWidth,
+      viewportHeight,
+      tiles,
+    );
+    final completer = Completer<void>();
+    _pending.add(completer);
+    await completer.future;
   }
 }

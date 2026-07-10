@@ -14,12 +14,8 @@
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
 		6339AA02542E40168CED21E5 /* EdrOverlayApi.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33AD26E4CD42CCAA2D639C /* EdrOverlayApi.g.swift */; };
 		010C85946C40417D9F0F1B76 /* EdrOverlayPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A5E389276CE4392A77DFB93 /* EdrOverlayPlugin.swift */; };
-		3AB847A4F0904D9ABF12EC76 /* EdrFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCA4502AF796417C89F9BF33 /* EdrFillView.swift */; };
-		E5642DA6A65948A2A2F33DDE /* EdrPulseAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23059AF72D384A9FAC2A0C00 /* EdrPulseAnimator.swift */; };
-		F13A8C7D9E204B6FA1D3C550 /* EdrJellyAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4B2A61C9F347E0A5B8D123 /* EdrJellyAnimator.swift */; };
-		A92C5F1E7B304D68C4E1A770 /* EdrJellyTransformAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7D9A2C6F184B50D1C8E440 /* EdrJellyTransformAnimator.swift */; };
-		B41D6A2E8C305F79A4E1B880 /* EdrTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52E7B3F9D416A80B5F2C990 /* EdrTileView.swift */; };
-		D63F8C40AE527B91C6A3DAA0 /* EdrJellyMaskLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7409D51BF638CA2D7B4EBB0 /* EdrJellyMaskLayer.swift */; };
+		B01A7C6D9F408B52C0D1E264 /* SharedAppFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = B21A7C6D9F408B52C0D1E264 /* SharedAppFoundation */; };
+		B31A7C6D9F408B52C0D1E264 /* SharedAppFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = B21A7C6D9F408B52C0D1E264 /* SharedAppFoundation */; };
 		880B8F80F94C8A2A26034143 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E89A52102477E45CCF3D24B /* Pods_Runner.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
@@ -66,12 +62,6 @@
 		7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		CC33AD26E4CD42CCAA2D639C /* EdrOverlayApi.g.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrOverlayApi.g.swift; sourceTree = "<group>"; };
 		2A5E389276CE4392A77DFB93 /* EdrOverlayPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrOverlayPlugin.swift; sourceTree = "<group>"; };
-		BCA4502AF796417C89F9BF33 /* EdrFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrFillView.swift; sourceTree = "<group>"; };
-		23059AF72D384A9FAC2A0C00 /* EdrPulseAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrPulseAnimator.swift; sourceTree = "<group>"; };
-		8D4B2A61C9F347E0A5B8D123 /* EdrJellyAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrJellyAnimator.swift; sourceTree = "<group>"; };
-		3E7D9A2C6F184B50D1C8E440 /* EdrJellyTransformAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrJellyTransformAnimator.swift; sourceTree = "<group>"; };
-		C52E7B3F9D416A80B5F2C990 /* EdrTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrTileView.swift; sourceTree = "<group>"; };
-		E7409D51BF638CA2D7B4EBB0 /* EdrJellyMaskLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdrJellyMaskLayer.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		8A8F2F41C60BC9B050F5BAE6 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
@@ -90,6 +80,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B31A7C6D9F408B52C0D1E264 /* SharedAppFoundation in Frameworks */,
 				CCB080808635467645158476 /* Pods_RunnerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,6 +89,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B01A7C6D9F408B52C0D1E264 /* SharedAppFoundation in Frameworks */,
 				880B8F80F94C8A2A26034143 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -181,12 +173,6 @@
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				CC33AD26E4CD42CCAA2D639C /* EdrOverlayApi.g.swift */,
 				2A5E389276CE4392A77DFB93 /* EdrOverlayPlugin.swift */,
-				BCA4502AF796417C89F9BF33 /* EdrFillView.swift */,
-				23059AF72D384A9FAC2A0C00 /* EdrPulseAnimator.swift */,
-				8D4B2A61C9F347E0A5B8D123 /* EdrJellyAnimator.swift */,
-				3E7D9A2C6F184B50D1C8E440 /* EdrJellyTransformAnimator.swift */,
-				C52E7B3F9D416A80B5F2C990 /* EdrTileView.swift */,
-				E7409D51BF638CA2D7B4EBB0 /* EdrJellyMaskLayer.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -210,6 +196,9 @@
 				331C8086294A63A400263BE5 /* PBXTargetDependency */,
 			);
 			name = RunnerTests;
+			packageProductDependencies = (
+				B21A7C6D9F408B52C0D1E264 /* SharedAppFoundation */,
+			);
 			productName = RunnerTests;
 			productReference = 331C8081294A63A400263BE5 /* RunnerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -234,6 +223,9 @@
 			dependencies = (
 			);
 			name = Runner;
+			packageProductDependencies = (
+				B21A7C6D9F408B52C0D1E264 /* SharedAppFoundation */,
+			);
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
@@ -267,6 +259,9 @@
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
+			packageReferences = (
+				B11A7C6D9F408B52C0D1E264 /* XCRemoteSwiftPackageReference "SharedAppFoundation" */,
+			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -441,12 +436,6 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				6339AA02542E40168CED21E5 /* EdrOverlayApi.g.swift in Sources */,
 				010C85946C40417D9F0F1B76 /* EdrOverlayPlugin.swift in Sources */,
-				3AB847A4F0904D9ABF12EC76 /* EdrFillView.swift in Sources */,
-				E5642DA6A65948A2A2F33DDE /* EdrPulseAnimator.swift in Sources */,
-				F13A8C7D9E204B6FA1D3C550 /* EdrJellyAnimator.swift in Sources */,
-				A92C5F1E7B304D68C4E1A770 /* EdrJellyTransformAnimator.swift in Sources */,
-				B41D6A2E8C305F79A4E1B880 /* EdrTileView.swift in Sources */,
-				D63F8C40AE527B91C6A3DAA0 /* EdrJellyMaskLayer.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 			);
@@ -796,6 +785,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B11A7C6D9F408B52C0D1E264 /* XCRemoteSwiftPackageReference "SharedAppFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/axrbarsic/SharedAppFoundation.git";
+			requirement = {
+				kind = revision;
+				revision = ceba87f54ce550a24def006b1a1638c5d23ed90a;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B21A7C6D9F408B52C0D1E264 /* SharedAppFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B11A7C6D9F408B52C0D1E264 /* XCRemoteSwiftPackageReference "SharedAppFoundation" */;
+			productName = SharedAppFoundation;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
 }

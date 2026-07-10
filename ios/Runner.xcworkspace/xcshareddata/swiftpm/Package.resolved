@@ -1,0 +1,14 @@
+{
+  "originHash" : "8c207a6d378fc43a98d245aff80058d80d981054b56e2506e465ef25c957c826",
+  "pins" : [
+    {
+      "identity" : "sharedappfoundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/axrbarsic/SharedAppFoundation.git",
+      "state" : {
+        "revision" : "ceba87f54ce550a24def006b1a1638c5d23ed90a"
+      }
+    }
+  ],
+  "version" : 3
+}

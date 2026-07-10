@@ -93,24 +93,73 @@ if rg -n "MethodChannel|BasicMessageChannel" \
   failed=1
 fi
 
-if rg -n "CADisplayLink|Timer\." ios/Runner/Edr*.swift; then
-  echo "ERROR: native EDR must use Core Animation, not its own frame ticker"
+shared_visual_runtime="../SharedAppFoundation/Sources/SharedAppFoundation/VisualRuntime"
+
+if ! rg -q "https://github.com/axrbarsic/SharedAppFoundation\.git" \
+    ios/Runner.xcodeproj/project.pbxproj || \
+   ! rg -q "ceba87f54ce550a24def006b1a1638c5d23ed90a" \
+    ios/Runner.xcodeproj/project.pbxproj \
+    ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved; then
+  echo "ERROR: SharedAppFoundation должен быть закреплён точным remote revision"
   failed=1
 fi
 
-if rg -n "SingleChildScrollView|EdrOverlay(Scope|Surface)" \
+if [[ -d "$shared_visual_runtime" ]]; then
+  native_edr_clock_count=$(rg -o "CADisplayLink\(target:" \
+    "$shared_visual_runtime" --glob '*.swift' | wc -l | tr -d ' ')
+  if [[ "$native_edr_clock_count" != "1" ]] || \
+     ! rg -q "final class VisualRuntimeFrameClock" \
+       "$shared_visual_runtime/VisualRuntimeFrameClock.swift"; then
+    echo "ERROR: общий native VisualRuntime обязан владеть ровно одним display clock"
+    failed=1
+  fi
+
+  if rg -n "Timer\." "$shared_visual_runtime" --glob '*.swift'; then
+    echo "ERROR: native VisualRuntime не должен анимироваться через Timer"
+    failed=1
+  fi
+
+  if ! rg -q "rgba16Float" \
+      "$shared_visual_runtime/VisualRuntimeMetalRenderer.swift" || \
+     ! rg -q "RGBA16Float" \
+      "$shared_visual_runtime/VisualRuntimeCoreGraphicsFillView.swift" || \
+     ! rg -q "preferredDynamicRange = \.high" \
+      "$shared_visual_runtime" --glob '*.swift'; then
+    echo "ERROR: Metal и CoreGraphics пути потеряли 16-bit/high-range контракт"
+    failed=1
+  fi
+fi
+
+if rg -n "SingleChildScrollView|Edr(Row|Tile|Viewport)Surface|UiKitView" \
   lib/features/summary --glob '*.dart'; then
-  echo "ERROR: Summary must keep ListView and reject the legacy moving EDR overlay"
+  echo "ERROR: Summary обязан использовать единый оконный runtime без PlatformView"
   failed=1
 fi
 
-if rg -n "EdrOverlayPlugin\.register" ios/Runner/AppDelegate.swift; then
-  echo "ERROR: legacy moving EDR plugin must stay unregistered"
+if rg -n "FlutterPlatformView|FlutterPlatformViewFactory|registrar\.register\(" \
+  ios/Runner/EdrOverlayPlugin.swift; then
+  echo "ERROR: EDR runtime не должен возвращаться в iOS PlatformView compositor"
   failed=1
 fi
 
 if ! rg -q "EdrViewportPlugin\.register" ios/Runner/AppDelegate.swift; then
-  echo "ERROR: fixed EDR viewport plugin must be registered through AppDelegate"
+  echo "ERROR: оконный EDR adapter должен регистрироваться через AppDelegate"
+  failed=1
+fi
+
+if ! rg -q "import SharedAppFoundation" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q "SharedAppFoundation" ios/Runner.xcodeproj/project.pbxproj; then
+  echo "ERROR: Runner обязан использовать общий SharedAppFoundation VisualRuntime"
+  failed=1
+fi
+
+if find ios/Runner -maxdepth 1 -type f \
+  \( -name 'EdrFillView.swift' \
+  -o -name 'EdrPulseAnimator.swift' \
+  -o -name 'EdrJelly*.swift' \
+  -o -name 'EdrTileView.swift' \
+  -o -name 'EdrMetal*.swift' \) | grep -q .; then
+  echo "ERROR: legacy EDR implementation must not duplicate SharedAppFoundation"
   failed=1
 fi
 
@@ -136,12 +185,6 @@ if rg -n "Margaritaville|RoomDisplayStatus|com\.alex\.margaritaville" \
   packages/interaction_foundation/android/src/main \
   --glob '*.dart' --glob '*.swift' --glob '*.kt'; then
   echo "ERROR: shared interaction foundation contains app-specific policy or identity"
-  failed=1
-fi
-
-if ! rg -q "RGBA16Float" ios/Runner/EdrFillView.swift || \
-   ! rg -q "preferredDynamicRange = \.high" ios/Runner/EdrFillView.swift; then
-  echo "ERROR: native iOS EDR surface lost its 16-bit/high-range contract"
   failed=1
 fi
 

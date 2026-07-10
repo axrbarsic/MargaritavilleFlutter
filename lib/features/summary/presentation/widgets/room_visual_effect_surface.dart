@@ -20,6 +20,7 @@ final class RoomVisualEffectSurface extends StatelessWidget {
     required this.child,
     this.pulseEvent,
     this.nativeEdrActive = false,
+    this.nativeEdrManaged = false,
     super.key,
   });
 
@@ -28,13 +29,15 @@ final class RoomVisualEffectSurface extends StatelessWidget {
   final SummaryVisualPolicy policy;
   final SummaryVisualPulseEvent? pulseEvent;
   final bool nativeEdrActive;
+  final bool nativeEdrManaged;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final clock = VisualRuntimeScope.maybeClockOf(context);
+    final nativeVipForegroundActive = !nativeEdrManaged || nativeEdrActive;
     final shouldAnimate =
-        (room.isVip && policy.vipJellyEnabled) ||
+        (room.isVip && policy.vipJellyEnabled && nativeVipForegroundActive) ||
         (pulseEvent != null && policy.transientPulseEnabled);
     final surface = !shouldAnimate || clock == null
         ? _frame(now: DateTime.now(), seconds: 0)
@@ -48,7 +51,10 @@ final class RoomVisualEffectSurface extends StatelessWidget {
   }
 
   Widget _frame({required DateTime now, required double seconds}) {
-    final vipJellyActive = room.isVip && policy.vipJellyEnabled;
+    final vipJellyActive =
+        room.isVip &&
+        policy.vipJellyEnabled &&
+        (!nativeEdrManaged || nativeEdrActive);
     final vipLightActive = room.isVip && policy.vipHdrLightEnabled;
     final pulseHeat = policy.transientPulseEnabled ? _pulseHeat(now) : 0.0;
     final seed = _stableSeed(room.roomNumber);
@@ -60,16 +66,20 @@ final class RoomVisualEffectSurface extends StatelessWidget {
     final jellyOffsetY = vipJellyActive ? 0.8 * math.cos(time * 1.3) : 0.0;
     final pulseRubber =
         pulseHeat * SummaryStatusPulseTiming.rubberAmplitudeMultiplier;
-    final pulseScale = 1 + 0.10 * policy.springIntensity * pulseRubber;
-    final pulseOffsetY = -7.5 * policy.springIntensity * pulseRubber;
+    final pulseScale = 1 + 0.09 * policy.springIntensity * pulseRubber;
+    final pulseOffsetY = -7 * policy.springIntensity * pulseRubber;
     final pulseColor = pulseEvent == null
         ? baseColor
         : MargaritavilleColors.vividStatus(pulseEvent!.status);
-    final vipGlow = !nativeEdrActive && vipLightActive && policy.sdrGlowEnabled
+    final flutterFallbackEffects = !nativeEdrManaged && !nativeEdrActive;
+    final vipGlow =
+        flutterFallbackEffects && vipLightActive && policy.sdrGlowEnabled
         ? 0.34
         : 0.0;
     final pulseGlow =
-        !nativeEdrActive && policy.sdrGlowEnabled && policy.statusPulseEnabled
+        flutterFallbackEffects &&
+            policy.sdrGlowEnabled &&
+            policy.statusPulseEnabled
         ? pulseHeat * 0.58
         : 0.0;
     final glow = math.max(vipGlow, pulseGlow).clamp(0.0, 0.72).toDouble();
@@ -79,7 +89,7 @@ final class RoomVisualEffectSurface extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         child,
-        if (!nativeEdrActive && vipLightActive && policy.sdrGlowEnabled)
+        if (flutterFallbackEffects && vipLightActive && policy.sdrGlowEnabled)
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(
@@ -94,7 +104,9 @@ final class RoomVisualEffectSurface extends StatelessWidget {
               ),
             ),
           ),
-        if (!nativeEdrActive && pulseHeat > 0 && policy.statusPulseEnabled)
+        if (flutterFallbackEffects &&
+            pulseHeat > 0 &&
+            policy.statusPulseEnabled)
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(

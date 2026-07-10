@@ -11,6 +11,7 @@ import 'package:pigeon/pigeon.dart';
 )
 class EdrTileSnapshot {
   late String roomId;
+  late String timeText;
   late double left;
   late double top;
   late double width;
@@ -22,25 +23,26 @@ class EdrTileSnapshot {
   late double vipJellySpeed;
   int? pulseGeneration;
   int? pulseColorArgb;
+  int? pulseBoostColorArgb;
   int? pulseStartedAtMicros;
   late double springIntensity;
 }
 
 @HostApi()
 abstract class EdrOverlayHostApi {
-  void configureViewport(
-    int viewId,
+  void configureWindow(
     int revision,
-    double scrollOffset,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
     List<EdrTileSnapshot> tiles,
   );
 
-  void updateScrollOffset(
-    int viewId,
-    int revision,
-    int sequence,
-    double scrollOffset,
-  );
+  void clearWindow(int revision);
+}
 
-  void clearViewport(int viewId, int revision);
+@FlutterApi()
+abstract class EdrOverlayFlutterApi {
+  void windowReady(int revision);
 }

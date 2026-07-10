@@ -55,6 +55,10 @@ private func wrapError(_ error: Any) -> [Any?] {
   ]
 }
 
+private func createConnectionError(withChannelName channelName: String) -> PigeonError {
+  return PigeonError(code: "channel-error", message: "Unable to establish connection on channel: '\(channelName)'.", details: "")
+}
+
 enum EdrOverlayApiPigeonInternal {
   static func isNullish(_ value: Any?) -> Bool {
     guard let innerValue = value else {
@@ -187,6 +191,7 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
 /// Generated class from Pigeon that represents data sent in messages.
 struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   var roomId: String
+  var timeText: String
   var left: Double
   var top: Double
   var width: Double
@@ -198,6 +203,7 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   var vipJellySpeed: Double
   var pulseGeneration: Int64? = nil
   var pulseColorArgb: Int64? = nil
+  var pulseBoostColorArgb: Int64? = nil
   var pulseStartedAtMicros: Int64? = nil
   var springIntensity: Double
 
@@ -205,22 +211,25 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> EdrTileSnapshot? {
     let roomId = pigeonVar_list[0] as! String
-    let left = pigeonVar_list[1] as! Double
-    let top = pigeonVar_list[2] as! Double
-    let width = pigeonVar_list[3] as! Double
-    let height = pigeonVar_list[4] as! Double
-    let cornerRadius = pigeonVar_list[5] as! Double
-    let baseColorArgb = pigeonVar_list[6] as! Int64
-    let vipHdrEnabled = pigeonVar_list[7] as! Bool
-    let vipJellyEnabled = pigeonVar_list[8] as! Bool
-    let vipJellySpeed = pigeonVar_list[9] as! Double
-    let pulseGeneration: Int64? = nilOrValue(pigeonVar_list[10])
-    let pulseColorArgb: Int64? = nilOrValue(pigeonVar_list[11])
-    let pulseStartedAtMicros: Int64? = nilOrValue(pigeonVar_list[12])
-    let springIntensity = pigeonVar_list[13] as! Double
+    let timeText = pigeonVar_list[1] as! String
+    let left = pigeonVar_list[2] as! Double
+    let top = pigeonVar_list[3] as! Double
+    let width = pigeonVar_list[4] as! Double
+    let height = pigeonVar_list[5] as! Double
+    let cornerRadius = pigeonVar_list[6] as! Double
+    let baseColorArgb = pigeonVar_list[7] as! Int64
+    let vipHdrEnabled = pigeonVar_list[8] as! Bool
+    let vipJellyEnabled = pigeonVar_list[9] as! Bool
+    let vipJellySpeed = pigeonVar_list[10] as! Double
+    let pulseGeneration: Int64? = nilOrValue(pigeonVar_list[11])
+    let pulseColorArgb: Int64? = nilOrValue(pigeonVar_list[12])
+    let pulseBoostColorArgb: Int64? = nilOrValue(pigeonVar_list[13])
+    let pulseStartedAtMicros: Int64? = nilOrValue(pigeonVar_list[14])
+    let springIntensity = pigeonVar_list[15] as! Double
 
     return EdrTileSnapshot(
       roomId: roomId,
+      timeText: timeText,
       left: left,
       top: top,
       width: width,
@@ -232,6 +241,7 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
       vipJellySpeed: vipJellySpeed,
       pulseGeneration: pulseGeneration,
       pulseColorArgb: pulseColorArgb,
+      pulseBoostColorArgb: pulseBoostColorArgb,
       pulseStartedAtMicros: pulseStartedAtMicros,
       springIntensity: springIntensity
     )
@@ -239,6 +249,7 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   func toList() -> [Any?] {
     return [
       roomId,
+      timeText,
       left,
       top,
       width,
@@ -250,6 +261,7 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
       vipJellySpeed,
       pulseGeneration,
       pulseColorArgb,
+      pulseBoostColorArgb,
       pulseStartedAtMicros,
       springIntensity,
     ]
@@ -258,12 +270,13 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return EdrOverlayApiPigeonInternal.deepEquals(lhs.roomId, rhs.roomId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.left, rhs.left) && EdrOverlayApiPigeonInternal.deepEquals(lhs.top, rhs.top) && EdrOverlayApiPigeonInternal.deepEquals(lhs.width, rhs.width) && EdrOverlayApiPigeonInternal.deepEquals(lhs.height, rhs.height) && EdrOverlayApiPigeonInternal.deepEquals(lhs.cornerRadius, rhs.cornerRadius) && EdrOverlayApiPigeonInternal.deepEquals(lhs.baseColorArgb, rhs.baseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipHdrEnabled, rhs.vipHdrEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellyEnabled, rhs.vipJellyEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellySpeed, rhs.vipJellySpeed) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseGeneration, rhs.pulseGeneration) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseColorArgb, rhs.pulseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseStartedAtMicros, rhs.pulseStartedAtMicros) && EdrOverlayApiPigeonInternal.deepEquals(lhs.springIntensity, rhs.springIntensity)
+    return EdrOverlayApiPigeonInternal.deepEquals(lhs.roomId, rhs.roomId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.timeText, rhs.timeText) && EdrOverlayApiPigeonInternal.deepEquals(lhs.left, rhs.left) && EdrOverlayApiPigeonInternal.deepEquals(lhs.top, rhs.top) && EdrOverlayApiPigeonInternal.deepEquals(lhs.width, rhs.width) && EdrOverlayApiPigeonInternal.deepEquals(lhs.height, rhs.height) && EdrOverlayApiPigeonInternal.deepEquals(lhs.cornerRadius, rhs.cornerRadius) && EdrOverlayApiPigeonInternal.deepEquals(lhs.baseColorArgb, rhs.baseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipHdrEnabled, rhs.vipHdrEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellyEnabled, rhs.vipJellyEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellySpeed, rhs.vipJellySpeed) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseGeneration, rhs.pulseGeneration) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseColorArgb, rhs.pulseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseBoostColorArgb, rhs.pulseBoostColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseStartedAtMicros, rhs.pulseStartedAtMicros) && EdrOverlayApiPigeonInternal.deepEquals(lhs.springIntensity, rhs.springIntensity)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("EdrTileSnapshot")
     EdrOverlayApiPigeonInternal.deepHash(value: roomId, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: timeText, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: left, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: top, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: width, hasher: &hasher)
@@ -275,12 +288,13 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
     EdrOverlayApiPigeonInternal.deepHash(value: vipJellySpeed, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: pulseGeneration, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: pulseColorArgb, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: pulseBoostColorArgb, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: pulseStartedAtMicros, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: springIntensity, hasher: &hasher)
   }
 
   public var description: String {
-    return "EdrTileSnapshot(roomId: \(String(describing: roomId)), left: \(String(describing: left)), top: \(String(describing: top)), width: \(String(describing: width)), height: \(String(describing: height)), cornerRadius: \(String(describing: cornerRadius)), baseColorArgb: \(String(describing: baseColorArgb)), vipHdrEnabled: \(String(describing: vipHdrEnabled)), vipJellyEnabled: \(String(describing: vipJellyEnabled)), vipJellySpeed: \(String(describing: vipJellySpeed)), pulseGeneration: \(String(describing: pulseGeneration)), pulseColorArgb: \(String(describing: pulseColorArgb)), pulseStartedAtMicros: \(String(describing: pulseStartedAtMicros)), springIntensity: \(String(describing: springIntensity)))"
+    return "EdrTileSnapshot(roomId: \(String(describing: roomId)), timeText: \(String(describing: timeText)), left: \(String(describing: left)), top: \(String(describing: top)), width: \(String(describing: width)), height: \(String(describing: height)), cornerRadius: \(String(describing: cornerRadius)), baseColorArgb: \(String(describing: baseColorArgb)), vipHdrEnabled: \(String(describing: vipHdrEnabled)), vipJellyEnabled: \(String(describing: vipJellyEnabled)), vipJellySpeed: \(String(describing: vipJellySpeed)), pulseGeneration: \(String(describing: pulseGeneration)), pulseColorArgb: \(String(describing: pulseColorArgb)), pulseBoostColorArgb: \(String(describing: pulseBoostColorArgb)), pulseStartedAtMicros: \(String(describing: pulseStartedAtMicros)), springIntensity: \(String(describing: springIntensity)))"
   }
 }
 
@@ -322,9 +336,8 @@ class EdrOverlayApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable
 
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol EdrOverlayHostApi {
-  func configureViewport(viewId: Int64, revision: Int64, scrollOffset: Double, tiles: [EdrTileSnapshot]) throws
-  func updateScrollOffset(viewId: Int64, revision: Int64, sequence: Int64, scrollOffset: Double) throws
-  func clearViewport(viewId: Int64, revision: Int64) throws
+  func configureWindow(revision: Int64, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, tiles: [EdrTileSnapshot]) throws
+  func clearWindow(revision: Int64) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -333,57 +346,74 @@ class EdrOverlayHostApiSetup {
   /// Sets up an instance of `EdrOverlayHostApi` to handle messages through the `binaryMessenger`.
   static func setUp(binaryMessenger: FlutterBinaryMessenger, api: EdrOverlayHostApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
-    let configureViewportChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.configureViewport\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let configureWindowChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.configureWindow\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      configureViewportChannel.setMessageHandler { message, reply in
+      configureWindowChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let viewIdArg = args[0] as! Int64
-        let revisionArg = args[1] as! Int64
-        let scrollOffsetArg = args[2] as! Double
-        let tilesArg = args[3] as! [EdrTileSnapshot]
+        let revisionArg = args[0] as! Int64
+        let viewportLeftArg = args[1] as! Double
+        let viewportTopArg = args[2] as! Double
+        let viewportWidthArg = args[3] as! Double
+        let viewportHeightArg = args[4] as! Double
+        let tilesArg = args[5] as! [EdrTileSnapshot]
         do {
-          try api.configureViewport(viewId: viewIdArg, revision: revisionArg, scrollOffset: scrollOffsetArg, tiles: tilesArg)
+          try api.configureWindow(revision: revisionArg, viewportLeft: viewportLeftArg, viewportTop: viewportTopArg, viewportWidth: viewportWidthArg, viewportHeight: viewportHeightArg, tiles: tilesArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      configureViewportChannel.setMessageHandler(nil)
+      configureWindowChannel.setMessageHandler(nil)
     }
-    let updateScrollOffsetChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.updateScrollOffset\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let clearWindowChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearWindow\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      updateScrollOffsetChannel.setMessageHandler { message, reply in
+      clearWindowChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let viewIdArg = args[0] as! Int64
-        let revisionArg = args[1] as! Int64
-        let sequenceArg = args[2] as! Int64
-        let scrollOffsetArg = args[3] as! Double
+        let revisionArg = args[0] as! Int64
         do {
-          try api.updateScrollOffset(viewId: viewIdArg, revision: revisionArg, sequence: sequenceArg, scrollOffset: scrollOffsetArg)
+          try api.clearWindow(revision: revisionArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      updateScrollOffsetChannel.setMessageHandler(nil)
+      clearWindowChannel.setMessageHandler(nil)
     }
-    let clearViewportChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearViewport\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      clearViewportChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let viewIdArg = args[0] as! Int64
-        let revisionArg = args[1] as! Int64
-        do {
-          try api.clearViewport(viewId: viewIdArg, revision: revisionArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
+  }
+}
+
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol EdrOverlayFlutterApiProtocol {
+  func windowReady(revision revisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void)
+}
+class EdrOverlayFlutterApi: EdrOverlayFlutterApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: EdrOverlayApiPigeonCodec {
+    return EdrOverlayApiPigeonCodec.shared
+  }
+  func windowReady(revision revisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayFlutterApi.windowReady\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([revisionArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
       }
-    } else {
-      clearViewportChannel.setMessageHandler(nil)
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
     }
   }
 }

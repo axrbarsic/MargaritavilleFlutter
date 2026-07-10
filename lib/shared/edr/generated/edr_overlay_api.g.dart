@@ -34,6 +34,20 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
+List<Object?> wrapResponse({
+  Object? result,
+  PlatformException? error,
+  bool empty = false,
+}) {
+  if (empty) {
+    return <Object?>[];
+  }
+  if (error == null) {
+    return <Object?>[result];
+  }
+  return <Object?>[error.code, error.message, error.details];
+}
+
 bool _deepEquals(Object? a, Object? b) {
   if (identical(a, b)) {
     return true;
@@ -100,6 +114,7 @@ int _deepHash(Object? value) {
 class EdrTileSnapshot {
   EdrTileSnapshot({
     required this.roomId,
+    required this.timeText,
     required this.left,
     required this.top,
     required this.width,
@@ -111,11 +126,14 @@ class EdrTileSnapshot {
     required this.vipJellySpeed,
     this.pulseGeneration,
     this.pulseColorArgb,
+    this.pulseBoostColorArgb,
     this.pulseStartedAtMicros,
     required this.springIntensity,
   });
 
   String roomId;
+
+  String timeText;
 
   double left;
 
@@ -139,6 +157,8 @@ class EdrTileSnapshot {
 
   int? pulseColorArgb;
 
+  int? pulseBoostColorArgb;
+
   int? pulseStartedAtMicros;
 
   double springIntensity;
@@ -146,6 +166,7 @@ class EdrTileSnapshot {
   List<Object?> _toList() {
     return <Object?>[
       roomId,
+      timeText,
       left,
       top,
       width,
@@ -157,6 +178,7 @@ class EdrTileSnapshot {
       vipJellySpeed,
       pulseGeneration,
       pulseColorArgb,
+      pulseBoostColorArgb,
       pulseStartedAtMicros,
       springIntensity,
     ];
@@ -170,19 +192,21 @@ class EdrTileSnapshot {
     result as List<Object?>;
     return EdrTileSnapshot(
       roomId: result[0]! as String,
-      left: result[1]! as double,
-      top: result[2]! as double,
-      width: result[3]! as double,
-      height: result[4]! as double,
-      cornerRadius: result[5]! as double,
-      baseColorArgb: result[6]! as int,
-      vipHdrEnabled: result[7]! as bool,
-      vipJellyEnabled: result[8]! as bool,
-      vipJellySpeed: result[9]! as double,
-      pulseGeneration: result[10] as int?,
-      pulseColorArgb: result[11] as int?,
-      pulseStartedAtMicros: result[12] as int?,
-      springIntensity: result[13]! as double,
+      timeText: result[1]! as String,
+      left: result[2]! as double,
+      top: result[3]! as double,
+      width: result[4]! as double,
+      height: result[5]! as double,
+      cornerRadius: result[6]! as double,
+      baseColorArgb: result[7]! as int,
+      vipHdrEnabled: result[8]! as bool,
+      vipJellyEnabled: result[9]! as bool,
+      vipJellySpeed: result[10]! as double,
+      pulseGeneration: result[11] as int?,
+      pulseColorArgb: result[12] as int?,
+      pulseBoostColorArgb: result[13] as int?,
+      pulseStartedAtMicros: result[14] as int?,
+      springIntensity: result[15]! as double,
     );
   }
 
@@ -196,6 +220,7 @@ class EdrTileSnapshot {
       return true;
     }
     return _deepEquals(roomId, other.roomId) &&
+        _deepEquals(timeText, other.timeText) &&
         _deepEquals(left, other.left) &&
         _deepEquals(top, other.top) &&
         _deepEquals(width, other.width) &&
@@ -207,6 +232,7 @@ class EdrTileSnapshot {
         _deepEquals(vipJellySpeed, other.vipJellySpeed) &&
         _deepEquals(pulseGeneration, other.pulseGeneration) &&
         _deepEquals(pulseColorArgb, other.pulseColorArgb) &&
+        _deepEquals(pulseBoostColorArgb, other.pulseBoostColorArgb) &&
         _deepEquals(pulseStartedAtMicros, other.pulseStartedAtMicros) &&
         _deepEquals(springIntensity, other.springIntensity);
   }
@@ -217,7 +243,7 @@ class EdrTileSnapshot {
 
   @override
   String toString() {
-    return 'EdrTileSnapshot(roomId: $roomId, left: $left, top: $top, width: $width, height: $height, cornerRadius: $cornerRadius, baseColorArgb: $baseColorArgb, vipHdrEnabled: $vipHdrEnabled, vipJellyEnabled: $vipJellyEnabled, vipJellySpeed: $vipJellySpeed, pulseGeneration: $pulseGeneration, pulseColorArgb: $pulseColorArgb, pulseStartedAtMicros: $pulseStartedAtMicros, springIntensity: $springIntensity)';
+    return 'EdrTileSnapshot(roomId: $roomId, timeText: $timeText, left: $left, top: $top, width: $width, height: $height, cornerRadius: $cornerRadius, baseColorArgb: $baseColorArgb, vipHdrEnabled: $vipHdrEnabled, vipJellyEnabled: $vipJellyEnabled, vipJellySpeed: $vipJellySpeed, pulseGeneration: $pulseGeneration, pulseColorArgb: $pulseColorArgb, pulseBoostColorArgb: $pulseBoostColorArgb, pulseStartedAtMicros: $pulseStartedAtMicros, springIntensity: $springIntensity)';
   }
 }
 
@@ -264,21 +290,30 @@ class EdrOverlayHostApi {
 
   final String pigeonVar_messageChannelSuffix;
 
-  Future<void> configureViewport(
-    int viewId,
+  Future<void> configureWindow(
     int revision,
-    double scrollOffset,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
     List<EdrTileSnapshot> tiles,
   ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.configureViewport$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.configureWindow$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[viewId, revision, scrollOffset, tiles],
+      <Object?>[
+        revision,
+        viewportLeft,
+        viewportTop,
+        viewportWidth,
+        viewportHeight,
+        tiles,
+      ],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
@@ -289,21 +324,16 @@ class EdrOverlayHostApi {
     );
   }
 
-  Future<void> updateScrollOffset(
-    int viewId,
-    int revision,
-    int sequence,
-    double scrollOffset,
-  ) async {
+  Future<void> clearWindow(int revision) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.updateScrollOffset$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearWindow$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[viewId, revision, sequence, scrollOffset],
+      <Object?>[revision],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
@@ -313,24 +343,45 @@ class EdrOverlayHostApi {
       isNullValid: true,
     );
   }
+}
 
-  Future<void> clearViewport(int viewId, int revision) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearViewport$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[viewId, revision],
-    );
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+abstract class EdrOverlayFlutterApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-    _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+  void windowReady(int revision);
+
+  static void setUp(
+    EdrOverlayFlutterApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty
+        ? '.$messageChannelSuffix'
+        : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayFlutterApi.windowReady$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final int arg_revision = args[0]! as int;
+          try {
+            api.windowReady(arg_revision);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
   }
 }
