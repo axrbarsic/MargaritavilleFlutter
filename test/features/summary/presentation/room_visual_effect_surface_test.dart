@@ -102,7 +102,7 @@ void main() {
     expect(painter.fullFill, isTrue);
   });
 
-  testWidgets('native EDR owns the contour while Flutter moves foreground', (
+  testWidgets('native EDR ownership releases the invisible Flutter clock', (
     tester,
   ) async {
     final selectedAt = DateTime(2027, 2, 10, 12);
@@ -125,6 +125,7 @@ void main() {
             baseColor: MargaritavilleColors.vividStatus(room.displayStatus),
             policy: policy,
             nativeEdrActive: true,
+            nativeEdrManaged: true,
             child: const SizedBox.expand(),
           ),
         ),
@@ -136,7 +137,7 @@ void main() {
       tester
           .widget<VisualRuntimeActivity>(find.byType(VisualRuntimeActivity))
           .active,
-      isTrue,
+      isFalse,
     );
   });
 }

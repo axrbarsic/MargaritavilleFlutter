@@ -834,3 +834,37 @@ haptics. Физический Pixel сейчас заблокирован, по�
   Повторный all-184 cadence probe подготовлен, но запуск был отклонён внешним
   состоянием `Locked`; тестовый harness сразу заменён на обычную подписанную
   profile build 34, которая установлена на iPhone и не требует Flutter tooling.
+
+## 2026-07-10 — Checkpoint 7: geometry-only reuse и физический A/B
+
+- Первый повтор CA-keyframe build 34 был намеренно признан недействительным:
+  скопированный probe имел timestamp предыдущего запуска. Явный `devicectl`
+  launch подтвердил внешний `Locked`, поэтому старые байты не были выданы за
+  новый результат.
+- После разблокировки свежий исходный повтор подтвердил регрессию: Flutter
+  build/raster оставались быстрыми (`p99 2.66/3.59 ms`, max `3.30/5.38 ms`,
+  `0` over-budget), но cadence составляла только `36.08 FPS` при `846` gaps.
+  Причина находилась вне измеряемых build/raster фаз.
+- SharedAppFoundation revision
+  `af78f15f3424c5b1f13284cd47d3eca84f83fcb7` разделяет geometry и visual
+  content внутри tile. Scroll-origin больше не запрашивает новый Metal drawable,
+  не перезапускает jelly и не сбрасывает readiness уже готового содержимого.
+  Нативный ownership также полностью освобождает невидимый Flutter visual-clock;
+  Swift уже рисует и фон, и labels, поэтому прозрачный второй animator не нужен.
+- Тем же контрактным блоком native label приведён к donor ink `#050505`, static
+  native tile возвращён к radius `16 pt`, а transform keyframes сокращены
+  `240 -> 32` с доказанной максимальной ошибкой линейной интерполяции `<0.006 pt`.
+  Animated jelly radius `min(16, h*0.46, w*0.12)` сохранён без изменения.
+- Свежий physical all-184 VIP build 35 с Matrix + EDR + jelly при `120 Hz` дал:
+  `115.16 FPS`, p95 build/raster `1.95/2.95 ms`, p99 `2.23/3.44 ms`,
+  max `2.72/7.36 ms`, `0` over-budget и `112` gaps. Это устраняет падение до
+  `36.08 FPS` и возвращает pipeline вблизи максимального дисплейного cadence.
+- Контрольный A/B той же build 35 с EDR, но без jelly дал `117.13 FPS`,
+  p99 `2.49/3.84 ms`, max `2.84/6.47 ms`, `0` over-budget и `52` gaps.
+  Следовательно, полная jelly-нагрузка стоит `1.97 FPS` и проходит выбранный
+  delta-gate `<=3 Hz`; оставшиеся микропровалы в основном принадлежат полному
+  geometry/Pigeon snapshot на каждом scroll-кадре, а не формулам кляксы.
+- Следующий фундаментальный срез: content-coordinate snapshot только при
+  membership/content change и отдельный geometry call с одним `scrollOffset`.
+  Swift должен двигать общий tile-container одним transform без измерения и
+  сериализации всех видимых tile descriptors на каждом vsync.

@@ -97,7 +97,7 @@ shared_visual_runtime="../SharedAppFoundation/Sources/SharedAppFoundation/Visual
 
 if ! rg -q "https://github.com/axrbarsic/SharedAppFoundation\.git" \
     ios/Runner.xcodeproj/project.pbxproj || \
-   ! rg -q "ceba87f54ce550a24def006b1a1638c5d23ed90a" \
+   ! rg -q "af78f15f3424c5b1f13284cd47d3eca84f83fcb7" \
     ios/Runner.xcodeproj/project.pbxproj \
     ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved; then
   echo "ERROR: SharedAppFoundation должен быть закреплён точным remote revision"

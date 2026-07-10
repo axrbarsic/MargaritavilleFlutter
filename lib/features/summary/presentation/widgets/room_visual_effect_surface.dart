@@ -35,10 +35,15 @@ final class RoomVisualEffectSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clock = VisualRuntimeScope.maybeClockOf(context);
-    final nativeVipForegroundActive = !nativeEdrManaged || nativeEdrActive;
+    // Once iOS delegates a tile to the window runtime, Swift owns the complete
+    // visual surface (fill, labels, jelly and pulse transform).  Keeping an
+    // invisible Flutter animation alive would still lease the shared ticker
+    // and rebuild transparent tiles every vsync.
+    final flutterOwnsAnimation = !nativeEdrManaged;
     final shouldAnimate =
-        (room.isVip && policy.vipJellyEnabled && nativeVipForegroundActive) ||
-        (pulseEvent != null && policy.transientPulseEnabled);
+        flutterOwnsAnimation &&
+        ((room.isVip && policy.vipJellyEnabled) ||
+            (pulseEvent != null && policy.transientPulseEnabled));
     final surface = !shouldAnimate || clock == null
         ? _frame(now: DateTime.now(), seconds: 0)
         : AnimatedBuilder(
@@ -52,9 +57,7 @@ final class RoomVisualEffectSurface extends StatelessWidget {
 
   Widget _frame({required DateTime now, required double seconds}) {
     final vipJellyActive =
-        room.isVip &&
-        policy.vipJellyEnabled &&
-        (!nativeEdrManaged || nativeEdrActive);
+        room.isVip && policy.vipJellyEnabled && !nativeEdrManaged;
     final vipLightActive = room.isVip && policy.vipHdrLightEnabled;
     final pulseHeat = policy.transientPulseEnabled ? _pulseHeat(now) : 0.0;
     final seed = _stableSeed(room.roomNumber);
