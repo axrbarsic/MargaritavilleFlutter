@@ -8,6 +8,7 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 class InteractionFoundationPlugin : FlutterPlugin, ActivityAware {
   private var activity: Activity? = null
   private var service: AndroidInteractionFeedbackService? = null
+  private var voiceService: AndroidVoiceCaptureUnavailableService? = null
 
   override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     service = AndroidInteractionFeedbackService(
@@ -17,12 +18,17 @@ class InteractionFoundationPlugin : FlutterPlugin, ActivityAware {
     ).also {
       NativeInteractionFeedbackHostApi.setUp(binding.binaryMessenger, it)
     }
+    voiceService = AndroidVoiceCaptureUnavailableService().also {
+      VoiceCaptureHostApi.setUp(binding.binaryMessenger, it)
+    }
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     NativeInteractionFeedbackHostApi.setUp(binding.binaryMessenger, null)
+    VoiceCaptureHostApi.setUp(binding.binaryMessenger, null)
     service?.dispose()
     service = null
+    voiceService = null
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {

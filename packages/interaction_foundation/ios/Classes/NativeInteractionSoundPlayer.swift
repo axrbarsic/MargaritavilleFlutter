@@ -21,6 +21,7 @@ final class NativeInteractionSoundPlayer: @unchecked Sendable {
   private var audioSessionNeedsRefresh = true
   private var respectSilentMode = true
   private var mixWithOthers = true
+  private let audioSession = NativeAudioSessionCoordinator.shared
 
   deinit {
     observers.forEach(NotificationCenter.default.removeObserver)
@@ -63,10 +64,7 @@ final class NativeInteractionSoundPlayer: @unchecked Sendable {
         configureAudioSession()
       case .voiceCapture, .background:
         stopAllPlayers()
-        try? AVAudioSession.sharedInstance().setActive(
-          false,
-          options: .notifyOthersOnDeactivation
-        )
+        audioSession.suspendInteractive()
         audioSessionNeedsRefresh = true
       }
     }
@@ -78,7 +76,7 @@ final class NativeInteractionSoundPlayer: @unchecked Sendable {
       let players = pools[soundId],
       !players.isEmpty
     else { return }
-    activateAudioSession()
+    guard activateAudioSession() else { return }
     stopAllPlayers()
     var cursor = cursors[soundId] ?? 0
     let player = players.first(where: { !$0.isPlaying }) ?? players[cursor % players.count]
@@ -119,30 +117,25 @@ final class NativeInteractionSoundPlayer: @unchecked Sendable {
     }
   }
 
-  private func activateAudioSession() {
+  private func activateAudioSession() -> Bool {
     if audioSessionNeedsRefresh {
-      configureAudioSession()
-      return
+      return configureAudioSession()
     }
-    do {
-      try AVAudioSession.sharedInstance().setActive(true)
-    } catch {
+    let activated = audioSession.activateInteractive()
+    if !activated {
       audioSessionNeedsRefresh = true
     }
+    return activated
   }
 
-  private func configureAudioSession() {
-    do {
-      let category: AVAudioSession.Category = respectSilentMode ? .ambient : .playback
-      let options: AVAudioSession.CategoryOptions = mixWithOthers ? [.mixWithOthers] : []
-      let session = AVAudioSession.sharedInstance()
-      try session.setCategory(category, mode: .default, options: options)
-      try session.setActive(true)
-      audioSessionNeedsRefresh = false
-    } catch {
-      audioSessionNeedsRefresh = true
-      NSLog("Failed to configure interaction audio: %@", error.localizedDescription)
-    }
+  @discardableResult
+  private func configureAudioSession() -> Bool {
+    let configured = audioSession.configureInteractive(
+      respectSilentMode: respectSilentMode,
+      mixWithOthers: mixWithOthers
+    )
+    audioSessionNeedsRefresh = !configured
+    return configured
   }
 
   private func stopAllPlayers() {
@@ -164,6 +157,7 @@ final class NativeInteractionSoundPlayer: @unchecked Sendable {
         object: AVAudioSession.sharedInstance(),
         queue: nil
       ) { [weak self] _ in
+        self?.audioSession.invalidate()
         self?.queue.async { [weak self] in self?.audioSessionNeedsRefresh = true }
       }
     }

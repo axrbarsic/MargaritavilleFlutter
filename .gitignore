@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 /ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+/packages/*/.dart_tool/
+/packages/*/build/
+/packages/*/pubspec.lock
 
 # Symbolication related
 app.*.symbols

@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 tool/verify_pigeon_generated.sh
+tool/verify_voice_capture_contract.sh
 tool/verify_drift_schema.sh
 dart run build_runner build
 dart format --output=none --set-exit-if-changed lib test

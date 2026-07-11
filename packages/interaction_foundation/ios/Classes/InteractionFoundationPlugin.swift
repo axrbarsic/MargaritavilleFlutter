@@ -2,6 +2,8 @@ import Flutter
 import UIKit
 
 public final class InteractionFoundationPlugin: NSObject, FlutterPlugin {
+  @MainActor private static var voiceService: NativeVoiceCaptureService?
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     let player = NativeInteractionSoundPlayer { packageAssetPath in
       let assetKey = registrar.lookupKey(
@@ -25,5 +27,15 @@ public final class InteractionFoundationPlugin: NSObject, FlutterPlugin {
       binaryMessenger: registrar.messenger(),
       api: NativeInteractionFeedbackService(soundPlayer: player)
     )
+    MainActor.assumeIsolated {
+      let voice = NativeVoiceCaptureService(
+        binaryMessenger: registrar.messenger()
+      )
+      voiceService = voice
+      VoiceCaptureHostApiSetup.setUp(
+        binaryMessenger: registrar.messenger(),
+        api: voice
+      )
+    }
   }
 }

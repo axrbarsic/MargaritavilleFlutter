@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design/margaritaville_colors.dart';
+import '../domain/models/room_media_item.dart';
 import 'controllers/room_details_controller.dart';
+import 'controllers/room_voice_capture_controller.dart';
 import 'widgets/room_details_media_section.dart';
 import 'widgets/room_details_voice_panel.dart';
 
@@ -20,6 +22,7 @@ final class RoomDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final request = (sessionId: sessionId, roomNumber: roomNumber);
     final details = ref.watch(roomDetailsControllerProvider(request));
+    final voice = ref.watch(roomVoiceCaptureControllerProvider(request));
     return Scaffold(
       key: const Key('room-details-screen'),
       body: SafeArea(
@@ -67,7 +70,17 @@ final class RoomDetailsScreen extends ConsumerWidget {
                         ],
                         const SizedBox(height: 14),
                         RoomDetailsVoicePanel(
-                          onPressed: () => _showNativeServiceNotice(context),
+                          state: voice,
+                          voiceNotes: snapshot.media
+                              .where((item) => item.kind == RoomMediaKind.voice)
+                              .toList(growable: false),
+                          onPressed: () => ref
+                              .read(
+                                roomVoiceCaptureControllerProvider(
+                                  request,
+                                ).notifier,
+                              )
+                              .toggle(),
                         ),
                         const SizedBox(height: 18),
                         Divider(

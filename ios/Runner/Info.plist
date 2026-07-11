@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Margaritaville записывает локальные голосовые заметки для комнат.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Margaritaville расшифровывает локальные голосовые заметки в русский текст.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

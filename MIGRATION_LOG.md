@@ -1049,3 +1049,39 @@ haptics. Физический Pixel сейчас заблокирован, по�
   architecture guards. Подписанная iOS profile build `0.1.0 (37)` прошла guard
   семи IOS frameworks и установлена на физический iPhone 17 Pro Max;
   автоматический launch ожидает разблокировки телефона.
+
+## 2026-07-11 — Checkpoint 13: локальная голосовая заметка и единый audio runtime
+
+- Заглушка «Новая голосовая заметка» заменена настоящей вертикалью Room
+  Details: typed Pigeon request получает versioned `operationId/mediaId`, а
+  обратные события имеют монотонный sequence, typed phase/status и terminal
+  result. Generated Dart/Swift/Kotlin воспроизводимы; Android пока честно
+  сообщает typed `unsupported`, не запрашивая неиспользуемое разрешение.
+- iOS записывает локальный MPEG-4 AAC через `AVAudioRecorder` с donor-контрактом
+  `44,1 kHz`, mono и high quality. После stop используется только файловый
+  `SFSpeechURLRecognitionRequest` с `ru-RU`; live `AVAudioEngine/installTap`
+  запрещён guard-скриптом. Отказ Speech не блокирует само аудио: заметка
+  сохраняется без transcript и показывает «Распознавание недоступно».
+- Все `AVAudioSession.setCategory/setActive` вынесены в один
+  `NativeAudioSessionCoordinator`, обслуживающий и SFX, и запись. Background,
+  phone interruption и media-services reset маршрутизируются в voice runtime;
+  interruption во время файловой transcription отменяет Speech и выдаёт один
+  terminal interrupted-result вместо зависшей operation.
+- Native temp не считается данными приложения. Flutter копирует его атомарно в
+  Application Support `Media/<mediaId>.m4a`, сверяет длину, считает настоящий
+  SHA-256, затем выполняет `AddRoomMediaCommand` в Drift и только после durable
+  commit вызывает `releaseResult`. Crash-retry переиспользует идентичный файл;
+  конфликт checksum запрещён; duplicate подтверждается чтением projection.
+  Ошибка temp cleanup никогда не удаляет уже закоммиченный media-файл.
+- Room Details показывает русские состояния permission/start/record/finish,
+  stop affordance и сохранённые transcript bubbles. Screen-scoped Riverpod
+  family использует auto-dispose; dispose/cancel дожидается незавершённого
+  durable copy, затем корректно освобождает native ownership.
+- Независимый architecture challenger дал GO после закрытия Speech-denied,
+  finishing-interruption, duplicate/ignored/reuse и dispose/finalize races.
+  Полный software gate включает Pigeon/Drift reproducibility, voice native
+  contract, format/analyze, Flutter tests, Android JVM, file-size и architecture
+  guards. Подписанная profile build `0.1.0 (37)` прошла deep codesign и guard
+  семи IOS frameworks и установлена на физический iPhone 17 Pro Max. Runtime
+  smoke (реальная фраза, denied Speech, звонок/background) остаётся открытым:
+  автоматический запуск отклонён iOS только из-за заблокированного телефона.
