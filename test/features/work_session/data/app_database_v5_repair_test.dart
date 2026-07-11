@@ -11,11 +11,13 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  test('canonical v5 to v9 preserves journal and adds content owner', () async {
-    final schema = await verifier.schemaAt(5);
-    addTearDown(schema.close);
-    _seedSession(schema);
-    schema.rawDatabase.execute('''
+  test(
+    'canonical v5 to v10 preserves journal and adds content owner',
+    () async {
+      final schema = await verifier.schemaAt(5);
+      addTearDown(schema.close);
+      _seedSession(schema);
+      schema.rawDatabase.execute('''
       INSERT INTO media_promotion_records (
         operation_id, command_id, media_id, session_id, room_number, kind,
         staged_relative_path, transient_file_path, final_relative_path,
@@ -31,16 +33,19 @@ void main() {
       )
     ''');
 
-    final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 9);
+      final database = AppDatabase.forTesting(schema.newConnection());
+      await verifier.migrateAndValidate(database, 10);
 
-    final journal = await database.select(database.mediaPromotionRecords).get();
-    expect(journal.single.operationId, 'operation-v5');
-    expect(journal.single.transientFilePath, '/camera/photo-v5.jpg');
-    await database.close();
-  });
+      final journal = await database
+          .select(database.mediaPromotionRecords)
+          .get();
+      expect(journal.single.operationId, 'operation-v5');
+      expect(journal.single.transientFilePath, '/camera/photo-v5.jpg');
+      await database.close();
+    },
+  );
 
-  test('intermediate physical v5 journal repairs safely into v9', () async {
+  test('intermediate physical v5 journal repairs safely into v10', () async {
     final schema = await verifier.schemaAt(5);
     addTearDown(schema.close);
     _seedSession(schema);
@@ -63,7 +68,7 @@ void main() {
     raw.execute('DROP TABLE canonical_v5');
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 9);
+    await verifier.migrateAndValidate(database, 10);
 
     final journal = await database.select(database.mediaPromotionRecords).get();
     expect(journal, hasLength(1));

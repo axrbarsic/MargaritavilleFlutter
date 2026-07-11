@@ -4277,6 +4277,28 @@ class $HistoryEventRecordsTable extends HistoryEventRecords
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _aggregateTypeMeta = const VerificationMeta(
+    'aggregateType',
+  );
+  @override
+  late final GeneratedColumn<String> aggregateType = GeneratedColumn<String>(
+    'aggregate_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _aggregateIdMeta = const VerificationMeta(
+    'aggregateId',
+  );
+  @override
+  late final GeneratedColumn<String> aggregateId = GeneratedColumn<String>(
+    'aggregate_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _sessionIdMeta = const VerificationMeta(
     'sessionId',
   );
@@ -4284,9 +4306,9 @@ class $HistoryEventRecordsTable extends HistoryEventRecords
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES work_session_records (id) ON DELETE CASCADE',
     ),
@@ -4350,6 +4372,8 @@ class $HistoryEventRecordsTable extends HistoryEventRecords
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    aggregateType,
+    aggregateId,
     sessionId,
     commandId,
     eventType,
@@ -4374,13 +4398,33 @@ class $HistoryEventRecordsTable extends HistoryEventRecords
     } else if (isInserting) {
       context.missing(_idMeta);
     }
+    if (data.containsKey('aggregate_type')) {
+      context.handle(
+        _aggregateTypeMeta,
+        aggregateType.isAcceptableOrUnknown(
+          data['aggregate_type']!,
+          _aggregateTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_aggregateTypeMeta);
+    }
+    if (data.containsKey('aggregate_id')) {
+      context.handle(
+        _aggregateIdMeta,
+        aggregateId.isAcceptableOrUnknown(
+          data['aggregate_id']!,
+          _aggregateIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_aggregateIdMeta);
+    }
     if (data.containsKey('session_id')) {
       context.handle(
         _sessionIdMeta,
         sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_sessionIdMeta);
     }
     if (data.containsKey('command_id')) {
       context.handle(
@@ -4439,10 +4483,18 @@ class $HistoryEventRecordsTable extends HistoryEventRecords
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      aggregateType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aggregate_type'],
+      )!,
+      aggregateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aggregate_id'],
+      )!,
       sessionId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}session_id'],
-      )!,
+      ),
       commandId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}command_id'],
@@ -4474,7 +4526,9 @@ class $HistoryEventRecordsTable extends HistoryEventRecords
 
 class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
   final String id;
-  final String sessionId;
+  final String aggregateType;
+  final String aggregateId;
+  final String? sessionId;
   final String commandId;
   final String eventType;
   final int eventVersion;
@@ -4482,7 +4536,9 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
   final DateTime happenedAt;
   const HistoryEventRow({
     required this.id,
-    required this.sessionId,
+    required this.aggregateType,
+    required this.aggregateId,
+    this.sessionId,
     required this.commandId,
     required this.eventType,
     required this.eventVersion,
@@ -4493,7 +4549,11 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['session_id'] = Variable<String>(sessionId);
+    map['aggregate_type'] = Variable<String>(aggregateType);
+    map['aggregate_id'] = Variable<String>(aggregateId);
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
     map['command_id'] = Variable<String>(commandId);
     map['event_type'] = Variable<String>(eventType);
     map['event_version'] = Variable<int>(eventVersion);
@@ -4505,7 +4565,11 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
   HistoryEventRecordsCompanion toCompanion(bool nullToAbsent) {
     return HistoryEventRecordsCompanion(
       id: Value(id),
-      sessionId: Value(sessionId),
+      aggregateType: Value(aggregateType),
+      aggregateId: Value(aggregateId),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
       commandId: Value(commandId),
       eventType: Value(eventType),
       eventVersion: Value(eventVersion),
@@ -4521,7 +4585,9 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return HistoryEventRow(
       id: serializer.fromJson<String>(json['id']),
-      sessionId: serializer.fromJson<String>(json['sessionId']),
+      aggregateType: serializer.fromJson<String>(json['aggregateType']),
+      aggregateId: serializer.fromJson<String>(json['aggregateId']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
       commandId: serializer.fromJson<String>(json['commandId']),
       eventType: serializer.fromJson<String>(json['eventType']),
       eventVersion: serializer.fromJson<int>(json['eventVersion']),
@@ -4534,7 +4600,9 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'sessionId': serializer.toJson<String>(sessionId),
+      'aggregateType': serializer.toJson<String>(aggregateType),
+      'aggregateId': serializer.toJson<String>(aggregateId),
+      'sessionId': serializer.toJson<String?>(sessionId),
       'commandId': serializer.toJson<String>(commandId),
       'eventType': serializer.toJson<String>(eventType),
       'eventVersion': serializer.toJson<int>(eventVersion),
@@ -4545,7 +4613,9 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
 
   HistoryEventRow copyWith({
     String? id,
-    String? sessionId,
+    String? aggregateType,
+    String? aggregateId,
+    Value<String?> sessionId = const Value.absent(),
     String? commandId,
     String? eventType,
     int? eventVersion,
@@ -4553,7 +4623,9 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
     DateTime? happenedAt,
   }) => HistoryEventRow(
     id: id ?? this.id,
-    sessionId: sessionId ?? this.sessionId,
+    aggregateType: aggregateType ?? this.aggregateType,
+    aggregateId: aggregateId ?? this.aggregateId,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
     commandId: commandId ?? this.commandId,
     eventType: eventType ?? this.eventType,
     eventVersion: eventVersion ?? this.eventVersion,
@@ -4563,6 +4635,12 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
   HistoryEventRow copyWithCompanion(HistoryEventRecordsCompanion data) {
     return HistoryEventRow(
       id: data.id.present ? data.id.value : this.id,
+      aggregateType: data.aggregateType.present
+          ? data.aggregateType.value
+          : this.aggregateType,
+      aggregateId: data.aggregateId.present
+          ? data.aggregateId.value
+          : this.aggregateId,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       commandId: data.commandId.present ? data.commandId.value : this.commandId,
       eventType: data.eventType.present ? data.eventType.value : this.eventType,
@@ -4582,6 +4660,8 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
   String toString() {
     return (StringBuffer('HistoryEventRow(')
           ..write('id: $id, ')
+          ..write('aggregateType: $aggregateType, ')
+          ..write('aggregateId: $aggregateId, ')
           ..write('sessionId: $sessionId, ')
           ..write('commandId: $commandId, ')
           ..write('eventType: $eventType, ')
@@ -4595,6 +4675,8 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
   @override
   int get hashCode => Object.hash(
     id,
+    aggregateType,
+    aggregateId,
     sessionId,
     commandId,
     eventType,
@@ -4607,6 +4689,8 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
       identical(this, other) ||
       (other is HistoryEventRow &&
           other.id == this.id &&
+          other.aggregateType == this.aggregateType &&
+          other.aggregateId == this.aggregateId &&
           other.sessionId == this.sessionId &&
           other.commandId == this.commandId &&
           other.eventType == this.eventType &&
@@ -4617,7 +4701,9 @@ class HistoryEventRow extends DataClass implements Insertable<HistoryEventRow> {
 
 class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
   final Value<String> id;
-  final Value<String> sessionId;
+  final Value<String> aggregateType;
+  final Value<String> aggregateId;
+  final Value<String?> sessionId;
   final Value<String> commandId;
   final Value<String> eventType;
   final Value<int> eventVersion;
@@ -4626,6 +4712,8 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
   final Value<int> rowid;
   const HistoryEventRecordsCompanion({
     this.id = const Value.absent(),
+    this.aggregateType = const Value.absent(),
+    this.aggregateId = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.commandId = const Value.absent(),
     this.eventType = const Value.absent(),
@@ -4636,7 +4724,9 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
   });
   HistoryEventRecordsCompanion.insert({
     required String id,
-    required String sessionId,
+    required String aggregateType,
+    required String aggregateId,
+    this.sessionId = const Value.absent(),
     required String commandId,
     required String eventType,
     this.eventVersion = const Value.absent(),
@@ -4644,13 +4734,16 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
     required DateTime happenedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       sessionId = Value(sessionId),
+       aggregateType = Value(aggregateType),
+       aggregateId = Value(aggregateId),
        commandId = Value(commandId),
        eventType = Value(eventType),
        payloadJson = Value(payloadJson),
        happenedAt = Value(happenedAt);
   static Insertable<HistoryEventRow> custom({
     Expression<String>? id,
+    Expression<String>? aggregateType,
+    Expression<String>? aggregateId,
     Expression<String>? sessionId,
     Expression<String>? commandId,
     Expression<String>? eventType,
@@ -4661,6 +4754,8 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (aggregateType != null) 'aggregate_type': aggregateType,
+      if (aggregateId != null) 'aggregate_id': aggregateId,
       if (sessionId != null) 'session_id': sessionId,
       if (commandId != null) 'command_id': commandId,
       if (eventType != null) 'event_type': eventType,
@@ -4673,7 +4768,9 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
 
   HistoryEventRecordsCompanion copyWith({
     Value<String>? id,
-    Value<String>? sessionId,
+    Value<String>? aggregateType,
+    Value<String>? aggregateId,
+    Value<String?>? sessionId,
     Value<String>? commandId,
     Value<String>? eventType,
     Value<int>? eventVersion,
@@ -4683,6 +4780,8 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
   }) {
     return HistoryEventRecordsCompanion(
       id: id ?? this.id,
+      aggregateType: aggregateType ?? this.aggregateType,
+      aggregateId: aggregateId ?? this.aggregateId,
       sessionId: sessionId ?? this.sessionId,
       commandId: commandId ?? this.commandId,
       eventType: eventType ?? this.eventType,
@@ -4698,6 +4797,12 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (aggregateType.present) {
+      map['aggregate_type'] = Variable<String>(aggregateType.value);
+    }
+    if (aggregateId.present) {
+      map['aggregate_id'] = Variable<String>(aggregateId.value);
     }
     if (sessionId.present) {
       map['session_id'] = Variable<String>(sessionId.value);
@@ -4727,6 +4832,8 @@ class HistoryEventRecordsCompanion extends UpdateCompanion<HistoryEventRow> {
   String toString() {
     return (StringBuffer('HistoryEventRecordsCompanion(')
           ..write('id: $id, ')
+          ..write('aggregateType: $aggregateType, ')
+          ..write('aggregateId: $aggregateId, ')
           ..write('sessionId: $sessionId, ')
           ..write('commandId: $commandId, ')
           ..write('eventType: $eventType, ')
@@ -4745,6 +4852,28 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CommandReceiptRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _aggregateTypeMeta = const VerificationMeta(
+    'aggregateType',
+  );
+  @override
+  late final GeneratedColumn<String> aggregateType = GeneratedColumn<String>(
+    'aggregate_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _aggregateIdMeta = const VerificationMeta(
+    'aggregateId',
+  );
+  @override
+  late final GeneratedColumn<String> aggregateId = GeneratedColumn<String>(
+    'aggregate_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _sessionIdMeta = const VerificationMeta(
     'sessionId',
   );
@@ -4752,9 +4881,9 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES work_session_records (id) ON DELETE CASCADE',
     ),
@@ -4839,6 +4968,8 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
   );
   @override
   List<GeneratedColumn> get $columns => [
+    aggregateType,
+    aggregateId,
     sessionId,
     commandId,
     commandVersion,
@@ -4860,13 +4991,33 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('aggregate_type')) {
+      context.handle(
+        _aggregateTypeMeta,
+        aggregateType.isAcceptableOrUnknown(
+          data['aggregate_type']!,
+          _aggregateTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_aggregateTypeMeta);
+    }
+    if (data.containsKey('aggregate_id')) {
+      context.handle(
+        _aggregateIdMeta,
+        aggregateId.isAcceptableOrUnknown(
+          data['aggregate_id']!,
+          _aggregateIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_aggregateIdMeta);
+    }
     if (data.containsKey('session_id')) {
       context.handle(
         _sessionIdMeta,
         sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_sessionIdMeta);
     }
     if (data.containsKey('command_id')) {
       context.handle(
@@ -4935,15 +5086,27 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {sessionId, commandId};
+  Set<GeneratedColumn> get $primaryKey => {
+    aggregateType,
+    aggregateId,
+    commandId,
+  };
   @override
   CommandReceiptRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CommandReceiptRow(
+      aggregateType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aggregate_type'],
+      )!,
+      aggregateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aggregate_id'],
+      )!,
       sessionId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}session_id'],
-      )!,
+      ),
       commandId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}command_id'],
@@ -4983,7 +5146,9 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
 
 class CommandReceiptRow extends DataClass
     implements Insertable<CommandReceiptRow> {
-  final String sessionId;
+  final String aggregateType;
+  final String aggregateId;
+  final String? sessionId;
   final String commandId;
   final int commandVersion;
   final String? commandType;
@@ -4992,7 +5157,9 @@ class CommandReceiptRow extends DataClass
   final String outcome;
   final DateTime processedAt;
   const CommandReceiptRow({
-    required this.sessionId,
+    required this.aggregateType,
+    required this.aggregateId,
+    this.sessionId,
     required this.commandId,
     required this.commandVersion,
     this.commandType,
@@ -5004,7 +5171,11 @@ class CommandReceiptRow extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['session_id'] = Variable<String>(sessionId);
+    map['aggregate_type'] = Variable<String>(aggregateType);
+    map['aggregate_id'] = Variable<String>(aggregateId);
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
     map['command_id'] = Variable<String>(commandId);
     map['command_version'] = Variable<int>(commandVersion);
     if (!nullToAbsent || commandType != null) {
@@ -5023,7 +5194,11 @@ class CommandReceiptRow extends DataClass
 
   CommandReceiptRecordsCompanion toCompanion(bool nullToAbsent) {
     return CommandReceiptRecordsCompanion(
-      sessionId: Value(sessionId),
+      aggregateType: Value(aggregateType),
+      aggregateId: Value(aggregateId),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
       commandId: Value(commandId),
       commandVersion: Value(commandVersion),
       commandType: commandType == null && nullToAbsent
@@ -5046,7 +5221,9 @@ class CommandReceiptRow extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CommandReceiptRow(
-      sessionId: serializer.fromJson<String>(json['sessionId']),
+      aggregateType: serializer.fromJson<String>(json['aggregateType']),
+      aggregateId: serializer.fromJson<String>(json['aggregateId']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
       commandId: serializer.fromJson<String>(json['commandId']),
       commandVersion: serializer.fromJson<int>(json['commandVersion']),
       commandType: serializer.fromJson<String?>(json['commandType']),
@@ -5062,7 +5239,9 @@ class CommandReceiptRow extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'sessionId': serializer.toJson<String>(sessionId),
+      'aggregateType': serializer.toJson<String>(aggregateType),
+      'aggregateId': serializer.toJson<String>(aggregateId),
+      'sessionId': serializer.toJson<String?>(sessionId),
       'commandId': serializer.toJson<String>(commandId),
       'commandVersion': serializer.toJson<int>(commandVersion),
       'commandType': serializer.toJson<String?>(commandType),
@@ -5074,7 +5253,9 @@ class CommandReceiptRow extends DataClass
   }
 
   CommandReceiptRow copyWith({
-    String? sessionId,
+    String? aggregateType,
+    String? aggregateId,
+    Value<String?> sessionId = const Value.absent(),
     String? commandId,
     int? commandVersion,
     Value<String?> commandType = const Value.absent(),
@@ -5083,7 +5264,9 @@ class CommandReceiptRow extends DataClass
     String? outcome,
     DateTime? processedAt,
   }) => CommandReceiptRow(
-    sessionId: sessionId ?? this.sessionId,
+    aggregateType: aggregateType ?? this.aggregateType,
+    aggregateId: aggregateId ?? this.aggregateId,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
     commandId: commandId ?? this.commandId,
     commandVersion: commandVersion ?? this.commandVersion,
     commandType: commandType.present ? commandType.value : this.commandType,
@@ -5098,6 +5281,12 @@ class CommandReceiptRow extends DataClass
   );
   CommandReceiptRow copyWithCompanion(CommandReceiptRecordsCompanion data) {
     return CommandReceiptRow(
+      aggregateType: data.aggregateType.present
+          ? data.aggregateType.value
+          : this.aggregateType,
+      aggregateId: data.aggregateId.present
+          ? data.aggregateId.value
+          : this.aggregateId,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       commandId: data.commandId.present ? data.commandId.value : this.commandId,
       commandVersion: data.commandVersion.present
@@ -5122,6 +5311,8 @@ class CommandReceiptRow extends DataClass
   @override
   String toString() {
     return (StringBuffer('CommandReceiptRow(')
+          ..write('aggregateType: $aggregateType, ')
+          ..write('aggregateId: $aggregateId, ')
           ..write('sessionId: $sessionId, ')
           ..write('commandId: $commandId, ')
           ..write('commandVersion: $commandVersion, ')
@@ -5136,6 +5327,8 @@ class CommandReceiptRow extends DataClass
 
   @override
   int get hashCode => Object.hash(
+    aggregateType,
+    aggregateId,
     sessionId,
     commandId,
     commandVersion,
@@ -5149,6 +5342,8 @@ class CommandReceiptRow extends DataClass
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CommandReceiptRow &&
+          other.aggregateType == this.aggregateType &&
+          other.aggregateId == this.aggregateId &&
           other.sessionId == this.sessionId &&
           other.commandId == this.commandId &&
           other.commandVersion == this.commandVersion &&
@@ -5161,7 +5356,9 @@ class CommandReceiptRow extends DataClass
 
 class CommandReceiptRecordsCompanion
     extends UpdateCompanion<CommandReceiptRow> {
-  final Value<String> sessionId;
+  final Value<String> aggregateType;
+  final Value<String> aggregateId;
+  final Value<String?> sessionId;
   final Value<String> commandId;
   final Value<int> commandVersion;
   final Value<String?> commandType;
@@ -5171,6 +5368,8 @@ class CommandReceiptRecordsCompanion
   final Value<DateTime> processedAt;
   final Value<int> rowid;
   const CommandReceiptRecordsCompanion({
+    this.aggregateType = const Value.absent(),
+    this.aggregateId = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.commandId = const Value.absent(),
     this.commandVersion = const Value.absent(),
@@ -5182,7 +5381,9 @@ class CommandReceiptRecordsCompanion
     this.rowid = const Value.absent(),
   });
   CommandReceiptRecordsCompanion.insert({
-    required String sessionId,
+    required String aggregateType,
+    required String aggregateId,
+    this.sessionId = const Value.absent(),
     required String commandId,
     this.commandVersion = const Value.absent(),
     this.commandType = const Value.absent(),
@@ -5191,11 +5392,14 @@ class CommandReceiptRecordsCompanion
     required String outcome,
     required DateTime processedAt,
     this.rowid = const Value.absent(),
-  }) : sessionId = Value(sessionId),
+  }) : aggregateType = Value(aggregateType),
+       aggregateId = Value(aggregateId),
        commandId = Value(commandId),
        outcome = Value(outcome),
        processedAt = Value(processedAt);
   static Insertable<CommandReceiptRow> custom({
+    Expression<String>? aggregateType,
+    Expression<String>? aggregateId,
     Expression<String>? sessionId,
     Expression<String>? commandId,
     Expression<int>? commandVersion,
@@ -5207,6 +5411,8 @@ class CommandReceiptRecordsCompanion
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (aggregateType != null) 'aggregate_type': aggregateType,
+      if (aggregateId != null) 'aggregate_id': aggregateId,
       if (sessionId != null) 'session_id': sessionId,
       if (commandId != null) 'command_id': commandId,
       if (commandVersion != null) 'command_version': commandVersion,
@@ -5220,7 +5426,9 @@ class CommandReceiptRecordsCompanion
   }
 
   CommandReceiptRecordsCompanion copyWith({
-    Value<String>? sessionId,
+    Value<String>? aggregateType,
+    Value<String>? aggregateId,
+    Value<String?>? sessionId,
     Value<String>? commandId,
     Value<int>? commandVersion,
     Value<String?>? commandType,
@@ -5231,6 +5439,8 @@ class CommandReceiptRecordsCompanion
     Value<int>? rowid,
   }) {
     return CommandReceiptRecordsCompanion(
+      aggregateType: aggregateType ?? this.aggregateType,
+      aggregateId: aggregateId ?? this.aggregateId,
       sessionId: sessionId ?? this.sessionId,
       commandId: commandId ?? this.commandId,
       commandVersion: commandVersion ?? this.commandVersion,
@@ -5246,6 +5456,12 @@ class CommandReceiptRecordsCompanion
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (aggregateType.present) {
+      map['aggregate_type'] = Variable<String>(aggregateType.value);
+    }
+    if (aggregateId.present) {
+      map['aggregate_id'] = Variable<String>(aggregateId.value);
+    }
     if (sessionId.present) {
       map['session_id'] = Variable<String>(sessionId.value);
     }
@@ -5279,6 +5495,8 @@ class CommandReceiptRecordsCompanion
   @override
   String toString() {
     return (StringBuffer('CommandReceiptRecordsCompanion(')
+          ..write('aggregateType: $aggregateType, ')
+          ..write('aggregateId: $aggregateId, ')
           ..write('sessionId: $sessionId, ')
           ..write('commandId: $commandId, ')
           ..write('commandVersion: $commandVersion, ')
@@ -5310,6 +5528,28 @@ class $SyncOutboxRecordsTable extends SyncOutboxRecords
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _aggregateTypeMeta = const VerificationMeta(
+    'aggregateType',
+  );
+  @override
+  late final GeneratedColumn<String> aggregateType = GeneratedColumn<String>(
+    'aggregate_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _aggregateIdMeta = const VerificationMeta(
+    'aggregateId',
+  );
+  @override
+  late final GeneratedColumn<String> aggregateId = GeneratedColumn<String>(
+    'aggregate_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _sessionIdMeta = const VerificationMeta(
     'sessionId',
   );
@@ -5317,9 +5557,9 @@ class $SyncOutboxRecordsTable extends SyncOutboxRecords
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES work_session_records (id) ON DELETE CASCADE',
     ),
@@ -5363,6 +5603,8 @@ class $SyncOutboxRecordsTable extends SyncOutboxRecords
   @override
   List<GeneratedColumn> get $columns => [
     eventId,
+    aggregateType,
+    aggregateId,
     sessionId,
     attemptCount,
     nextAttemptAt,
@@ -5388,13 +5630,33 @@ class $SyncOutboxRecordsTable extends SyncOutboxRecords
     } else if (isInserting) {
       context.missing(_eventIdMeta);
     }
+    if (data.containsKey('aggregate_type')) {
+      context.handle(
+        _aggregateTypeMeta,
+        aggregateType.isAcceptableOrUnknown(
+          data['aggregate_type']!,
+          _aggregateTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_aggregateTypeMeta);
+    }
+    if (data.containsKey('aggregate_id')) {
+      context.handle(
+        _aggregateIdMeta,
+        aggregateId.isAcceptableOrUnknown(
+          data['aggregate_id']!,
+          _aggregateIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_aggregateIdMeta);
+    }
     if (data.containsKey('session_id')) {
       context.handle(
         _sessionIdMeta,
         sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_sessionIdMeta);
     }
     if (data.containsKey('attempt_count')) {
       context.handle(
@@ -5436,10 +5698,18 @@ class $SyncOutboxRecordsTable extends SyncOutboxRecords
         DriftSqlType.string,
         data['${effectivePrefix}event_id'],
       )!,
+      aggregateType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aggregate_type'],
+      )!,
+      aggregateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aggregate_id'],
+      )!,
       sessionId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}session_id'],
-      )!,
+      ),
       attemptCount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}attempt_count'],
@@ -5463,13 +5733,17 @@ class $SyncOutboxRecordsTable extends SyncOutboxRecords
 
 class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
   final String eventId;
-  final String sessionId;
+  final String aggregateType;
+  final String aggregateId;
+  final String? sessionId;
   final int attemptCount;
   final DateTime? nextAttemptAt;
   final DateTime? acknowledgedAt;
   const SyncOutboxRow({
     required this.eventId,
-    required this.sessionId,
+    required this.aggregateType,
+    required this.aggregateId,
+    this.sessionId,
     required this.attemptCount,
     this.nextAttemptAt,
     this.acknowledgedAt,
@@ -5478,7 +5752,11 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['event_id'] = Variable<String>(eventId);
-    map['session_id'] = Variable<String>(sessionId);
+    map['aggregate_type'] = Variable<String>(aggregateType);
+    map['aggregate_id'] = Variable<String>(aggregateId);
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
     map['attempt_count'] = Variable<int>(attemptCount);
     if (!nullToAbsent || nextAttemptAt != null) {
       map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt);
@@ -5492,7 +5770,11 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
   SyncOutboxRecordsCompanion toCompanion(bool nullToAbsent) {
     return SyncOutboxRecordsCompanion(
       eventId: Value(eventId),
-      sessionId: Value(sessionId),
+      aggregateType: Value(aggregateType),
+      aggregateId: Value(aggregateId),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
       attemptCount: Value(attemptCount),
       nextAttemptAt: nextAttemptAt == null && nullToAbsent
           ? const Value.absent()
@@ -5510,7 +5792,9 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncOutboxRow(
       eventId: serializer.fromJson<String>(json['eventId']),
-      sessionId: serializer.fromJson<String>(json['sessionId']),
+      aggregateType: serializer.fromJson<String>(json['aggregateType']),
+      aggregateId: serializer.fromJson<String>(json['aggregateId']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
       attemptCount: serializer.fromJson<int>(json['attemptCount']),
       nextAttemptAt: serializer.fromJson<DateTime?>(json['nextAttemptAt']),
       acknowledgedAt: serializer.fromJson<DateTime?>(json['acknowledgedAt']),
@@ -5521,7 +5805,9 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'eventId': serializer.toJson<String>(eventId),
-      'sessionId': serializer.toJson<String>(sessionId),
+      'aggregateType': serializer.toJson<String>(aggregateType),
+      'aggregateId': serializer.toJson<String>(aggregateId),
+      'sessionId': serializer.toJson<String?>(sessionId),
       'attemptCount': serializer.toJson<int>(attemptCount),
       'nextAttemptAt': serializer.toJson<DateTime?>(nextAttemptAt),
       'acknowledgedAt': serializer.toJson<DateTime?>(acknowledgedAt),
@@ -5530,13 +5816,17 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
 
   SyncOutboxRow copyWith({
     String? eventId,
-    String? sessionId,
+    String? aggregateType,
+    String? aggregateId,
+    Value<String?> sessionId = const Value.absent(),
     int? attemptCount,
     Value<DateTime?> nextAttemptAt = const Value.absent(),
     Value<DateTime?> acknowledgedAt = const Value.absent(),
   }) => SyncOutboxRow(
     eventId: eventId ?? this.eventId,
-    sessionId: sessionId ?? this.sessionId,
+    aggregateType: aggregateType ?? this.aggregateType,
+    aggregateId: aggregateId ?? this.aggregateId,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
     attemptCount: attemptCount ?? this.attemptCount,
     nextAttemptAt: nextAttemptAt.present
         ? nextAttemptAt.value
@@ -5548,6 +5838,12 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
   SyncOutboxRow copyWithCompanion(SyncOutboxRecordsCompanion data) {
     return SyncOutboxRow(
       eventId: data.eventId.present ? data.eventId.value : this.eventId,
+      aggregateType: data.aggregateType.present
+          ? data.aggregateType.value
+          : this.aggregateType,
+      aggregateId: data.aggregateId.present
+          ? data.aggregateId.value
+          : this.aggregateId,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       attemptCount: data.attemptCount.present
           ? data.attemptCount.value
@@ -5565,6 +5861,8 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
   String toString() {
     return (StringBuffer('SyncOutboxRow(')
           ..write('eventId: $eventId, ')
+          ..write('aggregateType: $aggregateType, ')
+          ..write('aggregateId: $aggregateId, ')
           ..write('sessionId: $sessionId, ')
           ..write('attemptCount: $attemptCount, ')
           ..write('nextAttemptAt: $nextAttemptAt, ')
@@ -5576,6 +5874,8 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
   @override
   int get hashCode => Object.hash(
     eventId,
+    aggregateType,
+    aggregateId,
     sessionId,
     attemptCount,
     nextAttemptAt,
@@ -5586,6 +5886,8 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
       identical(this, other) ||
       (other is SyncOutboxRow &&
           other.eventId == this.eventId &&
+          other.aggregateType == this.aggregateType &&
+          other.aggregateId == this.aggregateId &&
           other.sessionId == this.sessionId &&
           other.attemptCount == this.attemptCount &&
           other.nextAttemptAt == this.nextAttemptAt &&
@@ -5594,13 +5896,17 @@ class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
 
 class SyncOutboxRecordsCompanion extends UpdateCompanion<SyncOutboxRow> {
   final Value<String> eventId;
-  final Value<String> sessionId;
+  final Value<String> aggregateType;
+  final Value<String> aggregateId;
+  final Value<String?> sessionId;
   final Value<int> attemptCount;
   final Value<DateTime?> nextAttemptAt;
   final Value<DateTime?> acknowledgedAt;
   final Value<int> rowid;
   const SyncOutboxRecordsCompanion({
     this.eventId = const Value.absent(),
+    this.aggregateType = const Value.absent(),
+    this.aggregateId = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.attemptCount = const Value.absent(),
     this.nextAttemptAt = const Value.absent(),
@@ -5609,15 +5915,20 @@ class SyncOutboxRecordsCompanion extends UpdateCompanion<SyncOutboxRow> {
   });
   SyncOutboxRecordsCompanion.insert({
     required String eventId,
-    required String sessionId,
+    required String aggregateType,
+    required String aggregateId,
+    this.sessionId = const Value.absent(),
     this.attemptCount = const Value.absent(),
     this.nextAttemptAt = const Value.absent(),
     this.acknowledgedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : eventId = Value(eventId),
-       sessionId = Value(sessionId);
+       aggregateType = Value(aggregateType),
+       aggregateId = Value(aggregateId);
   static Insertable<SyncOutboxRow> custom({
     Expression<String>? eventId,
+    Expression<String>? aggregateType,
+    Expression<String>? aggregateId,
     Expression<String>? sessionId,
     Expression<int>? attemptCount,
     Expression<DateTime>? nextAttemptAt,
@@ -5626,6 +5937,8 @@ class SyncOutboxRecordsCompanion extends UpdateCompanion<SyncOutboxRow> {
   }) {
     return RawValuesInsertable({
       if (eventId != null) 'event_id': eventId,
+      if (aggregateType != null) 'aggregate_type': aggregateType,
+      if (aggregateId != null) 'aggregate_id': aggregateId,
       if (sessionId != null) 'session_id': sessionId,
       if (attemptCount != null) 'attempt_count': attemptCount,
       if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
@@ -5636,7 +5949,9 @@ class SyncOutboxRecordsCompanion extends UpdateCompanion<SyncOutboxRow> {
 
   SyncOutboxRecordsCompanion copyWith({
     Value<String>? eventId,
-    Value<String>? sessionId,
+    Value<String>? aggregateType,
+    Value<String>? aggregateId,
+    Value<String?>? sessionId,
     Value<int>? attemptCount,
     Value<DateTime?>? nextAttemptAt,
     Value<DateTime?>? acknowledgedAt,
@@ -5644,6 +5959,8 @@ class SyncOutboxRecordsCompanion extends UpdateCompanion<SyncOutboxRow> {
   }) {
     return SyncOutboxRecordsCompanion(
       eventId: eventId ?? this.eventId,
+      aggregateType: aggregateType ?? this.aggregateType,
+      aggregateId: aggregateId ?? this.aggregateId,
       sessionId: sessionId ?? this.sessionId,
       attemptCount: attemptCount ?? this.attemptCount,
       nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
@@ -5657,6 +5974,12 @@ class SyncOutboxRecordsCompanion extends UpdateCompanion<SyncOutboxRow> {
     final map = <String, Expression>{};
     if (eventId.present) {
       map['event_id'] = Variable<String>(eventId.value);
+    }
+    if (aggregateType.present) {
+      map['aggregate_type'] = Variable<String>(aggregateType.value);
+    }
+    if (aggregateId.present) {
+      map['aggregate_id'] = Variable<String>(aggregateId.value);
     }
     if (sessionId.present) {
       map['session_id'] = Variable<String>(sessionId.value);
@@ -5680,6 +6003,8 @@ class SyncOutboxRecordsCompanion extends UpdateCompanion<SyncOutboxRow> {
   String toString() {
     return (StringBuffer('SyncOutboxRecordsCompanion(')
           ..write('eventId: $eventId, ')
+          ..write('aggregateType: $aggregateType, ')
+          ..write('aggregateId: $aggregateId, ')
           ..write('sessionId: $sessionId, ')
           ..write('attemptCount: $attemptCount, ')
           ..write('nextAttemptAt: $nextAttemptAt, ')
@@ -12968,7 +13293,9 @@ typedef $$CartConsumableRecordsTableProcessedTableManager =
 typedef $$HistoryEventRecordsTableCreateCompanionBuilder =
     HistoryEventRecordsCompanion Function({
       required String id,
-      required String sessionId,
+      required String aggregateType,
+      required String aggregateId,
+      Value<String?> sessionId,
       required String commandId,
       required String eventType,
       Value<int> eventVersion,
@@ -12979,7 +13306,9 @@ typedef $$HistoryEventRecordsTableCreateCompanionBuilder =
 typedef $$HistoryEventRecordsTableUpdateCompanionBuilder =
     HistoryEventRecordsCompanion Function({
       Value<String> id,
-      Value<String> sessionId,
+      Value<String> aggregateType,
+      Value<String> aggregateId,
+      Value<String?> sessionId,
       Value<String> commandId,
       Value<String> eventType,
       Value<int> eventVersion,
@@ -13006,9 +13335,9 @@ final class $$HistoryEventRecordsTableReferences
         'history_event_records__session_id__work_session_records__id',
       );
 
-  $$WorkSessionRecordsTableProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<String>('session_id')!;
-
+  $$WorkSessionRecordsTableProcessedTableManager? get sessionId {
+    final $_column = $_itemColumn<String>('session_id');
+    if ($_column == null) return null;
     final manager = $$WorkSessionRecordsTableTableManager(
       $_db,
       $_db.workSessionRecords,
@@ -13032,6 +13361,16 @@ class $$HistoryEventRecordsTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13098,6 +13437,16 @@ class $$HistoryEventRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get commandId => $composableBuilder(
     column: $table.commandId,
     builder: (column) => ColumnOrderings(column),
@@ -13158,6 +13507,16 @@ class $$HistoryEventRecordsTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get commandId =>
       $composableBuilder(column: $table.commandId, builder: (column) => column);
@@ -13242,7 +13601,9 @@ class $$HistoryEventRecordsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String> sessionId = const Value.absent(),
+                Value<String> aggregateType = const Value.absent(),
+                Value<String> aggregateId = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
                 Value<String> commandId = const Value.absent(),
                 Value<String> eventType = const Value.absent(),
                 Value<int> eventVersion = const Value.absent(),
@@ -13251,6 +13612,8 @@ class $$HistoryEventRecordsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => HistoryEventRecordsCompanion(
                 id: id,
+                aggregateType: aggregateType,
+                aggregateId: aggregateId,
                 sessionId: sessionId,
                 commandId: commandId,
                 eventType: eventType,
@@ -13262,7 +13625,9 @@ class $$HistoryEventRecordsTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                required String sessionId,
+                required String aggregateType,
+                required String aggregateId,
+                Value<String?> sessionId = const Value.absent(),
                 required String commandId,
                 required String eventType,
                 Value<int> eventVersion = const Value.absent(),
@@ -13271,6 +13636,8 @@ class $$HistoryEventRecordsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => HistoryEventRecordsCompanion.insert(
                 id: id,
+                aggregateType: aggregateType,
+                aggregateId: aggregateId,
                 sessionId: sessionId,
                 commandId: commandId,
                 eventType: eventType,
@@ -13350,7 +13717,9 @@ typedef $$HistoryEventRecordsTableProcessedTableManager =
     >;
 typedef $$CommandReceiptRecordsTableCreateCompanionBuilder =
     CommandReceiptRecordsCompanion Function({
-      required String sessionId,
+      required String aggregateType,
+      required String aggregateId,
+      Value<String?> sessionId,
       required String commandId,
       Value<int> commandVersion,
       Value<String?> commandType,
@@ -13362,7 +13731,9 @@ typedef $$CommandReceiptRecordsTableCreateCompanionBuilder =
     });
 typedef $$CommandReceiptRecordsTableUpdateCompanionBuilder =
     CommandReceiptRecordsCompanion Function({
-      Value<String> sessionId,
+      Value<String> aggregateType,
+      Value<String> aggregateId,
+      Value<String?> sessionId,
       Value<String> commandId,
       Value<int> commandVersion,
       Value<String?> commandType,
@@ -13391,9 +13762,9 @@ final class $$CommandReceiptRecordsTableReferences
         'command_receipt_records__session_id__work_session_records__id',
       );
 
-  $$WorkSessionRecordsTableProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<String>('session_id')!;
-
+  $$WorkSessionRecordsTableProcessedTableManager? get sessionId {
+    final $_column = $_itemColumn<String>('session_id');
+    if ($_column == null) return null;
     final manager = $$WorkSessionRecordsTableTableManager(
       $_db,
       $_db.workSessionRecords,
@@ -13415,6 +13786,16 @@ class $$CommandReceiptRecordsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get commandId => $composableBuilder(
     column: $table.commandId,
     builder: (column) => ColumnFilters(column),
@@ -13483,6 +13864,16 @@ class $$CommandReceiptRecordsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get commandId => $composableBuilder(
     column: $table.commandId,
     builder: (column) => ColumnOrderings(column),
@@ -13551,6 +13942,16 @@ class $$CommandReceiptRecordsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get commandId =>
       $composableBuilder(column: $table.commandId, builder: (column) => column);
 
@@ -13646,7 +14047,9 @@ class $$CommandReceiptRecordsTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<String> sessionId = const Value.absent(),
+                Value<String> aggregateType = const Value.absent(),
+                Value<String> aggregateId = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
                 Value<String> commandId = const Value.absent(),
                 Value<int> commandVersion = const Value.absent(),
                 Value<String?> commandType = const Value.absent(),
@@ -13656,6 +14059,8 @@ class $$CommandReceiptRecordsTableTableManager
                 Value<DateTime> processedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CommandReceiptRecordsCompanion(
+                aggregateType: aggregateType,
+                aggregateId: aggregateId,
                 sessionId: sessionId,
                 commandId: commandId,
                 commandVersion: commandVersion,
@@ -13668,7 +14073,9 @@ class $$CommandReceiptRecordsTableTableManager
               ),
           createCompanionCallback:
               ({
-                required String sessionId,
+                required String aggregateType,
+                required String aggregateId,
+                Value<String?> sessionId = const Value.absent(),
                 required String commandId,
                 Value<int> commandVersion = const Value.absent(),
                 Value<String?> commandType = const Value.absent(),
@@ -13678,6 +14085,8 @@ class $$CommandReceiptRecordsTableTableManager
                 required DateTime processedAt,
                 Value<int> rowid = const Value.absent(),
               }) => CommandReceiptRecordsCompanion.insert(
+                aggregateType: aggregateType,
+                aggregateId: aggregateId,
                 sessionId: sessionId,
                 commandId: commandId,
                 commandVersion: commandVersion,
@@ -13760,7 +14169,9 @@ typedef $$CommandReceiptRecordsTableProcessedTableManager =
 typedef $$SyncOutboxRecordsTableCreateCompanionBuilder =
     SyncOutboxRecordsCompanion Function({
       required String eventId,
-      required String sessionId,
+      required String aggregateType,
+      required String aggregateId,
+      Value<String?> sessionId,
       Value<int> attemptCount,
       Value<DateTime?> nextAttemptAt,
       Value<DateTime?> acknowledgedAt,
@@ -13769,7 +14180,9 @@ typedef $$SyncOutboxRecordsTableCreateCompanionBuilder =
 typedef $$SyncOutboxRecordsTableUpdateCompanionBuilder =
     SyncOutboxRecordsCompanion Function({
       Value<String> eventId,
-      Value<String> sessionId,
+      Value<String> aggregateType,
+      Value<String> aggregateId,
+      Value<String?> sessionId,
       Value<int> attemptCount,
       Value<DateTime?> nextAttemptAt,
       Value<DateTime?> acknowledgedAt,
@@ -13789,9 +14202,9 @@ final class $$SyncOutboxRecordsTableReferences
       .workSessionRecords
       .createAlias('sync_outbox_records__session_id__work_session_records__id');
 
-  $$WorkSessionRecordsTableProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<String>('session_id')!;
-
+  $$WorkSessionRecordsTableProcessedTableManager? get sessionId {
+    final $_column = $_itemColumn<String>('session_id');
+    if ($_column == null) return null;
     final manager = $$WorkSessionRecordsTableTableManager(
       $_db,
       $_db.workSessionRecords,
@@ -13815,6 +14228,16 @@ class $$SyncOutboxRecordsTableFilterComposer
   });
   ColumnFilters<String> get eventId => $composableBuilder(
     column: $table.eventId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13871,6 +14294,16 @@ class $$SyncOutboxRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get attemptCount => $composableBuilder(
     column: $table.attemptCount,
     builder: (column) => ColumnOrderings(column),
@@ -13921,6 +14354,16 @@ class $$SyncOutboxRecordsTableAnnotationComposer
   });
   GeneratedColumn<String> get eventId =>
       $composableBuilder(column: $table.eventId, builder: (column) => column);
+
+  GeneratedColumn<String> get aggregateType => $composableBuilder(
+    column: $table.aggregateType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aggregateId => $composableBuilder(
+    column: $table.aggregateId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get attemptCount => $composableBuilder(
     column: $table.attemptCount,
@@ -13996,13 +14439,17 @@ class $$SyncOutboxRecordsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> eventId = const Value.absent(),
-                Value<String> sessionId = const Value.absent(),
+                Value<String> aggregateType = const Value.absent(),
+                Value<String> aggregateId = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
                 Value<int> attemptCount = const Value.absent(),
                 Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime?> acknowledgedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SyncOutboxRecordsCompanion(
                 eventId: eventId,
+                aggregateType: aggregateType,
+                aggregateId: aggregateId,
                 sessionId: sessionId,
                 attemptCount: attemptCount,
                 nextAttemptAt: nextAttemptAt,
@@ -14012,13 +14459,17 @@ class $$SyncOutboxRecordsTableTableManager
           createCompanionCallback:
               ({
                 required String eventId,
-                required String sessionId,
+                required String aggregateType,
+                required String aggregateId,
+                Value<String?> sessionId = const Value.absent(),
                 Value<int> attemptCount = const Value.absent(),
                 Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime?> acknowledgedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SyncOutboxRecordsCompanion.insert(
                 eventId: eventId,
+                aggregateType: aggregateType,
+                aggregateId: aggregateId,
                 sessionId: sessionId,
                 attemptCount: attemptCount,
                 nextAttemptAt: nextAttemptAt,

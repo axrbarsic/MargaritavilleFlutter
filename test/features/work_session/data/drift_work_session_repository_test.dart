@@ -201,7 +201,9 @@ Future<void> _insertSessionProjections(
       .into(database.commandReceiptRecords)
       .insert(
         CommandReceiptRecordsCompanion.insert(
-          sessionId: sessionId,
+          aggregateType: 'work-session',
+          aggregateId: sessionId,
+          sessionId: Value(sessionId),
           commandId: 'note-command-1',
           outcome: 'applied',
           processedAt: happenedAt,
@@ -212,7 +214,9 @@ Future<void> _insertSessionProjections(
       .insert(
         HistoryEventRecordsCompanion.insert(
           id: 'note-event-1',
-          sessionId: sessionId,
+          aggregateType: 'work-session',
+          aggregateId: sessionId,
+          sessionId: Value(sessionId),
           commandId: 'note-command-1',
           eventType: 'room.note.updated',
           payloadJson: '{"roomNumber":"101"}',
@@ -224,7 +228,9 @@ Future<void> _insertSessionProjections(
       .insert(
         SyncOutboxRecordsCompanion.insert(
           eventId: 'note-event-1',
-          sessionId: sessionId,
+          aggregateType: 'work-session',
+          aggregateId: sessionId,
+          sessionId: Value(sessionId),
         ),
       );
   await database

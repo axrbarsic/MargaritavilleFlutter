@@ -7,8 +7,13 @@ import 'work_session_tables.dart';
 @DataClassName('HistoryEventRow')
 class HistoryEventRecords extends Table {
   TextColumn get id => text()();
-  TextColumn get sessionId =>
-      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  TextColumn get aggregateType => text()();
+  TextColumn get aggregateId => text()();
+  TextColumn get sessionId => text().nullable().references(
+    WorkSessionRecords,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
   TextColumn get commandId => text()();
   TextColumn get eventType => text()();
   IntColumn get eventVersion => integer().withDefault(const Constant(1))();
@@ -21,8 +26,13 @@ class HistoryEventRecords extends Table {
 
 @DataClassName('CommandReceiptRow')
 class CommandReceiptRecords extends Table {
-  TextColumn get sessionId =>
-      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  TextColumn get aggregateType => text()();
+  TextColumn get aggregateId => text()();
+  TextColumn get sessionId => text().nullable().references(
+    WorkSessionRecords,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
   TextColumn get commandId => text()();
   IntColumn get commandVersion => integer().withDefault(const Constant(1))();
   TextColumn get commandType => text().nullable()();
@@ -32,14 +42,19 @@ class CommandReceiptRecords extends Table {
   DateTimeColumn get processedAt => dateTime()();
 
   @override
-  Set<Column<Object>> get primaryKey => {sessionId, commandId};
+  Set<Column<Object>> get primaryKey => {aggregateType, aggregateId, commandId};
 }
 
 @DataClassName('SyncOutboxRow')
 class SyncOutboxRecords extends Table {
   TextColumn get eventId => text()();
-  TextColumn get sessionId =>
-      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  TextColumn get aggregateType => text()();
+  TextColumn get aggregateId => text()();
+  TextColumn get sessionId => text().nullable().references(
+    WorkSessionRecords,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
   IntColumn get attemptCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get nextAttemptAt => dateTime().nullable()();
   DateTimeColumn get acknowledgedAt => dateTime().nullable()();

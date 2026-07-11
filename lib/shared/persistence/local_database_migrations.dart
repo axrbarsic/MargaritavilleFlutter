@@ -125,7 +125,7 @@ extension AppDatabaseMigrations on AppDatabase {
       // Some physical pre-release installs recorded user_version=3 without
       // creating the receipt projection. Recreate the current table and
       // recover applied command identities from the append-only history.
-      await migrator.createTable(commandReceiptRecords);
+      await _createLegacyCommandReceiptTableV9();
       await customStatement('''
         INSERT OR IGNORE INTO command_receipt_records (
           session_id, command_id, command_version, outcome, processed_at
@@ -161,6 +161,23 @@ extension AppDatabaseMigrations on AppDatabase {
     }
   }
 
+  Future<void> _createLegacyCommandReceiptTableV9() {
+    return customStatement('''
+      CREATE TABLE command_receipt_records (
+        session_id TEXT NOT NULL REFERENCES work_session_records(id)
+          ON DELETE CASCADE,
+        command_id TEXT NOT NULL,
+        command_version INTEGER NOT NULL DEFAULT 1,
+        command_type TEXT,
+        command_fingerprint TEXT,
+        issued_at_micros INTEGER,
+        outcome TEXT NOT NULL,
+        processed_at INTEGER NOT NULL,
+        PRIMARY KEY (session_id, command_id)
+      )
+    ''');
+  }
+
   Future<void> _upgradeWorkSetupV8(Migrator migrator) async {
     final columns = await customSelect(
       "PRAGMA table_info('work_assignment_records')",
@@ -175,6 +192,59 @@ extension AppDatabaseMigrations on AppDatabase {
 
   Future<void> _upgradeHousekeeperCatalogV9(Migrator migrator) {
     return migrator.createTable(housekeeperCatalogRecords);
+  }
+
+  Future<void> _upgradeAggregateLedgerV10(Migrator migrator) async {
+    await customStatement(
+      'ALTER TABLE history_event_records RENAME TO history_event_records_v9',
+    );
+    await migrator.createTable(historyEventRecords);
+    await customStatement('''
+      INSERT INTO history_event_records (
+        id, aggregate_type, aggregate_id, session_id, command_id, event_type,
+        event_version, payload_json, happened_at
+      )
+      SELECT
+        id, 'work-session', session_id, session_id, command_id, event_type,
+        event_version, payload_json, happened_at
+      FROM history_event_records_v9
+    ''');
+    await customStatement('DROP TABLE history_event_records_v9');
+
+    await customStatement(
+      'ALTER TABLE command_receipt_records '
+      'RENAME TO command_receipt_records_v9',
+    );
+    await migrator.createTable(commandReceiptRecords);
+    await customStatement('''
+      INSERT INTO command_receipt_records (
+        aggregate_type, aggregate_id, session_id, command_id, command_version,
+        command_type, command_fingerprint, issued_at_micros, outcome,
+        processed_at
+      )
+      SELECT
+        'work-session', session_id, session_id, command_id, command_version,
+        command_type, command_fingerprint, issued_at_micros, outcome,
+        processed_at
+      FROM command_receipt_records_v9
+    ''');
+    await customStatement('DROP TABLE command_receipt_records_v9');
+
+    await customStatement(
+      'ALTER TABLE sync_outbox_records RENAME TO sync_outbox_records_v9',
+    );
+    await migrator.createTable(syncOutboxRecords);
+    await customStatement('''
+      INSERT INTO sync_outbox_records (
+        event_id, aggregate_type, aggregate_id, session_id, attempt_count,
+        next_attempt_at, acknowledged_at
+      )
+      SELECT
+        event_id, 'work-session', session_id, session_id, attempt_count,
+        next_attempt_at, acknowledged_at
+      FROM sync_outbox_records_v9
+    ''');
+    await customStatement('DROP TABLE sync_outbox_records_v9');
   }
 
   Future<void> _assertNoOwnerlessMediaRows(String tableName) async {

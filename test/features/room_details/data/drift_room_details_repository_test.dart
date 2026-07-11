@@ -56,10 +56,12 @@ void main() {
     final issuedAt = media.updatedAt;
     await database.customStatement('''
       INSERT INTO history_event_records (
-        id, session_id, command_id, event_type, event_version,
+        id, aggregate_type, aggregate_id, session_id,
+        command_id, event_type, event_version,
         payload_json, happened_at
       ) VALUES (
-        'room:${session.id}:collision', '${session.id}', 'preexisting',
+        'room:${session.id}:collision', 'work-session', '${session.id}',
+        '${session.id}', 'preexisting',
         'sentinel', 1, '{}', '${issuedAt.toIso8601String()}'
       )
     ''');

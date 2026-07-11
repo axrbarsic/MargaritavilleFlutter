@@ -12,7 +12,7 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  test('v6 to v9 preserves room media and adds assignment content', () async {
+  test('v6 to v10 preserves room media and adds assignment content', () async {
     final schema = await verifier.schemaAt(6);
     addTearDown(schema.close);
     final raw = schema.rawDatabase;
@@ -29,7 +29,7 @@ void main() {
     ''');
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 9);
+    await verifier.migrateAndValidate(database, 10);
 
     expect(
       (await database.select(database.mediaManifestRecords).get()).single.id,

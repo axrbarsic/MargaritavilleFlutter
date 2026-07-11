@@ -41,7 +41,7 @@ final class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -52,7 +52,7 @@ final class AppDatabase extends _$AppDatabase {
       if (from == 2 && to >= 3) {
         await transaction(() async {
           await migrator.createTable(roomNoteRecords);
-          await migrator.createTable(commandReceiptRecords);
+          await _createLegacyCommandReceiptTableV9();
           await customStatement('''
             INSERT OR IGNORE INTO command_receipt_records (
               session_id, command_id, command_version, outcome, processed_at
@@ -98,6 +98,7 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (to >= 8) await _upgradeWorkSetupV8(migrator);
           if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+          if (to >= 10) await _upgradeAggregateLedgerV10(migrator);
         });
         return;
       }
@@ -119,6 +120,7 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (to >= 8) await _upgradeWorkSetupV8(migrator);
           if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+          if (to >= 10) await _upgradeAggregateLedgerV10(migrator);
         });
         return;
       }
@@ -130,6 +132,7 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (to >= 8) await _upgradeWorkSetupV8(migrator);
           if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+          if (to >= 10) await _upgradeAggregateLedgerV10(migrator);
         });
         return;
       }
@@ -141,6 +144,7 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (to >= 8) await _upgradeWorkSetupV8(migrator);
           if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+          if (to >= 10) await _upgradeAggregateLedgerV10(migrator);
         });
         return;
       }
@@ -149,6 +153,7 @@ final class AppDatabase extends _$AppDatabase {
           await _upgradeAssignmentContentV7(migrator);
           if (to >= 8) await _upgradeWorkSetupV8(migrator);
           if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+          if (to >= 10) await _upgradeAggregateLedgerV10(migrator);
         });
         return;
       }
@@ -156,11 +161,19 @@ final class AppDatabase extends _$AppDatabase {
         await transaction(() async {
           await _upgradeWorkSetupV8(migrator);
           if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+          if (to >= 10) await _upgradeAggregateLedgerV10(migrator);
         });
         return;
       }
       if (from == 8 && to >= 9) {
-        await transaction(() => _upgradeHousekeeperCatalogV9(migrator));
+        await transaction(() async {
+          await _upgradeHousekeeperCatalogV9(migrator);
+          if (to >= 10) await _upgradeAggregateLedgerV10(migrator);
+        });
+        return;
+      }
+      if (from == 9 && to >= 10) {
+        await transaction(() => _upgradeAggregateLedgerV10(migrator));
         return;
       }
       throw UnsupportedError('Unsupported database upgrade $from -> $to');

@@ -8,7 +8,70 @@ import 'app_database.dart';
 enum CommandLedgerStatus { applied, duplicate, ignored }
 
 final class CommandLedgerEnvelope {
-  CommandLedgerEnvelope({
+  factory CommandLedgerEnvelope({
+    required String sessionId,
+    required String commandId,
+    required int commandVersion,
+    required String commandType,
+    required String commandFingerprint,
+    required DateTime issuedAt,
+    required String eventId,
+    required String eventType,
+    required Map<String, Object?> eventPayload,
+  }) {
+    return CommandLedgerEnvelope._(
+      aggregateType: 'work-session',
+      aggregateId: sessionId,
+      sessionId: sessionId,
+      commandId: commandId,
+      commandVersion: commandVersion,
+      commandType: commandType,
+      commandFingerprint: commandFingerprint,
+      issuedAt: issuedAt,
+      eventId: eventId,
+      eventType: eventType,
+      eventPayload: Map.unmodifiable(eventPayload),
+    );
+  }
+
+  factory CommandLedgerEnvelope.forAggregate({
+    required String aggregateType,
+    required String aggregateId,
+    required String commandId,
+    required int commandVersion,
+    required String commandType,
+    required String commandFingerprint,
+    required DateTime issuedAt,
+    required String eventId,
+    required String eventType,
+    required Map<String, Object?> eventPayload,
+  }) {
+    if (aggregateType.trim().isEmpty || aggregateId.trim().isEmpty) {
+      throw ArgumentError('Command aggregate scope must not be empty.');
+    }
+    if (aggregateType == 'work-session') {
+      throw ArgumentError(
+        'Work-session commands must use the session-scoped constructor.',
+      );
+    }
+    return CommandLedgerEnvelope._(
+      aggregateType: aggregateType,
+      aggregateId: aggregateId,
+      sessionId: null,
+      commandId: commandId,
+      commandVersion: commandVersion,
+      commandType: commandType,
+      commandFingerprint: commandFingerprint,
+      issuedAt: issuedAt,
+      eventId: eventId,
+      eventType: eventType,
+      eventPayload: Map.unmodifiable(eventPayload),
+    );
+  }
+
+  const CommandLedgerEnvelope._({
+    required this.aggregateType,
+    required this.aggregateId,
     required this.sessionId,
     required this.commandId,
     required this.commandVersion,
@@ -17,10 +80,12 @@ final class CommandLedgerEnvelope {
     required this.issuedAt,
     required this.eventId,
     required this.eventType,
-    required Map<String, Object?> eventPayload,
-  }) : eventPayload = Map.unmodifiable(eventPayload);
+    required this.eventPayload,
+  });
 
-  final String sessionId;
+  final String aggregateType;
+  final String aggregateId;
+  final String? sessionId;
   final String commandId;
   final int commandVersion;
   final String commandType;
@@ -57,7 +122,9 @@ final class DriftCommandLedger {
           .insert(
             HistoryEventRecordsCompanion.insert(
               id: envelope.eventId,
-              sessionId: envelope.sessionId,
+              aggregateType: envelope.aggregateType,
+              aggregateId: envelope.aggregateId,
+              sessionId: Value(envelope.sessionId),
               commandId: envelope.commandId,
               eventType: envelope.eventType,
               eventVersion: Value(envelope.commandVersion),
@@ -70,7 +137,9 @@ final class DriftCommandLedger {
           .insert(
             SyncOutboxRecordsCompanion.insert(
               eventId: envelope.eventId,
-              sessionId: envelope.sessionId,
+              aggregateType: envelope.aggregateType,
+              aggregateId: envelope.aggregateId,
+              sessionId: Value(envelope.sessionId),
             ),
           );
       await _finish(envelope, CommandLedgerStatus.applied);
@@ -84,7 +153,9 @@ final class DriftCommandLedger {
         .into(_database.commandReceiptRecords)
         .insertReturningOrNull(
           CommandReceiptRecordsCompanion.insert(
-            sessionId: envelope.sessionId,
+            aggregateType: envelope.aggregateType,
+            aggregateId: envelope.aggregateId,
+            sessionId: Value(envelope.sessionId),
             commandId: envelope.commandId,
             commandVersion: Value(envelope.commandVersion),
             commandType: Value(envelope.commandType),
@@ -100,7 +171,8 @@ final class DriftCommandLedger {
     final query = _database.select(_database.commandReceiptRecords)
       ..where(
         (row) =>
-            row.sessionId.equals(envelope.sessionId) &
+            row.aggregateType.equals(envelope.aggregateType) &
+            row.aggregateId.equals(envelope.aggregateId) &
             row.commandId.equals(envelope.commandId),
       )
       ..limit(1);
@@ -127,7 +199,8 @@ final class DriftCommandLedger {
     final update = _database.update(_database.commandReceiptRecords)
       ..where(
         (row) =>
-            row.sessionId.equals(envelope.sessionId) &
+            row.aggregateType.equals(envelope.aggregateType) &
+            row.aggregateId.equals(envelope.aggregateId) &
             row.commandId.equals(envelope.commandId),
       );
     return update.write(

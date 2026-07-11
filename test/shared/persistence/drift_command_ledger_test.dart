@@ -93,10 +93,12 @@ void main() {
     final envelope = _envelope('collision');
     await database.customStatement('''
       INSERT INTO history_event_records (
-        id, session_id, command_id, event_type, event_version,
+        id, aggregate_type, aggregate_id, session_id,
+        command_id, event_type, event_version,
         payload_json, happened_at
       ) VALUES (
-        '${envelope.eventId}', 'session-1', 'existing', 'sentinel', 1,
+        '${envelope.eventId}', 'work-session', 'session-1', 'session-1',
+        'existing', 'sentinel', 1,
         '{}', '2027-02-10T12:00:00Z'
       )
     ''');
@@ -148,6 +150,96 @@ void main() {
     expect(payload.toString(), isNot(contains('secret note')));
     expect(payload.toString(), isNot(contains('/private/path')));
   });
+
+  test('app aggregate commits without a synthetic work session', () async {
+    final issuedAt = DateTime.utc(2027, 2, 10, 13);
+    final envelope = CommandLedgerEnvelope.forAggregate(
+      aggregateType: 'housekeeper-catalog',
+      aggregateId: 'margaritaville',
+      commandId: 'catalog-add-1',
+      commandVersion: 1,
+      commandType: 'housekeeper_catalog.add',
+      commandFingerprint: CommandLedgerEnvelope.fingerprint(const {
+        'displayName': 'Zoë',
+      }),
+      issuedAt: issuedAt,
+      eventId: 'housekeeper-catalog:margaritaville:catalog-add-1',
+      eventType: 'housekeeper_catalog.added',
+      eventPayload: const {'housekeeperId': 'zoe'},
+    );
+
+    expect(
+      await ledger.commit(envelope: envelope, mutate: () async => true),
+      CommandLedgerStatus.applied,
+    );
+
+    final receipt = await database
+        .select(database.commandReceiptRecords)
+        .getSingle();
+    final history = await database
+        .select(database.historyEventRecords)
+        .getSingle();
+    final outbox = await database
+        .select(database.syncOutboxRecords)
+        .getSingle();
+    expect(receipt.aggregateType, 'housekeeper-catalog');
+    expect(receipt.aggregateId, 'margaritaville');
+    expect(receipt.sessionId, isNull);
+    expect(history.aggregateId, 'margaritaville');
+    expect(history.sessionId, isNull);
+    expect(outbox.aggregateId, 'margaritaville');
+    expect(outbox.sessionId, isNull);
+  });
+
+  test('generic aggregate cannot counterfeit reserved work-session scope', () {
+    expect(
+      () => _aggregateEnvelope('work-session', 'fake-session', 'reserved'),
+      throwsArgumentError,
+    );
+  });
+
+  test('the same command ID is independent across aggregate scopes', () async {
+    await ledger.commit(
+      envelope: _aggregateEnvelope('housekeeper-catalog', 'hotel-a', 'same'),
+      mutate: () async => true,
+    );
+    await ledger.commit(
+      envelope: _aggregateEnvelope('housekeeper-catalog', 'hotel-b', 'same'),
+      mutate: () async => true,
+    );
+
+    expect(
+      await database.select(database.commandReceiptRecords).get(),
+      hasLength(2),
+    );
+    expect(
+      await database.select(database.historyEventRecords).get(),
+      hasLength(2),
+    );
+    expect(
+      await database.select(database.syncOutboxRecords).get(),
+      hasLength(2),
+    );
+  });
+}
+
+CommandLedgerEnvelope _aggregateEnvelope(
+  String aggregateType,
+  String aggregateId,
+  String commandId,
+) {
+  return CommandLedgerEnvelope.forAggregate(
+    aggregateType: aggregateType,
+    aggregateId: aggregateId,
+    commandId: commandId,
+    commandVersion: 1,
+    commandType: 'test.aggregate',
+    commandFingerprint: CommandLedgerEnvelope.fingerprint(const {'value': 1}),
+    issuedAt: DateTime.utc(2027, 2, 10, 13),
+    eventId: '$aggregateType:$aggregateId:$commandId',
+    eventType: 'test.aggregate.changed',
+    eventPayload: const {},
+  );
 }
 
 CommandLedgerEnvelope _envelope(

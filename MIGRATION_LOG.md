@@ -1297,3 +1297,44 @@ haptics. Физический Pixel сейчас заблокирован, по�
   durable command receipts; после аудита приложение перезапущено, снова ровно
   одним Runner. Это подтверждает не только install/launch, но и первое живое
   открытие Drift на физическом устройстве.
+
+## 2026-07-11 — Checkpoint 15C: aggregate-scoped durable ledger
+
+- Перед Catalog Editor три read-only роли заново проверили target, Swift build
+  37 и границу системы. Donor-аудит опроверг гипотезу ручного reorder: build 37
+  сохраняет порядок массива, а новую уборщицу добавляет в конец. Удаление
+  назначенной уборщицы остаётся отдельным продуктовым выбором из-за donor-дефекта
+  locked workday и в текущий checkpoint не входит.
+- Architecture challenger обнаружил ложную границу: существующие receipt,
+  history и outbox были обязательными FK-детьми WorkSession. Привязывать
+  глобальную catalog-команду к latest или synthetic session запрещено, потому
+  что удаление смены тогда удаляло бы аудит независимого каталога.
+- Drift schema v10 обобщает единый ledger через
+  `(aggregate_type, aggregate_id)`. `session_id` остаётся nullable projection
+  для work-session queries; прежние конструкторы ledger автоматически получают
+  scope `work-session:<sessionId>`, а глобальные aggregate-команды работают без
+  фиктивной смены.
+- Миграция v9→v10 явно и транзакционно rebuild-ит три ledger projection и
+  backfill-ит scope без потери command type/fingerprint, issuedAt, attempts и
+  acknowledgement. Длинные v2...v8→v10 пути сначала создают историческую v9
+  receipt-форму, затем применяют тот же backfill; промежуточная физическая v3
+  без receipt table также остаётся ремонтируемой.
+- Первый красный тест доказал отсутствие app-aggregate API. Следующий migration
+  test поймал потерю backfilled receipts через общий `TableMigration`; он не был
+  ослаблен, а реализация заменена явным rename/create/copy/drop. Целевой набор
+  из `34` ledger, v2...v9 migration, physical repair, WorkSession, Cart Details
+  и Room Details tests зелёный; Drift snapshot v10 и generated helpers
+  воспроизводимы.
+- Полный `tool/quality_gate.sh` после исправления зелёный: format, analyze,
+  Flutter/Android JVM, Pigeon/media/voice, schema reproducibility, file-size и
+  architecture guards. Подписанная profile-сборка прошла deep codesign и guard
+  восьми IOS frameworks и установлена на физический iPhone 17 Pro Max. Запуск
+  CoreDevice отклонил только потому, что телефон заблокирован
+  (`FBSOpenApplicationErrorDomain: Locked`); поэтому physical schema v10/runtime
+  read ещё не заявлены и остаются коротким deferred gate после разблокировки.
+- Свежий correctness-review дал `PASS` без P0/P1. P2 о возможности подделать
+  зарезервированный aggregate type `work-session` с nullable `session_id`
+  исправлен запретом в generic factory и regression test. P3 proof-gap закрыт:
+  direct v9→v10 test теперь также сверяет `next_attempt_at` и
+  `acknowledged_at`; отдельный тест подтверждает независимость одинакового
+  command ID в двух aggregate scopes.

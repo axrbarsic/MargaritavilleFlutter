@@ -10,6 +10,20 @@ if rg -n "features/" lib/shared/persistence --glob '*.dart'; then
   failed=1
 fi
 
+aggregate_type_columns=$(rg -o 'TextColumn get aggregateType' \
+  lib/shared/persistence/tables/sync_contract_tables.dart | wc -l | tr -d ' ')
+aggregate_id_columns=$(rg -o 'TextColumn get aggregateId' \
+  lib/shared/persistence/tables/sync_contract_tables.dart | wc -l | tr -d ' ')
+if [[ "$aggregate_type_columns" != "3" ]] || \
+   [[ "$aggregate_id_columns" != "3" ]] || \
+   ! rg -q 'CommandLedgerEnvelope\.forAggregate' \
+     lib/shared/persistence/drift_command_ledger.dart || \
+   ! rg -q 'int get schemaVersion => 10' \
+     lib/shared/persistence/local_database.dart; then
+  echo "ERROR: durable ledger must keep independent aggregate ownership"
+  failed=1
+fi
+
 if rg -n "package:(flutter|flutter_riverpod|drift)" \
   lib/features/work_session/domain --glob '*.dart'; then
   echo "ERROR: pure domain imports a framework package"

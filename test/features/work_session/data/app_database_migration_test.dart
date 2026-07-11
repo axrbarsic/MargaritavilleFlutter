@@ -13,13 +13,13 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  test('v2 to v9 preserves data and adds assignment content', () async {
+  test('v2 to v10 preserves data and adds assignment content', () async {
     final schema = await verifier.schemaAt(2);
     addTearDown(schema.close);
     _seedV2(schema);
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 9);
+    await verifier.migrateAndValidate(database, 10);
 
     final sessions = await database.select(database.workSessionRecords).get();
     final history = await database.select(database.historyEventRecords).get();
@@ -58,15 +58,20 @@ void main() {
     expect(notes, isEmpty);
     expect(receipts, hasLength(1));
     expect(receipts.single.commandId, 'command-1');
+    expect(receipts.single.aggregateType, 'work-session');
+    expect(receipts.single.aggregateId, 'session-1');
+    expect(receipts.single.sessionId, 'session-1');
     expect(receipts.single.commandVersion, 1);
     expect(receipts.single.outcome, 'applied');
     expect(foreignKeyFailures, isEmpty);
     await database.customStatement('''
         INSERT INTO history_event_records (
-          id, session_id, command_id, event_type, event_version,
+          id, aggregate_type, aggregate_id, session_id,
+          command_id, event_type, event_version,
           payload_json, happened_at
         ) VALUES (
-          'event-duplicate', 'session-1', 'command-1', 'duplicate', 1,
+          'event-duplicate', 'work-session', 'session-1', 'session-1',
+          'command-1', 'duplicate', 1,
           '{}', '2027-02-10T12:31:00.000Z'
         )
       ''');
@@ -78,9 +83,10 @@ void main() {
     await expectLater(
       database.customStatement('''
         INSERT INTO command_receipt_records (
-          session_id, command_id, command_version, outcome, processed_at
+          aggregate_type, aggregate_id, session_id, command_id,
+          command_version, outcome, processed_at
         ) VALUES (
-          'session-1', 'command-1', 1, 'duplicate',
+          'work-session', 'session-1', 'session-1', 'command-1', 1, 'duplicate',
           '2027-02-10T12:32:00.000Z'
         )
       '''),
@@ -91,7 +97,7 @@ void main() {
   });
 
   test(
-    'v3 to v9 preserves notes and media while adding assignment content',
+    'v3 to v10 preserves notes and media while adding assignment content',
     () async {
       final schema = await verifier.schemaAt(3);
       addTearDown(schema.close);
@@ -125,7 +131,7 @@ void main() {
     ''');
 
       final database = AppDatabase.forTesting(schema.newConnection());
-      await verifier.migrateAndValidate(database, 9);
+      await verifier.migrateAndValidate(database, 10);
 
       final notes = await database.select(database.roomNoteRecords).get();
       final media = await database.select(database.mediaManifestRecords).get();
@@ -142,7 +148,7 @@ void main() {
     },
   );
 
-  test('v4 to v9 preserves manifest and creates assignment content', () async {
+  test('v4 to v10 preserves manifest and creates assignment content', () async {
     final schema = await verifier.schemaAt(4);
     addTearDown(schema.close);
     final raw = schema.rawDatabase;
@@ -167,7 +173,7 @@ void main() {
     ''');
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 9);
+    await verifier.migrateAndValidate(database, 10);
 
     final media = await database.select(database.mediaManifestRecords).get();
     expect(media.single.id, 'media-v4');
@@ -213,7 +219,7 @@ void main() {
     ''');
 
       final database = AppDatabase.forTesting(schema.newConnection());
-      await verifier.migrateAndValidate(database, 9);
+      await verifier.migrateAndValidate(database, 10);
       final repository = DriftWorkSessionRepository(database);
       final loaded = await repository.loadSession('session-v7');
 
@@ -237,11 +243,11 @@ void main() {
     },
   );
 
-  test('v8 to v9 creates and seeds the persistent donor catalog', () async {
+  test('v8 to v10 creates and seeds the persistent donor catalog', () async {
     final schema = await verifier.schemaAt(8);
     addTearDown(schema.close);
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 9);
+    await verifier.migrateAndValidate(database, 10);
     final catalog = DriftHousekeeperCatalogRepository(database);
 
     expect(await catalog.loadActive(), isEmpty);

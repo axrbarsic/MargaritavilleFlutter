@@ -40,7 +40,7 @@ void main() {
       ''');
 
       final database = AppDatabase.forTesting(schema.newConnection());
-      await verifier.migrateAndValidate(database, 9);
+      await verifier.migrateAndValidate(database, 10);
       final receipts = await database
           .select(database.commandReceiptRecords)
           .get();
