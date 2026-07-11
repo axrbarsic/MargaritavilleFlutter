@@ -36,5 +36,8 @@ Future<void> main() async {
 bool _isHandwrittenDart(String path) {
   return path.endsWith('.dart') &&
       !path.endsWith('.g.dart') &&
-      !path.endsWith('.freezed.dart');
+      !path.endsWith('.freezed.dart') &&
+      !path.contains(
+        '${Platform.pathSeparator}generated_migrations${Platform.pathSeparator}',
+      );
 }

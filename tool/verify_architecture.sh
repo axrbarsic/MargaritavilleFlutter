@@ -5,6 +5,11 @@ cd "$(git rev-parse --show-toplevel)"
 
 failed=0
 
+if rg -n "features/" lib/shared/persistence --glob '*.dart'; then
+  echo "ERROR: shared persistence must not depend on a feature module"
+  failed=1
+fi
+
 if rg -n "package:(flutter|flutter_riverpod|drift)" \
   lib/features/work_session/domain --glob '*.dart'; then
   echo "ERROR: pure domain imports a framework package"

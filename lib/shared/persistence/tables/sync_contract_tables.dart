@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+// App-wide audit, receipt, sync, and media projections.
+
 import 'work_session_tables.dart';
 
 @DataClassName('HistoryEventRow')
@@ -15,6 +17,19 @@ class HistoryEventRecords extends Table {
 
   @override
   Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('CommandReceiptRow')
+class CommandReceiptRecords extends Table {
+  TextColumn get sessionId =>
+      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  TextColumn get commandId => text()();
+  IntColumn get commandVersion => integer().withDefault(const Constant(1))();
+  TextColumn get outcome => text()();
+  DateTimeColumn get processedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionId, commandId};
 }
 
 @DataClassName('SyncOutboxRow')
@@ -52,7 +67,12 @@ class MediaManifestRecords extends Table {
   TextColumn get relativePath => text()();
   TextColumn get checksumSha256 => text()();
   TextColumn get originDeviceId => text()();
+  DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  TextColumn get mimeType => text().nullable()();
+  IntColumn get durationMs => integer().nullable()();
+  TextColumn get transcript => text().nullable()();
+  TextColumn get lastCommandId => text().nullable()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override

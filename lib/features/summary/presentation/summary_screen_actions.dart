@@ -153,17 +153,16 @@ extension _SummaryScreenActions on _SummaryScreenState {
       );
   }
 
-  void _showMediaNotice(RoomState room) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            'Голос и медиа комнаты ${room.roomNumber} — следующий platform-services блок.',
+  void _openMedia(RoomState room) {
+    unawaited(
+      Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => RoomDetailsScreen(
+            sessionId: widget.session.id,
+            roomNumber: room.roomNumber,
           ),
-          duration: const Duration(seconds: 2),
         ),
-      );
+      ),
+    );
   }
 }

@@ -4,3 +4,7 @@ targets:
       drift_dev:
         options:
           store_date_time_values_as_text: true
+          databases:
+            app_database: lib/shared/persistence/local_database.dart
+          schema_dir: drift_schemas/
+          test_dir: test/generated_migrations/

@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+// App-wide canonical work-session projection.
+
 @DataClassName('WorkSessionRow')
 class WorkSessionRecords extends Table {
   TextColumn get id => text()();

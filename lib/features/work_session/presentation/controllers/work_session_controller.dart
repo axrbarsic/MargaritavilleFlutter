@@ -4,25 +4,17 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/time/clock.dart';
+import '../../../../shared/persistence/app_database_provider.dart';
 import '../../application/all_rooms_test_data_generator.dart';
 import '../../application/commands/work_session_command.dart';
 import '../../application/ports/room_schedule_notification_client.dart';
 import '../../application/work_session_command_handler.dart';
 import '../../application/work_session_seed.dart';
-import '../../data/local/app_database.dart';
 import '../../data/repositories/drift_work_session_repository.dart';
 import '../../domain/models/work_session.dart';
 import '../../domain/repositories/work_session_repository.dart';
 
 final clockProvider = Provider<Clock>((ref) => const SystemClock());
-
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final database = AppDatabase();
-  ref.onDispose(() {
-    database.close();
-  });
-  return database;
-});
 
 final workSessionRepositoryProvider = Provider<WorkSessionRepository>((ref) {
   return DriftWorkSessionRepository(ref.watch(appDatabaseProvider));

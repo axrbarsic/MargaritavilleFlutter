@@ -10,6 +10,7 @@ import 'package:margaritaville_flutter/features/work_session/domain/models/house
 import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
+import 'package:margaritaville_flutter/shared/persistence/app_database_provider.dart';
 
 void main() {
   testWidgets('status chip filters rooms and toggles back to all', (
@@ -136,6 +137,51 @@ void main() {
     await tester.tap(find.byKey(const Key('room-action-vip')));
     await tester.pumpAndSettle();
     expect(vipToggles, 1);
+  });
+
+  testWidgets('media action opens real Room Details route and returns', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(440, 956);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final database = AppDatabase.inMemory();
+    addTearDown(database.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(database)],
+        child: MaterialApp(
+          theme: MargaritavilleTheme.dark,
+          home: SummaryScreen(session: _mixedSession()),
+        ),
+      ),
+    );
+
+    final tile = find.byKey(const Key('summary-room-101'));
+    await tester.timedDrag(
+      tile,
+      const Offset(72, 0),
+      const Duration(milliseconds: 500),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('room-action-media')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('room-details-screen')), findsOneWidget);
+    expect(find.byKey(const Key('room-details-room-number')), findsOneWidget);
+    expect(find.text('101'), findsWidgets);
+    expect(find.text('Голос/медиа'), findsOneWidget);
+    expect(
+      find.textContaining('следующий platform-services блок'),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const Key('room-details-back')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('room-details-screen')), findsNothing);
+    expect(find.byKey(const Key('summary-room-101')), findsOneWidget);
   });
 }
 

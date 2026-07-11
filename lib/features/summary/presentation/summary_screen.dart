@@ -7,6 +7,7 @@ import '../../../shared/edr/edr_overlay_controller.dart';
 import '../../../shared/edr/edr_overlay_scope.dart';
 import '../../../shared/edr/edr_window_surface.dart';
 import '../../interaction/presentation/margaritaville_feedback_scope.dart';
+import '../../room_details/presentation/room_details_screen.dart';
 import '../../work_session/domain/models/room_state.dart';
 import '../../work_session/domain/models/work_assignment.dart';
 import '../../work_session/domain/models/work_session.dart';
@@ -223,7 +224,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
       onReset: _resetRoom,
       onToggleVip: _toggleVip,
       onSchedule: _openSchedule,
-      onOpenMedia: _showMediaNotice,
+      onOpenMedia: _openMedia,
       visualPolicy: widget.visualPolicy,
       pulseEventFor: _visualPulses.eventFor,
     );

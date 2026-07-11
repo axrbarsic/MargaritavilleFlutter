@@ -1018,3 +1018,34 @@ haptics. Физический Pixel сейчас заблокирован, по�
   hit target, jelly contour на всех формах, `4→3→4`, width-only resize и
   Android logical-to-physical bounds. Финальный physical Pixel/iPhone gate
   выполняется отдельной свежей сборкой после software gate.
+
+## 2026-07-11 — Checkpoint 12: Room Details route и schema v4 foundation
+
+- Заглушка Snackbar для действия `Голос/медиа` удалена. Room action теперь
+  открывает настоящий feature-first `RoomDetailsScreen` с правильными
+  `sessionId/roomNumber` и возвратом в Summary. Неактивный donor text-mode
+  намеренно не выставлен в UI.
+- Flutter shell повторяет измеряемый build-37 контракт: внешний inset `18 pt`,
+  back target `48×48`, room number `44 pt`, title `34 pt`, card radius/padding
+  `18 pt`, photo/video actions `86 pt` и двухколоночный media grid. Метрики
+  закреплены widget-тестом без визуальных коэффициентов «на глаз».
+- Drift обновлён до schema v4 безопасной миграцией уже устанавливавшейся v3:
+  отдельные command receipts получают атомарный claim и финальный
+  `applied/ignored`; конкурентный дубль возвращает `duplicate` без второй
+  мутации. v2 history backfill-ится в receipts при прямом обновлении v2→v4.
+- Notes и media используют детерминированный LWW `(issuedAt, commandId)`.
+  Старые update/delete не перетирают новую проекцию; immutable media identity
+  запрещает перенос одного ID между владельцем, типом, local path и origin.
+- Sync event payload стал allow-list envelope: private note, transcript и
+  device-local `relativePath` остаются только локально и не достижимы через
+  outbox. Session graph replacement сохраняет history/outbox/media/notes и
+  receipts вместо каскадного удаления общей проекции.
+- AppDatabase, generated schema, migration helpers и все общие projection
+  tables физически вынесены из Work Session feature в shared persistence;
+  architecture guard запрещает обратную зависимость `shared → feature`.
+  Room Details получил собственные repository/controller/provider.
+- Полный quality gate зелёный: воспроизводимые schema snapshots/migration
+  helpers, format, analyze, `134` Flutter test, Android JVM, file-size и
+  architecture guards. Подписанная iOS profile build `0.1.0 (37)` прошла guard
+  семи IOS frameworks и установлена на физический iPhone 17 Pro Max;
+  автоматический launch ожидает разблокировки телефона.

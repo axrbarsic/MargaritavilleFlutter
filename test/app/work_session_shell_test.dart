@@ -8,9 +8,9 @@ import 'package:margaritaville_flutter/features/settings/domain/models/appearanc
 import 'package:margaritaville_flutter/features/settings/domain/repositories/appearance_settings_repository.dart';
 import 'package:margaritaville_flutter/features/settings/presentation/controllers/appearance_settings_controller.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
-import 'package:margaritaville_flutter/features/work_session/data/local/app_database.dart';
 import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_work_session_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/presentation/controllers/work_session_controller.dart';
+import 'package:margaritaville_flutter/shared/persistence/app_database.dart';
 
 void main() {
   testWidgets('setup persists a room and opens the real summary shell', (
