@@ -7,14 +7,18 @@ import 'tables/sync_contract_tables.dart';
 import 'tables/work_session_tables.dart';
 
 part 'local_database.g.dart';
+part 'local_database_migrations.dart';
 
 @DriftDatabase(
   tables: [
+    HousekeeperCatalogRecords,
     WorkSessionRecords,
     HousekeeperRecords,
     WorkAssignmentRecords,
     RoomStateRecords,
     RoomNoteRecords,
+    AssignmentNoteRecords,
+    CartConsumableRecords,
     HistoryEventRecords,
     CommandReceiptRecords,
     SyncOutboxRecords,
@@ -37,7 +41,7 @@ final class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -89,6 +93,11 @@ final class AppDatabase extends _$AppDatabase {
           if (to >= 5) {
             await migrator.createTable(mediaPromotionRecords);
           }
+          if (to >= 7) {
+            await _upgradeAssignmentContentV7(migrator);
+          }
+          if (to >= 8) await _upgradeWorkSetupV8(migrator);
+          if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
         });
         return;
       }
@@ -105,19 +114,53 @@ final class AppDatabase extends _$AppDatabase {
           if (to >= 5) {
             await _upgradeMediaFoundationV5(migrator);
           }
+          if (to >= 7) {
+            await _upgradeAssignmentContentV7(migrator);
+          }
+          if (to >= 8) await _upgradeWorkSetupV8(migrator);
+          if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
         });
         return;
       }
       if (from == 4 && to >= 5) {
         await transaction(() async {
           await _upgradeMediaFoundationV5(migrator);
+          if (to >= 7) {
+            await _upgradeAssignmentContentV7(migrator);
+          }
+          if (to >= 8) await _upgradeWorkSetupV8(migrator);
+          if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
         });
         return;
       }
       if (from == 5 && to >= 6) {
         await transaction(() async {
           await _repairPreReleaseMediaJournalV6(migrator);
+          if (to >= 7) {
+            await _upgradeAssignmentContentV7(migrator);
+          }
+          if (to >= 8) await _upgradeWorkSetupV8(migrator);
+          if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
         });
+        return;
+      }
+      if (from == 6 && to >= 7) {
+        await transaction(() async {
+          await _upgradeAssignmentContentV7(migrator);
+          if (to >= 8) await _upgradeWorkSetupV8(migrator);
+          if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+        });
+        return;
+      }
+      if (from == 7 && to >= 8) {
+        await transaction(() async {
+          await _upgradeWorkSetupV8(migrator);
+          if (to >= 9) await _upgradeHousekeeperCatalogV9(migrator);
+        });
+        return;
+      }
+      if (from == 8 && to >= 9) {
+        await transaction(() => _upgradeHousekeeperCatalogV9(migrator));
         return;
       }
       throw UnsupportedError('Unsupported database upgrade $from -> $to');
@@ -126,66 +169,4 @@ final class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
-
-  Future<void> _upgradeMediaFoundationV5(Migrator migrator) async {
-    await migrator.createTable(mediaPromotionRecords);
-    await migrator.addColumn(
-      mediaManifestRecords,
-      mediaManifestRecords.byteLength,
-    );
-    await migrator.addColumn(
-      mediaManifestRecords,
-      mediaManifestRecords.widthPixels,
-    );
-    await migrator.addColumn(
-      mediaManifestRecords,
-      mediaManifestRecords.heightPixels,
-    );
-    await migrator.addColumn(
-      mediaManifestRecords,
-      mediaManifestRecords.originalExtension,
-    );
-    await migrator.addColumn(
-      mediaManifestRecords,
-      mediaManifestRecords.orientation,
-    );
-    await migrator.addColumn(
-      mediaManifestRecords,
-      mediaManifestRecords.colorSpace,
-    );
-    await migrator.addColumn(mediaManifestRecords, mediaManifestRecords.isHdr);
-  }
-
-  Future<void> _repairPreReleaseMediaJournalV6(Migrator migrator) async {
-    final columns = await customSelect(
-      "PRAGMA table_info('media_promotion_records')",
-    ).map((row) => row.read<String>('name')).get();
-    const requiredColumns = {
-      'transient_file_path',
-      'quarantined_at',
-      'failure_reason',
-    };
-    if (columns.toSet().containsAll(requiredColumns)) return;
-
-    // Some physical development installs saw an intermediate v5 table before
-    // its recovery metadata was finalized. Rebuild it into the canonical shape
-    // without deleting the journal. The sentinel is only consulted when neither
-    // verified staged nor final bytes exist, in which case recovery quarantines
-    // the row as a missing source instead of publishing unverified media.
-    await migrator.alterTable(
-      TableMigration(
-        mediaPromotionRecords,
-        columnTransformer: {
-          if (!columns.contains('transient_file_path'))
-            mediaPromotionRecords.transientFilePath: const Constant(
-              '/tmp/margaritaville-recovery-missing-source',
-            ),
-          if (!columns.contains('quarantined_at'))
-            mediaPromotionRecords.quarantinedAt: const Constant(null),
-          if (!columns.contains('failure_reason'))
-            mediaPromotionRecords.failureReason: const Constant(null),
-        },
-      ),
-    );
-  }
 }

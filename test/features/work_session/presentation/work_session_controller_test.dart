@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/core/time/clock.dart';
 import 'package:margaritaville_flutter/features/work_session/application/ports/room_schedule_notification_client.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_housekeeper_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/repositories/housekeeper_catalog_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/repositories/work_session_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/presentation/controllers/work_session_controller.dart';
 
@@ -23,6 +25,9 @@ void main() {
         overrides: [
           clockProvider.overrideWithValue(FixedClock(now)),
           workSessionRepositoryProvider.overrideWithValue(repository),
+          housekeeperCatalogRepositoryProvider.overrideWithValue(
+            _MemoryHousekeeperCatalogRepository(now),
+          ),
           roomScheduleNotificationClientProvider.overrideWithValue(
             notifications,
           ),
@@ -65,6 +70,9 @@ void main() {
         overrides: [
           clockProvider.overrideWithValue(FixedClock(now)),
           workSessionRepositoryProvider.overrideWithValue(repository),
+          housekeeperCatalogRepositoryProvider.overrideWithValue(
+            _MemoryHousekeeperCatalogRepository(now),
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -91,6 +99,9 @@ void main() {
       overrides: [
         clockProvider.overrideWithValue(FixedClock(now)),
         workSessionRepositoryProvider.overrideWithValue(repository),
+        housekeeperCatalogRepositoryProvider.overrideWithValue(
+          _MemoryHousekeeperCatalogRepository(now),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -114,6 +125,44 @@ void main() {
       repository.session,
     );
   });
+
+  test(
+    'rapid double room tap is evaluated as two serialized toggles',
+    () async {
+      final now = DateTime.utc(2027, 2, 10, 12);
+      final initial = _session(now).unlockWorkday(changedAt: now);
+      final repository = _MemoryRepository(
+        initial,
+        writeDelay: const Duration(milliseconds: 20),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          clockProvider.overrideWithValue(FixedClock(now)),
+          workSessionRepositoryProvider.overrideWithValue(repository),
+          housekeeperCatalogRepositoryProvider.overrideWithValue(
+            _MemoryHousekeeperCatalogRepository(now),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(workSessionControllerProvider.future);
+      final controller = container.read(workSessionControllerProvider.notifier);
+
+      await Future.wait([
+        controller.toggleRoomSelection(
+          assignmentId: 'cart-1',
+          roomNumber: '102',
+        ),
+        controller.toggleRoomSelection(
+          assignmentId: 'cart-1',
+          roomNumber: '102',
+        ),
+      ]);
+
+      expect(repository.session.room('102'), isNull);
+      expect(repository.writeCount, 2);
+    },
+  );
 }
 
 WorkSession _session(DateTime now) {
@@ -161,6 +210,32 @@ final class _MemoryRepository implements WorkSessionRepository {
 
   @override
   Stream<WorkSession?> watchLatestSession() => Stream.value(session);
+}
+
+final class _MemoryHousekeeperCatalogRepository
+    implements HousekeeperCatalogRepository {
+  _MemoryHousekeeperCatalogRepository(DateTime now)
+    : housekeepers = MargaritavilleHousekeeperCatalog.housekeepers(now);
+
+  final List<Housekeeper> housekeepers;
+
+  @override
+  Future<void> ensureDefaults(DateTime seededAt) async {}
+
+  @override
+  Future<List<Housekeeper>> loadActive() async => [...housekeepers];
+
+  @override
+  Stream<List<Housekeeper>> watchActive() => Stream.value([...housekeepers]);
+
+  @override
+  Future<void> save(Housekeeper housekeeper, {required int sortOrder}) async {}
+
+  @override
+  Future<void> remove(
+    String housekeeperId, {
+    required DateTime changedAt,
+  }) async {}
 }
 
 final class _RecordingNotificationClient

@@ -28,6 +28,7 @@ final class WorkSessionGraphWriter {
                 id: assignment.id,
                 cartNumber: assignment.cartNumber,
                 housekeeperId: assignment.housekeeper.id,
+                territoryId: Value(assignment.territoryId),
                 assignedAt: assignment.assignedAt,
                 updatedAt: assignment.updatedAt,
                 deletedAt: Value(assignment.deletedAt),

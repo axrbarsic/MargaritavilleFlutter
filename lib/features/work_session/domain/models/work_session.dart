@@ -1,5 +1,6 @@
 import '../catalogs/margaritaville_room_catalog.dart';
 import 'hotel_profile.dart';
+import 'housekeeper.dart';
 import 'room_state.dart';
 import 'work_assignment.dart';
 import 'work_session_mutation.dart';
@@ -9,6 +10,7 @@ export 'work_session_mutation.dart';
 part 'work_session_serialization.dart';
 part 'work_session_room_actions.dart';
 part 'work_session_room_assignment_replacement.dart';
+part 'work_session_setup_actions.dart';
 
 final class WorkSession {
   WorkSession._({
@@ -72,71 +74,6 @@ final class WorkSession {
       if (candidate.id == assignmentId) return candidate;
     }
     return null;
-  }
-
-  WorkSessionMutation assignRoom({
-    required String assignmentId,
-    required String roomNumber,
-    required DateTime changedAt,
-  }) {
-    if (workdayLocked ||
-        !MargaritavilleRoomCatalog.contains(roomNumber.trim())) {
-      return _ignored();
-    }
-    final target = assignment(assignmentId);
-    if (target == null) return _ignored();
-    for (final owner in activeAssignments) {
-      final existing = owner.room(roomNumber);
-      if (existing == null) continue;
-      if (owner.id == assignmentId) return _ignored();
-      return WorkSessionMutation(
-        session: this,
-        status: WorkSessionMutationStatus.blocked,
-        conflict: RoomAssignmentConflict(
-          roomNumber: roomNumber,
-          ownerAssignmentId: owner.id,
-          ownerHousekeeperId: owner.housekeeper.id,
-        ),
-      );
-    }
-    final room = RoomState.pending(
-      roomNumber: roomNumber,
-      selectedAt: changedAt,
-    );
-    final nextAssignments = assignments.map((assignment) {
-      if (assignment.id == target.id) {
-        return assignment.replacingRoom(room, changedAt: changedAt);
-      }
-      if (assignment.rooms.any(
-        (candidate) =>
-            candidate.roomNumber == roomNumber && candidate.isDeleted,
-      )) {
-        return assignment.removingRoomRecord(roomNumber, changedAt: changedAt);
-      }
-      return assignment;
-    }).toList();
-    return WorkSessionMutation(
-      session: _copy(assignments: nextAssignments, updatedAt: changedAt),
-      status: WorkSessionMutationStatus.changed,
-    );
-  }
-
-  WorkSessionMutation unassignRoom({
-    required String assignmentId,
-    required String roomNumber,
-    required DateTime changedAt,
-  }) {
-    if (workdayLocked) return _ignored();
-    final owner = assignment(assignmentId);
-    final current = owner?.room(roomNumber);
-    if (owner == null || current == null) return _ignored();
-    return _replaceAssignment(
-      owner.replacingRoom(
-        current.tombstone(changedAt: changedAt),
-        changedAt: changedAt,
-      ),
-      changedAt: changedAt,
-    );
   }
 
   WorkSessionMutation advanceRoom({
@@ -243,7 +180,19 @@ final class WorkSession {
 
   void _validate() {
     final activeRoomNumbers = <String>{};
+    final activeCartNumbers = <int>{};
     for (final assignment in activeAssignments) {
+      if (assignment.cartNumber < 1 || assignment.cartNumber > 100) {
+        throw FormatException('Invalid cart number: ${assignment.cartNumber}');
+      }
+      if (!activeCartNumbers.add(assignment.cartNumber)) {
+        throw FormatException(
+          'Duplicate active cart number: ${assignment.cartNumber}',
+        );
+      }
+      if (MargaritavilleRoomCatalog.territory(assignment.territoryId) == null) {
+        throw FormatException('Invalid territory: ${assignment.territoryId}');
+      }
       for (final room in assignment.activeRooms) {
         if (!activeRoomNumbers.add(room.roomNumber)) {
           throw FormatException('Duplicate active room: ${room.roomNumber}');

@@ -1,3 +1,5 @@
+import '../../domain/models/housekeeper.dart';
+
 sealed class WorkSessionCommand {
   const WorkSessionCommand({
     required this.commandId,
@@ -22,6 +24,44 @@ final class AssignRoomCommand extends WorkSessionCommand {
   final String roomNumber;
 }
 
+final class ToggleRoomSelectionCommand extends WorkSessionCommand {
+  const ToggleRoomSelectionCommand({
+    required super.commandId,
+    required super.issuedAt,
+    required this.assignmentId,
+    required this.roomNumber,
+  });
+
+  final String assignmentId;
+  final String roomNumber;
+}
+
+final class ToggleHousekeeperWorkItemCommand extends WorkSessionCommand {
+  const ToggleHousekeeperWorkItemCommand({
+    required super.commandId,
+    required super.issuedAt,
+    required this.housekeeperId,
+    required this.displayName,
+    required this.paletteKey,
+  });
+
+  final String housekeeperId;
+  final String displayName;
+  final String paletteKey;
+}
+
+final class SetAssignmentTerritoryCommand extends WorkSessionCommand {
+  const SetAssignmentTerritoryCommand({
+    required super.commandId,
+    required super.issuedAt,
+    required this.assignmentId,
+    required this.territoryId,
+  });
+
+  final String assignmentId;
+  final String territoryId;
+}
+
 final class UnassignRoomCommand extends WorkSessionCommand {
   const UnassignRoomCommand({
     required super.commandId,
@@ -35,13 +75,15 @@ final class UnassignRoomCommand extends WorkSessionCommand {
 }
 
 final class ReplaceAllRoomAssignmentsCommand extends WorkSessionCommand {
-  const ReplaceAllRoomAssignmentsCommand({
+  ReplaceAllRoomAssignmentsCommand({
     required super.commandId,
     required super.issuedAt,
     required this.roomNumbers,
-  });
+    required List<Housekeeper> housekeepers,
+  }) : housekeepers = List.unmodifiable(housekeepers);
 
   final List<String> roomNumbers;
+  final List<Housekeeper> housekeepers;
 }
 
 final class LockWorkdayCommand extends WorkSessionCommand {

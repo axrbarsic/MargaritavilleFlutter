@@ -47,6 +47,12 @@ final class DriftWorkSessionRepository implements WorkSessionRepository {
   }
 
   Future<WorkSession> _hydrate(WorkSessionRow session) async {
+    final catalogRows = await (_database.select(
+      _database.housekeeperCatalogRecords,
+    )..where((row) => row.deletedAt.isNull())).get();
+    final catalogById = {
+      for (final row in catalogRows) row.id: _mapCatalogHousekeeper(row),
+    };
     final assignmentQuery = _database.select(_database.workAssignmentRecords)
       ..where((row) => row.sessionId.equals(session.id))
       ..orderBy([(row) => OrderingTerm.asc(row.cartNumber)]);
@@ -73,7 +79,10 @@ final class DriftWorkSessionRepository implements WorkSessionRepository {
         WorkAssignment(
           id: assignment.id,
           cartNumber: assignment.cartNumber,
-          housekeeper: _mapHousekeeper(housekeeper),
+          territoryId: assignment.territoryId,
+          housekeeper:
+              catalogById[assignment.housekeeperId] ??
+              _mapHousekeeper(housekeeper),
           assignedAt: assignment.assignedAt,
           updatedAt: assignment.updatedAt,
           deletedAt: assignment.deletedAt,
@@ -99,6 +108,14 @@ final class DriftWorkSessionRepository implements WorkSessionRepository {
   }
 
   Housekeeper _mapHousekeeper(HousekeeperRow row) => Housekeeper(
+    id: row.id,
+    displayName: row.displayName,
+    paletteKey: row.paletteKey,
+    updatedAt: row.updatedAt,
+    deletedAt: row.deletedAt,
+  );
+
+  Housekeeper _mapCatalogHousekeeper(HousekeeperCatalogRow row) => Housekeeper(
     id: row.id,
     displayName: row.displayName,
     paletteKey: row.paletteKey,

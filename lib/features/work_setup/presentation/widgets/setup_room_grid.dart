@@ -8,14 +8,14 @@ final class SetupRoomGrid extends StatelessWidget {
     required this.roomNumbers,
     required this.session,
     required this.selectedAssignment,
-    required this.onRoomHeld,
+    required this.onRoomTap,
     super.key,
   });
 
   final List<String> roomNumbers;
   final WorkSession session;
   final WorkAssignment selectedAssignment;
-  final ValueChanged<String> onRoomHeld;
+  final ValueChanged<String> onRoomTap;
 
   @override
   Widget build(BuildContext context) {
@@ -36,16 +36,17 @@ final class SetupRoomGrid extends StatelessWidget {
         final isBlocked = owner != null && !isSelected;
         return Semantics(
           button: true,
+          enabled: !isBlocked,
           label: 'Номер $roomNumber',
           value: isSelected
               ? 'выбран для ${selectedAssignment.housekeeper.displayName}'
               : isBlocked
               ? 'занят ${owner.housekeeper.displayName}'
               : 'не выбран',
-          hint: 'Удерживайте, чтобы изменить выбор',
+          hint: isBlocked ? null : 'Нажмите, чтобы изменить выбор',
           child: GestureDetector(
             key: Key('setup-room-$roomNumber'),
-            onLongPress: () => onRoomHeld(roomNumber),
+            onTap: isBlocked ? null : () => onRoomTap(roomNumber),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
               decoration: BoxDecoration(

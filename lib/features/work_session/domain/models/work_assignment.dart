@@ -1,3 +1,4 @@
+import '../catalogs/margaritaville_room_catalog.dart';
 import 'housekeeper.dart';
 import 'room_state.dart';
 
@@ -9,14 +10,19 @@ final class WorkAssignment {
     required this.assignedAt,
     required this.updatedAt,
     required List<RoomState> rooms,
+    String? territoryId,
     this.deletedAt,
-  }) : rooms = List.unmodifiable(rooms);
+  }) : territoryId =
+           territoryId ??
+           MargaritavilleRoomCatalog.preferredTerritoryId(cartNumber),
+       rooms = List.unmodifiable(rooms);
 
   factory WorkAssignment.create({
     required String id,
     required int cartNumber,
     required Housekeeper housekeeper,
     required DateTime assignedAt,
+    String? territoryId,
   }) {
     return WorkAssignment(
       id: id,
@@ -24,6 +30,7 @@ final class WorkAssignment {
       housekeeper: housekeeper,
       assignedAt: assignedAt,
       updatedAt: assignedAt,
+      territoryId: territoryId,
       rooms: const [],
     );
   }
@@ -33,6 +40,7 @@ final class WorkAssignment {
   final Housekeeper housekeeper;
   final DateTime assignedAt;
   final DateTime updatedAt;
+  final String territoryId;
   final DateTime? deletedAt;
   final List<RoomState> rooms;
 
@@ -71,6 +79,7 @@ final class WorkAssignment {
   WorkAssignment copyWith({
     Housekeeper? housekeeper,
     DateTime? updatedAt,
+    String? territoryId,
     List<RoomState>? rooms,
   }) {
     return WorkAssignment(
@@ -79,6 +88,7 @@ final class WorkAssignment {
       housekeeper: housekeeper ?? this.housekeeper,
       assignedAt: assignedAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      territoryId: territoryId ?? this.territoryId,
       deletedAt: deletedAt,
       rooms: rooms ?? this.rooms,
     );
@@ -93,6 +103,7 @@ final class WorkAssignment {
       ),
       assignedAt: DateTime.parse(json['assignedAt']! as String),
       updatedAt: DateTime.parse(json['updatedAt']! as String),
+      territoryId: json['territoryId'] as String?,
       deletedAt: _dateTime(json['deletedAt']),
       rooms: (json['rooms']! as List<Object?>)
           .cast<Map<String, Object?>>()
@@ -107,6 +118,7 @@ final class WorkAssignment {
     'housekeeper': housekeeper.toJson(),
     'assignedAt': assignedAt.toUtc().toIso8601String(),
     'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'territoryId': territoryId,
     'deletedAt': deletedAt?.toUtc().toIso8601String(),
     'rooms': rooms.map((room) => room.toJson()).toList(),
   };
@@ -120,6 +132,7 @@ final class WorkAssignment {
           housekeeper == other.housekeeper &&
           assignedAt == other.assignedAt &&
           updatedAt == other.updatedAt &&
+          territoryId == other.territoryId &&
           deletedAt == other.deletedAt &&
           _listEquals(rooms, other.rooms);
 
@@ -130,6 +143,7 @@ final class WorkAssignment {
     housekeeper,
     assignedAt,
     updatedAt,
+    territoryId,
     deletedAt,
     Object.hashAll(rooms),
   );

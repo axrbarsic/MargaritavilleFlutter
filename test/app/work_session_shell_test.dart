@@ -44,13 +44,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Настройка смены'), findsOneWidget);
-    expect(find.text('Ketty'), findsOneWidget);
-    expect(find.text('A1'), findsOneWidget);
-
-    await tester.longPress(find.byKey(const Key('setup-room-101')));
+    expect(find.text('Рабочий список'), findsOneWidget);
+    expect(find.text('Kerlange'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('setup-housekeeper-kerlange')));
     await tester.pumpAndSettle();
-    await tester.longPress(find.byKey(const Key('lock-workday')));
+    expect(find.text('A1'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('setup-room-101')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('lock-workday')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('summary-header')), findsOneWidget);

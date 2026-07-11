@@ -48,8 +48,13 @@ require 'quarantineMediaPromotion' \
   'terminal recovery quarantine'
 require 'RoomMediaRecoveryGate' lib/app/margaritaville_app.dart \
   'startup recovery gate before work session UI'
-require 'schemaVersion => 6' lib/shared/persistence/local_database.dart \
-  'physical intermediate-v5 repair version'
+schema_version="$({
+  rg -o 'schemaVersion => [0-9]+' lib/shared/persistence/local_database.dart || true
+} | awk '{print $3}' | tail -n 1)"
+if [[ -z "$schema_version" || "$schema_version" -lt 6 ]]; then
+  echo 'Media foundation guard failed: missing physical intermediate-v5 repair version' >&2
+  exit 1
+fi
 require '_repairPreReleaseMediaJournalV6' \
   lib/shared/persistence/local_database.dart \
   'non-destructive intermediate-v5 journal repair'

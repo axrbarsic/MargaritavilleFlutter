@@ -10,25 +10,29 @@ final class RoomMediaStartupRecovery {
   const RoomMediaStartupRecovery({
     required RoomMediaPromotionRecovery promotionRecovery,
     required RoomMediaGarbageCollector garbageCollector,
+    this.promotionTimeout = const Duration(seconds: 8),
+    this.garbageTimeout = const Duration(seconds: 4),
   }) : _promotionRecovery = promotionRecovery,
        _garbageCollector = garbageCollector;
 
   final RoomMediaPromotionRecovery _promotionRecovery;
   final RoomMediaGarbageCollector _garbageCollector;
+  final Duration promotionTimeout;
+  final Duration garbageTimeout;
 
   Future<RoomMediaPromotionRecoveryReport> run() async {
     Object? promotionError;
     StackTrace? promotionStackTrace;
     RoomMediaPromotionRecoveryReport? report;
     try {
-      report = await _promotionRecovery.recoverAll();
+      report = await _promotionRecovery.recoverAll().timeout(promotionTimeout);
     } catch (error, stackTrace) {
       promotionError = error;
       promotionStackTrace = stackTrace;
     }
 
     try {
-      await _garbageCollector.collect();
+      await _garbageCollector.collect().timeout(garbageTimeout);
     } catch (error, stackTrace) {
       if (promotionError == null) {
         Error.throwWithStackTrace(error, stackTrace);

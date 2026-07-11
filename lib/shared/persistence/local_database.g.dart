@@ -3,6 +3,432 @@
 part of 'local_database.dart';
 
 // ignore_for_file: type=lint
+class $HousekeeperCatalogRecordsTable extends HousekeeperCatalogRecords
+    with TableInfo<$HousekeeperCatalogRecordsTable, HousekeeperCatalogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HousekeeperCatalogRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paletteKeyMeta = const VerificationMeta(
+    'paletteKey',
+  );
+  @override
+  late final GeneratedColumn<String> paletteKey = GeneratedColumn<String>(
+    'palette_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    displayName,
+    paletteKey,
+    sortOrder,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'housekeeper_catalog_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HousekeeperCatalogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('palette_key')) {
+      context.handle(
+        _paletteKeyMeta,
+        paletteKey.isAcceptableOrUnknown(data['palette_key']!, _paletteKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_paletteKeyMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sortOrderMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {sortOrder},
+  ];
+  @override
+  HousekeeperCatalogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HousekeeperCatalogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      paletteKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}palette_key'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $HousekeeperCatalogRecordsTable createAlias(String alias) {
+    return $HousekeeperCatalogRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class HousekeeperCatalogRow extends DataClass
+    implements Insertable<HousekeeperCatalogRow> {
+  final String id;
+  final String displayName;
+  final String paletteKey;
+  final int sortOrder;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const HousekeeperCatalogRow({
+    required this.id,
+    required this.displayName,
+    required this.paletteKey,
+    required this.sortOrder,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['display_name'] = Variable<String>(displayName);
+    map['palette_key'] = Variable<String>(paletteKey);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  HousekeeperCatalogRecordsCompanion toCompanion(bool nullToAbsent) {
+    return HousekeeperCatalogRecordsCompanion(
+      id: Value(id),
+      displayName: Value(displayName),
+      paletteKey: Value(paletteKey),
+      sortOrder: Value(sortOrder),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory HousekeeperCatalogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HousekeeperCatalogRow(
+      id: serializer.fromJson<String>(json['id']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      paletteKey: serializer.fromJson<String>(json['paletteKey']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'displayName': serializer.toJson<String>(displayName),
+      'paletteKey': serializer.toJson<String>(paletteKey),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  HousekeeperCatalogRow copyWith({
+    String? id,
+    String? displayName,
+    String? paletteKey,
+    int? sortOrder,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => HousekeeperCatalogRow(
+    id: id ?? this.id,
+    displayName: displayName ?? this.displayName,
+    paletteKey: paletteKey ?? this.paletteKey,
+    sortOrder: sortOrder ?? this.sortOrder,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  HousekeeperCatalogRow copyWithCompanion(
+    HousekeeperCatalogRecordsCompanion data,
+  ) {
+    return HousekeeperCatalogRow(
+      id: data.id.present ? data.id.value : this.id,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      paletteKey: data.paletteKey.present
+          ? data.paletteKey.value
+          : this.paletteKey,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousekeeperCatalogRow(')
+          ..write('id: $id, ')
+          ..write('displayName: $displayName, ')
+          ..write('paletteKey: $paletteKey, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, displayName, paletteKey, sortOrder, updatedAt, deletedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HousekeeperCatalogRow &&
+          other.id == this.id &&
+          other.displayName == this.displayName &&
+          other.paletteKey == this.paletteKey &&
+          other.sortOrder == this.sortOrder &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class HousekeeperCatalogRecordsCompanion
+    extends UpdateCompanion<HousekeeperCatalogRow> {
+  final Value<String> id;
+  final Value<String> displayName;
+  final Value<String> paletteKey;
+  final Value<int> sortOrder;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const HousekeeperCatalogRecordsCompanion({
+    this.id = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.paletteKey = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HousekeeperCatalogRecordsCompanion.insert({
+    required String id,
+    required String displayName,
+    required String paletteKey,
+    required int sortOrder,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       displayName = Value(displayName),
+       paletteKey = Value(paletteKey),
+       sortOrder = Value(sortOrder),
+       updatedAt = Value(updatedAt);
+  static Insertable<HousekeeperCatalogRow> custom({
+    Expression<String>? id,
+    Expression<String>? displayName,
+    Expression<String>? paletteKey,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (displayName != null) 'display_name': displayName,
+      if (paletteKey != null) 'palette_key': paletteKey,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HousekeeperCatalogRecordsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? displayName,
+    Value<String>? paletteKey,
+    Value<int>? sortOrder,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return HousekeeperCatalogRecordsCompanion(
+      id: id ?? this.id,
+      displayName: displayName ?? this.displayName,
+      paletteKey: paletteKey ?? this.paletteKey,
+      sortOrder: sortOrder ?? this.sortOrder,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (paletteKey.present) {
+      map['palette_key'] = Variable<String>(paletteKey.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousekeeperCatalogRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('displayName: $displayName, ')
+          ..write('paletteKey: $paletteKey, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $WorkSessionRecordsTable extends WorkSessionRecords
     with TableInfo<$WorkSessionRecordsTable, WorkSessionRow> {
   @override
@@ -1061,6 +1487,17 @@ class $WorkAssignmentRecordsTable extends WorkAssignmentRecords
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _territoryIdMeta = const VerificationMeta(
+    'territoryId',
+  );
+  @override
+  late final GeneratedColumn<String> territoryId = GeneratedColumn<String>(
+    'territory_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _assignedAtMeta = const VerificationMeta(
     'assignedAt',
   );
@@ -1100,6 +1537,7 @@ class $WorkAssignmentRecordsTable extends WorkAssignmentRecords
     id,
     cartNumber,
     housekeeperId,
+    territoryId,
     assignedAt,
     updatedAt,
     deletedAt,
@@ -1147,6 +1585,15 @@ class $WorkAssignmentRecordsTable extends WorkAssignmentRecords
       );
     } else if (isInserting) {
       context.missing(_housekeeperIdMeta);
+    }
+    if (data.containsKey('territory_id')) {
+      context.handle(
+        _territoryIdMeta,
+        territoryId.isAcceptableOrUnknown(
+          data['territory_id']!,
+          _territoryIdMeta,
+        ),
+      );
     }
     if (data.containsKey('assigned_at')) {
       context.handle(
@@ -1199,6 +1646,10 @@ class $WorkAssignmentRecordsTable extends WorkAssignmentRecords
         DriftSqlType.string,
         data['${effectivePrefix}housekeeper_id'],
       )!,
+      territoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}territory_id'],
+      ),
       assignedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}assigned_at'],
@@ -1226,6 +1677,7 @@ class WorkAssignmentRow extends DataClass
   final String id;
   final int cartNumber;
   final String housekeeperId;
+  final String? territoryId;
   final DateTime assignedAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -1234,6 +1686,7 @@ class WorkAssignmentRow extends DataClass
     required this.id,
     required this.cartNumber,
     required this.housekeeperId,
+    this.territoryId,
     required this.assignedAt,
     required this.updatedAt,
     this.deletedAt,
@@ -1245,6 +1698,9 @@ class WorkAssignmentRow extends DataClass
     map['id'] = Variable<String>(id);
     map['cart_number'] = Variable<int>(cartNumber);
     map['housekeeper_id'] = Variable<String>(housekeeperId);
+    if (!nullToAbsent || territoryId != null) {
+      map['territory_id'] = Variable<String>(territoryId);
+    }
     map['assigned_at'] = Variable<DateTime>(assignedAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -1259,6 +1715,9 @@ class WorkAssignmentRow extends DataClass
       id: Value(id),
       cartNumber: Value(cartNumber),
       housekeeperId: Value(housekeeperId),
+      territoryId: territoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(territoryId),
       assignedAt: Value(assignedAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -1277,6 +1736,7 @@ class WorkAssignmentRow extends DataClass
       id: serializer.fromJson<String>(json['id']),
       cartNumber: serializer.fromJson<int>(json['cartNumber']),
       housekeeperId: serializer.fromJson<String>(json['housekeeperId']),
+      territoryId: serializer.fromJson<String?>(json['territoryId']),
       assignedAt: serializer.fromJson<DateTime>(json['assignedAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -1290,6 +1750,7 @@ class WorkAssignmentRow extends DataClass
       'id': serializer.toJson<String>(id),
       'cartNumber': serializer.toJson<int>(cartNumber),
       'housekeeperId': serializer.toJson<String>(housekeeperId),
+      'territoryId': serializer.toJson<String?>(territoryId),
       'assignedAt': serializer.toJson<DateTime>(assignedAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -1301,6 +1762,7 @@ class WorkAssignmentRow extends DataClass
     String? id,
     int? cartNumber,
     String? housekeeperId,
+    Value<String?> territoryId = const Value.absent(),
     DateTime? assignedAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -1309,6 +1771,7 @@ class WorkAssignmentRow extends DataClass
     id: id ?? this.id,
     cartNumber: cartNumber ?? this.cartNumber,
     housekeeperId: housekeeperId ?? this.housekeeperId,
+    territoryId: territoryId.present ? territoryId.value : this.territoryId,
     assignedAt: assignedAt ?? this.assignedAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -1323,6 +1786,9 @@ class WorkAssignmentRow extends DataClass
       housekeeperId: data.housekeeperId.present
           ? data.housekeeperId.value
           : this.housekeeperId,
+      territoryId: data.territoryId.present
+          ? data.territoryId.value
+          : this.territoryId,
       assignedAt: data.assignedAt.present
           ? data.assignedAt.value
           : this.assignedAt,
@@ -1338,6 +1804,7 @@ class WorkAssignmentRow extends DataClass
           ..write('id: $id, ')
           ..write('cartNumber: $cartNumber, ')
           ..write('housekeeperId: $housekeeperId, ')
+          ..write('territoryId: $territoryId, ')
           ..write('assignedAt: $assignedAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -1351,6 +1818,7 @@ class WorkAssignmentRow extends DataClass
     id,
     cartNumber,
     housekeeperId,
+    territoryId,
     assignedAt,
     updatedAt,
     deletedAt,
@@ -1363,6 +1831,7 @@ class WorkAssignmentRow extends DataClass
           other.id == this.id &&
           other.cartNumber == this.cartNumber &&
           other.housekeeperId == this.housekeeperId &&
+          other.territoryId == this.territoryId &&
           other.assignedAt == this.assignedAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -1374,6 +1843,7 @@ class WorkAssignmentRecordsCompanion
   final Value<String> id;
   final Value<int> cartNumber;
   final Value<String> housekeeperId;
+  final Value<String?> territoryId;
   final Value<DateTime> assignedAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -1383,6 +1853,7 @@ class WorkAssignmentRecordsCompanion
     this.id = const Value.absent(),
     this.cartNumber = const Value.absent(),
     this.housekeeperId = const Value.absent(),
+    this.territoryId = const Value.absent(),
     this.assignedAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1393,6 +1864,7 @@ class WorkAssignmentRecordsCompanion
     required String id,
     required int cartNumber,
     required String housekeeperId,
+    this.territoryId = const Value.absent(),
     required DateTime assignedAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -1408,6 +1880,7 @@ class WorkAssignmentRecordsCompanion
     Expression<String>? id,
     Expression<int>? cartNumber,
     Expression<String>? housekeeperId,
+    Expression<String>? territoryId,
     Expression<DateTime>? assignedAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -1418,6 +1891,7 @@ class WorkAssignmentRecordsCompanion
       if (id != null) 'id': id,
       if (cartNumber != null) 'cart_number': cartNumber,
       if (housekeeperId != null) 'housekeeper_id': housekeeperId,
+      if (territoryId != null) 'territory_id': territoryId,
       if (assignedAt != null) 'assigned_at': assignedAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -1430,6 +1904,7 @@ class WorkAssignmentRecordsCompanion
     Value<String>? id,
     Value<int>? cartNumber,
     Value<String>? housekeeperId,
+    Value<String?>? territoryId,
     Value<DateTime>? assignedAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -1440,6 +1915,7 @@ class WorkAssignmentRecordsCompanion
       id: id ?? this.id,
       cartNumber: cartNumber ?? this.cartNumber,
       housekeeperId: housekeeperId ?? this.housekeeperId,
+      territoryId: territoryId ?? this.territoryId,
       assignedAt: assignedAt ?? this.assignedAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1461,6 +1937,9 @@ class WorkAssignmentRecordsCompanion
     }
     if (housekeeperId.present) {
       map['housekeeper_id'] = Variable<String>(housekeeperId.value);
+    }
+    if (territoryId.present) {
+      map['territory_id'] = Variable<String>(territoryId.value);
     }
     if (assignedAt.present) {
       map['assigned_at'] = Variable<DateTime>(assignedAt.value);
@@ -1484,6 +1963,7 @@ class WorkAssignmentRecordsCompanion
           ..write('id: $id, ')
           ..write('cartNumber: $cartNumber, ')
           ..write('housekeeperId: $housekeeperId, ')
+          ..write('territoryId: $territoryId, ')
           ..write('assignedAt: $assignedAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -2733,6 +3213,1055 @@ class RoomNoteRecordsCompanion extends UpdateCompanion<RoomNoteRow> {
   }
 }
 
+class $AssignmentNoteRecordsTable extends AssignmentNoteRecords
+    with TableInfo<$AssignmentNoteRecordsTable, AssignmentNoteRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AssignmentNoteRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES work_session_records (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _assignmentIdMeta = const VerificationMeta(
+    'assignmentId',
+  );
+  @override
+  late final GeneratedColumn<String> assignmentId = GeneratedColumn<String>(
+    'assignment_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _textValueMeta = const VerificationMeta(
+    'textValue',
+  );
+  @override
+  late final GeneratedColumn<String> textValue = GeneratedColumn<String>(
+    'text_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMicrosMeta = const VerificationMeta(
+    'updatedAtMicros',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMicros = GeneratedColumn<int>(
+    'updated_at_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastCommandIdMeta = const VerificationMeta(
+    'lastCommandId',
+  );
+  @override
+  late final GeneratedColumn<String> lastCommandId = GeneratedColumn<String>(
+    'last_command_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMicrosMeta = const VerificationMeta(
+    'deletedAtMicros',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAtMicros = GeneratedColumn<int>(
+    'deleted_at_micros',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    sessionId,
+    assignmentId,
+    textValue,
+    updatedAtMicros,
+    lastCommandId,
+    deletedAtMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'assignment_note_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AssignmentNoteRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('assignment_id')) {
+      context.handle(
+        _assignmentIdMeta,
+        assignmentId.isAcceptableOrUnknown(
+          data['assignment_id']!,
+          _assignmentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_assignmentIdMeta);
+    }
+    if (data.containsKey('text_value')) {
+      context.handle(
+        _textValueMeta,
+        textValue.isAcceptableOrUnknown(data['text_value']!, _textValueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_textValueMeta);
+    }
+    if (data.containsKey('updated_at_micros')) {
+      context.handle(
+        _updatedAtMicrosMeta,
+        updatedAtMicros.isAcceptableOrUnknown(
+          data['updated_at_micros']!,
+          _updatedAtMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMicrosMeta);
+    }
+    if (data.containsKey('last_command_id')) {
+      context.handle(
+        _lastCommandIdMeta,
+        lastCommandId.isAcceptableOrUnknown(
+          data['last_command_id']!,
+          _lastCommandIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted_at_micros')) {
+      context.handle(
+        _deletedAtMicrosMeta,
+        deletedAtMicros.isAcceptableOrUnknown(
+          data['deleted_at_micros']!,
+          _deletedAtMicrosMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionId, assignmentId};
+  @override
+  AssignmentNoteRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AssignmentNoteRow(
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      assignmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assignment_id'],
+      )!,
+      textValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}text_value'],
+      )!,
+      updatedAtMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_micros'],
+      )!,
+      lastCommandId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_command_id'],
+      ),
+      deletedAtMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at_micros'],
+      ),
+    );
+  }
+
+  @override
+  $AssignmentNoteRecordsTable createAlias(String alias) {
+    return $AssignmentNoteRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class AssignmentNoteRow extends DataClass
+    implements Insertable<AssignmentNoteRow> {
+  final String sessionId;
+  final String assignmentId;
+  final String textValue;
+  final int updatedAtMicros;
+  final String? lastCommandId;
+  final int? deletedAtMicros;
+  const AssignmentNoteRow({
+    required this.sessionId,
+    required this.assignmentId,
+    required this.textValue,
+    required this.updatedAtMicros,
+    this.lastCommandId,
+    this.deletedAtMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_id'] = Variable<String>(sessionId);
+    map['assignment_id'] = Variable<String>(assignmentId);
+    map['text_value'] = Variable<String>(textValue);
+    map['updated_at_micros'] = Variable<int>(updatedAtMicros);
+    if (!nullToAbsent || lastCommandId != null) {
+      map['last_command_id'] = Variable<String>(lastCommandId);
+    }
+    if (!nullToAbsent || deletedAtMicros != null) {
+      map['deleted_at_micros'] = Variable<int>(deletedAtMicros);
+    }
+    return map;
+  }
+
+  AssignmentNoteRecordsCompanion toCompanion(bool nullToAbsent) {
+    return AssignmentNoteRecordsCompanion(
+      sessionId: Value(sessionId),
+      assignmentId: Value(assignmentId),
+      textValue: Value(textValue),
+      updatedAtMicros: Value(updatedAtMicros),
+      lastCommandId: lastCommandId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCommandId),
+      deletedAtMicros: deletedAtMicros == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAtMicros),
+    );
+  }
+
+  factory AssignmentNoteRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AssignmentNoteRow(
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      assignmentId: serializer.fromJson<String>(json['assignmentId']),
+      textValue: serializer.fromJson<String>(json['textValue']),
+      updatedAtMicros: serializer.fromJson<int>(json['updatedAtMicros']),
+      lastCommandId: serializer.fromJson<String?>(json['lastCommandId']),
+      deletedAtMicros: serializer.fromJson<int?>(json['deletedAtMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionId': serializer.toJson<String>(sessionId),
+      'assignmentId': serializer.toJson<String>(assignmentId),
+      'textValue': serializer.toJson<String>(textValue),
+      'updatedAtMicros': serializer.toJson<int>(updatedAtMicros),
+      'lastCommandId': serializer.toJson<String?>(lastCommandId),
+      'deletedAtMicros': serializer.toJson<int?>(deletedAtMicros),
+    };
+  }
+
+  AssignmentNoteRow copyWith({
+    String? sessionId,
+    String? assignmentId,
+    String? textValue,
+    int? updatedAtMicros,
+    Value<String?> lastCommandId = const Value.absent(),
+    Value<int?> deletedAtMicros = const Value.absent(),
+  }) => AssignmentNoteRow(
+    sessionId: sessionId ?? this.sessionId,
+    assignmentId: assignmentId ?? this.assignmentId,
+    textValue: textValue ?? this.textValue,
+    updatedAtMicros: updatedAtMicros ?? this.updatedAtMicros,
+    lastCommandId: lastCommandId.present
+        ? lastCommandId.value
+        : this.lastCommandId,
+    deletedAtMicros: deletedAtMicros.present
+        ? deletedAtMicros.value
+        : this.deletedAtMicros,
+  );
+  AssignmentNoteRow copyWithCompanion(AssignmentNoteRecordsCompanion data) {
+    return AssignmentNoteRow(
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      assignmentId: data.assignmentId.present
+          ? data.assignmentId.value
+          : this.assignmentId,
+      textValue: data.textValue.present ? data.textValue.value : this.textValue,
+      updatedAtMicros: data.updatedAtMicros.present
+          ? data.updatedAtMicros.value
+          : this.updatedAtMicros,
+      lastCommandId: data.lastCommandId.present
+          ? data.lastCommandId.value
+          : this.lastCommandId,
+      deletedAtMicros: data.deletedAtMicros.present
+          ? data.deletedAtMicros.value
+          : this.deletedAtMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssignmentNoteRow(')
+          ..write('sessionId: $sessionId, ')
+          ..write('assignmentId: $assignmentId, ')
+          ..write('textValue: $textValue, ')
+          ..write('updatedAtMicros: $updatedAtMicros, ')
+          ..write('lastCommandId: $lastCommandId, ')
+          ..write('deletedAtMicros: $deletedAtMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    sessionId,
+    assignmentId,
+    textValue,
+    updatedAtMicros,
+    lastCommandId,
+    deletedAtMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AssignmentNoteRow &&
+          other.sessionId == this.sessionId &&
+          other.assignmentId == this.assignmentId &&
+          other.textValue == this.textValue &&
+          other.updatedAtMicros == this.updatedAtMicros &&
+          other.lastCommandId == this.lastCommandId &&
+          other.deletedAtMicros == this.deletedAtMicros);
+}
+
+class AssignmentNoteRecordsCompanion
+    extends UpdateCompanion<AssignmentNoteRow> {
+  final Value<String> sessionId;
+  final Value<String> assignmentId;
+  final Value<String> textValue;
+  final Value<int> updatedAtMicros;
+  final Value<String?> lastCommandId;
+  final Value<int?> deletedAtMicros;
+  final Value<int> rowid;
+  const AssignmentNoteRecordsCompanion({
+    this.sessionId = const Value.absent(),
+    this.assignmentId = const Value.absent(),
+    this.textValue = const Value.absent(),
+    this.updatedAtMicros = const Value.absent(),
+    this.lastCommandId = const Value.absent(),
+    this.deletedAtMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssignmentNoteRecordsCompanion.insert({
+    required String sessionId,
+    required String assignmentId,
+    required String textValue,
+    required int updatedAtMicros,
+    this.lastCommandId = const Value.absent(),
+    this.deletedAtMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : sessionId = Value(sessionId),
+       assignmentId = Value(assignmentId),
+       textValue = Value(textValue),
+       updatedAtMicros = Value(updatedAtMicros);
+  static Insertable<AssignmentNoteRow> custom({
+    Expression<String>? sessionId,
+    Expression<String>? assignmentId,
+    Expression<String>? textValue,
+    Expression<int>? updatedAtMicros,
+    Expression<String>? lastCommandId,
+    Expression<int>? deletedAtMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionId != null) 'session_id': sessionId,
+      if (assignmentId != null) 'assignment_id': assignmentId,
+      if (textValue != null) 'text_value': textValue,
+      if (updatedAtMicros != null) 'updated_at_micros': updatedAtMicros,
+      if (lastCommandId != null) 'last_command_id': lastCommandId,
+      if (deletedAtMicros != null) 'deleted_at_micros': deletedAtMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssignmentNoteRecordsCompanion copyWith({
+    Value<String>? sessionId,
+    Value<String>? assignmentId,
+    Value<String>? textValue,
+    Value<int>? updatedAtMicros,
+    Value<String?>? lastCommandId,
+    Value<int?>? deletedAtMicros,
+    Value<int>? rowid,
+  }) {
+    return AssignmentNoteRecordsCompanion(
+      sessionId: sessionId ?? this.sessionId,
+      assignmentId: assignmentId ?? this.assignmentId,
+      textValue: textValue ?? this.textValue,
+      updatedAtMicros: updatedAtMicros ?? this.updatedAtMicros,
+      lastCommandId: lastCommandId ?? this.lastCommandId,
+      deletedAtMicros: deletedAtMicros ?? this.deletedAtMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (assignmentId.present) {
+      map['assignment_id'] = Variable<String>(assignmentId.value);
+    }
+    if (textValue.present) {
+      map['text_value'] = Variable<String>(textValue.value);
+    }
+    if (updatedAtMicros.present) {
+      map['updated_at_micros'] = Variable<int>(updatedAtMicros.value);
+    }
+    if (lastCommandId.present) {
+      map['last_command_id'] = Variable<String>(lastCommandId.value);
+    }
+    if (deletedAtMicros.present) {
+      map['deleted_at_micros'] = Variable<int>(deletedAtMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssignmentNoteRecordsCompanion(')
+          ..write('sessionId: $sessionId, ')
+          ..write('assignmentId: $assignmentId, ')
+          ..write('textValue: $textValue, ')
+          ..write('updatedAtMicros: $updatedAtMicros, ')
+          ..write('lastCommandId: $lastCommandId, ')
+          ..write('deletedAtMicros: $deletedAtMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CartConsumableRecordsTable extends CartConsumableRecords
+    with TableInfo<$CartConsumableRecordsTable, CartConsumableRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CartConsumableRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES work_session_records (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _assignmentIdMeta = const VerificationMeta(
+    'assignmentId',
+  );
+  @override
+  late final GeneratedColumn<String> assignmentId = GeneratedColumn<String>(
+    'assignment_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMicrosMeta = const VerificationMeta(
+    'updatedAtMicros',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMicros = GeneratedColumn<int>(
+    'updated_at_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastCommandIdMeta = const VerificationMeta(
+    'lastCommandId',
+  );
+  @override
+  late final GeneratedColumn<String> lastCommandId = GeneratedColumn<String>(
+    'last_command_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedAtMicrosMeta = const VerificationMeta(
+    'completedAtMicros',
+  );
+  @override
+  late final GeneratedColumn<int> completedAtMicros = GeneratedColumn<int>(
+    'completed_at_micros',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMicrosMeta = const VerificationMeta(
+    'deletedAtMicros',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAtMicros = GeneratedColumn<int>(
+    'deleted_at_micros',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    sessionId,
+    assignmentId,
+    itemId,
+    title,
+    quantity,
+    updatedAtMicros,
+    lastCommandId,
+    completedAtMicros,
+    deletedAtMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cart_consumable_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CartConsumableRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('assignment_id')) {
+      context.handle(
+        _assignmentIdMeta,
+        assignmentId.isAcceptableOrUnknown(
+          data['assignment_id']!,
+          _assignmentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_assignmentIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('updated_at_micros')) {
+      context.handle(
+        _updatedAtMicrosMeta,
+        updatedAtMicros.isAcceptableOrUnknown(
+          data['updated_at_micros']!,
+          _updatedAtMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMicrosMeta);
+    }
+    if (data.containsKey('last_command_id')) {
+      context.handle(
+        _lastCommandIdMeta,
+        lastCommandId.isAcceptableOrUnknown(
+          data['last_command_id']!,
+          _lastCommandIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastCommandIdMeta);
+    }
+    if (data.containsKey('completed_at_micros')) {
+      context.handle(
+        _completedAtMicrosMeta,
+        completedAtMicros.isAcceptableOrUnknown(
+          data['completed_at_micros']!,
+          _completedAtMicrosMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted_at_micros')) {
+      context.handle(
+        _deletedAtMicrosMeta,
+        deletedAtMicros.isAcceptableOrUnknown(
+          data['deleted_at_micros']!,
+          _deletedAtMicrosMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionId, assignmentId, itemId};
+  @override
+  CartConsumableRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CartConsumableRow(
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      assignmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assignment_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      updatedAtMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_micros'],
+      )!,
+      lastCommandId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_command_id'],
+      )!,
+      completedAtMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completed_at_micros'],
+      ),
+      deletedAtMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at_micros'],
+      ),
+    );
+  }
+
+  @override
+  $CartConsumableRecordsTable createAlias(String alias) {
+    return $CartConsumableRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class CartConsumableRow extends DataClass
+    implements Insertable<CartConsumableRow> {
+  final String sessionId;
+  final String assignmentId;
+  final String itemId;
+  final String title;
+  final int quantity;
+  final int updatedAtMicros;
+  final String lastCommandId;
+  final int? completedAtMicros;
+  final int? deletedAtMicros;
+  const CartConsumableRow({
+    required this.sessionId,
+    required this.assignmentId,
+    required this.itemId,
+    required this.title,
+    required this.quantity,
+    required this.updatedAtMicros,
+    required this.lastCommandId,
+    this.completedAtMicros,
+    this.deletedAtMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_id'] = Variable<String>(sessionId);
+    map['assignment_id'] = Variable<String>(assignmentId);
+    map['item_id'] = Variable<String>(itemId);
+    map['title'] = Variable<String>(title);
+    map['quantity'] = Variable<int>(quantity);
+    map['updated_at_micros'] = Variable<int>(updatedAtMicros);
+    map['last_command_id'] = Variable<String>(lastCommandId);
+    if (!nullToAbsent || completedAtMicros != null) {
+      map['completed_at_micros'] = Variable<int>(completedAtMicros);
+    }
+    if (!nullToAbsent || deletedAtMicros != null) {
+      map['deleted_at_micros'] = Variable<int>(deletedAtMicros);
+    }
+    return map;
+  }
+
+  CartConsumableRecordsCompanion toCompanion(bool nullToAbsent) {
+    return CartConsumableRecordsCompanion(
+      sessionId: Value(sessionId),
+      assignmentId: Value(assignmentId),
+      itemId: Value(itemId),
+      title: Value(title),
+      quantity: Value(quantity),
+      updatedAtMicros: Value(updatedAtMicros),
+      lastCommandId: Value(lastCommandId),
+      completedAtMicros: completedAtMicros == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAtMicros),
+      deletedAtMicros: deletedAtMicros == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAtMicros),
+    );
+  }
+
+  factory CartConsumableRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CartConsumableRow(
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      assignmentId: serializer.fromJson<String>(json['assignmentId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      title: serializer.fromJson<String>(json['title']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      updatedAtMicros: serializer.fromJson<int>(json['updatedAtMicros']),
+      lastCommandId: serializer.fromJson<String>(json['lastCommandId']),
+      completedAtMicros: serializer.fromJson<int?>(json['completedAtMicros']),
+      deletedAtMicros: serializer.fromJson<int?>(json['deletedAtMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionId': serializer.toJson<String>(sessionId),
+      'assignmentId': serializer.toJson<String>(assignmentId),
+      'itemId': serializer.toJson<String>(itemId),
+      'title': serializer.toJson<String>(title),
+      'quantity': serializer.toJson<int>(quantity),
+      'updatedAtMicros': serializer.toJson<int>(updatedAtMicros),
+      'lastCommandId': serializer.toJson<String>(lastCommandId),
+      'completedAtMicros': serializer.toJson<int?>(completedAtMicros),
+      'deletedAtMicros': serializer.toJson<int?>(deletedAtMicros),
+    };
+  }
+
+  CartConsumableRow copyWith({
+    String? sessionId,
+    String? assignmentId,
+    String? itemId,
+    String? title,
+    int? quantity,
+    int? updatedAtMicros,
+    String? lastCommandId,
+    Value<int?> completedAtMicros = const Value.absent(),
+    Value<int?> deletedAtMicros = const Value.absent(),
+  }) => CartConsumableRow(
+    sessionId: sessionId ?? this.sessionId,
+    assignmentId: assignmentId ?? this.assignmentId,
+    itemId: itemId ?? this.itemId,
+    title: title ?? this.title,
+    quantity: quantity ?? this.quantity,
+    updatedAtMicros: updatedAtMicros ?? this.updatedAtMicros,
+    lastCommandId: lastCommandId ?? this.lastCommandId,
+    completedAtMicros: completedAtMicros.present
+        ? completedAtMicros.value
+        : this.completedAtMicros,
+    deletedAtMicros: deletedAtMicros.present
+        ? deletedAtMicros.value
+        : this.deletedAtMicros,
+  );
+  CartConsumableRow copyWithCompanion(CartConsumableRecordsCompanion data) {
+    return CartConsumableRow(
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      assignmentId: data.assignmentId.present
+          ? data.assignmentId.value
+          : this.assignmentId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      title: data.title.present ? data.title.value : this.title,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      updatedAtMicros: data.updatedAtMicros.present
+          ? data.updatedAtMicros.value
+          : this.updatedAtMicros,
+      lastCommandId: data.lastCommandId.present
+          ? data.lastCommandId.value
+          : this.lastCommandId,
+      completedAtMicros: data.completedAtMicros.present
+          ? data.completedAtMicros.value
+          : this.completedAtMicros,
+      deletedAtMicros: data.deletedAtMicros.present
+          ? data.deletedAtMicros.value
+          : this.deletedAtMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CartConsumableRow(')
+          ..write('sessionId: $sessionId, ')
+          ..write('assignmentId: $assignmentId, ')
+          ..write('itemId: $itemId, ')
+          ..write('title: $title, ')
+          ..write('quantity: $quantity, ')
+          ..write('updatedAtMicros: $updatedAtMicros, ')
+          ..write('lastCommandId: $lastCommandId, ')
+          ..write('completedAtMicros: $completedAtMicros, ')
+          ..write('deletedAtMicros: $deletedAtMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    sessionId,
+    assignmentId,
+    itemId,
+    title,
+    quantity,
+    updatedAtMicros,
+    lastCommandId,
+    completedAtMicros,
+    deletedAtMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CartConsumableRow &&
+          other.sessionId == this.sessionId &&
+          other.assignmentId == this.assignmentId &&
+          other.itemId == this.itemId &&
+          other.title == this.title &&
+          other.quantity == this.quantity &&
+          other.updatedAtMicros == this.updatedAtMicros &&
+          other.lastCommandId == this.lastCommandId &&
+          other.completedAtMicros == this.completedAtMicros &&
+          other.deletedAtMicros == this.deletedAtMicros);
+}
+
+class CartConsumableRecordsCompanion
+    extends UpdateCompanion<CartConsumableRow> {
+  final Value<String> sessionId;
+  final Value<String> assignmentId;
+  final Value<String> itemId;
+  final Value<String> title;
+  final Value<int> quantity;
+  final Value<int> updatedAtMicros;
+  final Value<String> lastCommandId;
+  final Value<int?> completedAtMicros;
+  final Value<int?> deletedAtMicros;
+  final Value<int> rowid;
+  const CartConsumableRecordsCompanion({
+    this.sessionId = const Value.absent(),
+    this.assignmentId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.updatedAtMicros = const Value.absent(),
+    this.lastCommandId = const Value.absent(),
+    this.completedAtMicros = const Value.absent(),
+    this.deletedAtMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CartConsumableRecordsCompanion.insert({
+    required String sessionId,
+    required String assignmentId,
+    required String itemId,
+    required String title,
+    required int quantity,
+    required int updatedAtMicros,
+    required String lastCommandId,
+    this.completedAtMicros = const Value.absent(),
+    this.deletedAtMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : sessionId = Value(sessionId),
+       assignmentId = Value(assignmentId),
+       itemId = Value(itemId),
+       title = Value(title),
+       quantity = Value(quantity),
+       updatedAtMicros = Value(updatedAtMicros),
+       lastCommandId = Value(lastCommandId);
+  static Insertable<CartConsumableRow> custom({
+    Expression<String>? sessionId,
+    Expression<String>? assignmentId,
+    Expression<String>? itemId,
+    Expression<String>? title,
+    Expression<int>? quantity,
+    Expression<int>? updatedAtMicros,
+    Expression<String>? lastCommandId,
+    Expression<int>? completedAtMicros,
+    Expression<int>? deletedAtMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionId != null) 'session_id': sessionId,
+      if (assignmentId != null) 'assignment_id': assignmentId,
+      if (itemId != null) 'item_id': itemId,
+      if (title != null) 'title': title,
+      if (quantity != null) 'quantity': quantity,
+      if (updatedAtMicros != null) 'updated_at_micros': updatedAtMicros,
+      if (lastCommandId != null) 'last_command_id': lastCommandId,
+      if (completedAtMicros != null) 'completed_at_micros': completedAtMicros,
+      if (deletedAtMicros != null) 'deleted_at_micros': deletedAtMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CartConsumableRecordsCompanion copyWith({
+    Value<String>? sessionId,
+    Value<String>? assignmentId,
+    Value<String>? itemId,
+    Value<String>? title,
+    Value<int>? quantity,
+    Value<int>? updatedAtMicros,
+    Value<String>? lastCommandId,
+    Value<int?>? completedAtMicros,
+    Value<int?>? deletedAtMicros,
+    Value<int>? rowid,
+  }) {
+    return CartConsumableRecordsCompanion(
+      sessionId: sessionId ?? this.sessionId,
+      assignmentId: assignmentId ?? this.assignmentId,
+      itemId: itemId ?? this.itemId,
+      title: title ?? this.title,
+      quantity: quantity ?? this.quantity,
+      updatedAtMicros: updatedAtMicros ?? this.updatedAtMicros,
+      lastCommandId: lastCommandId ?? this.lastCommandId,
+      completedAtMicros: completedAtMicros ?? this.completedAtMicros,
+      deletedAtMicros: deletedAtMicros ?? this.deletedAtMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (assignmentId.present) {
+      map['assignment_id'] = Variable<String>(assignmentId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (updatedAtMicros.present) {
+      map['updated_at_micros'] = Variable<int>(updatedAtMicros.value);
+    }
+    if (lastCommandId.present) {
+      map['last_command_id'] = Variable<String>(lastCommandId.value);
+    }
+    if (completedAtMicros.present) {
+      map['completed_at_micros'] = Variable<int>(completedAtMicros.value);
+    }
+    if (deletedAtMicros.present) {
+      map['deleted_at_micros'] = Variable<int>(deletedAtMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CartConsumableRecordsCompanion(')
+          ..write('sessionId: $sessionId, ')
+          ..write('assignmentId: $assignmentId, ')
+          ..write('itemId: $itemId, ')
+          ..write('title: $title, ')
+          ..write('quantity: $quantity, ')
+          ..write('updatedAtMicros: $updatedAtMicros, ')
+          ..write('lastCommandId: $lastCommandId, ')
+          ..write('completedAtMicros: $completedAtMicros, ')
+          ..write('deletedAtMicros: $deletedAtMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $HistoryEventRecordsTable extends HistoryEventRecords
     with TableInfo<$HistoryEventRecordsTable, HistoryEventRow> {
   @override
@@ -3253,6 +4782,39 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _commandTypeMeta = const VerificationMeta(
+    'commandType',
+  );
+  @override
+  late final GeneratedColumn<String> commandType = GeneratedColumn<String>(
+    'command_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _commandFingerprintMeta =
+      const VerificationMeta('commandFingerprint');
+  @override
+  late final GeneratedColumn<String> commandFingerprint =
+      GeneratedColumn<String>(
+        'command_fingerprint',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _issuedAtMicrosMeta = const VerificationMeta(
+    'issuedAtMicros',
+  );
+  @override
+  late final GeneratedColumn<int> issuedAtMicros = GeneratedColumn<int>(
+    'issued_at_micros',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _outcomeMeta = const VerificationMeta(
     'outcome',
   );
@@ -3280,6 +4842,9 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
     sessionId,
     commandId,
     commandVersion,
+    commandType,
+    commandFingerprint,
+    issuedAtMicros,
     outcome,
     processedAt,
   ];
@@ -3317,6 +4882,33 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
         commandVersion.isAcceptableOrUnknown(
           data['command_version']!,
           _commandVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('command_type')) {
+      context.handle(
+        _commandTypeMeta,
+        commandType.isAcceptableOrUnknown(
+          data['command_type']!,
+          _commandTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('command_fingerprint')) {
+      context.handle(
+        _commandFingerprintMeta,
+        commandFingerprint.isAcceptableOrUnknown(
+          data['command_fingerprint']!,
+          _commandFingerprintMeta,
+        ),
+      );
+    }
+    if (data.containsKey('issued_at_micros')) {
+      context.handle(
+        _issuedAtMicrosMeta,
+        issuedAtMicros.isAcceptableOrUnknown(
+          data['issued_at_micros']!,
+          _issuedAtMicrosMeta,
         ),
       );
     }
@@ -3360,6 +4952,18 @@ class $CommandReceiptRecordsTable extends CommandReceiptRecords
         DriftSqlType.int,
         data['${effectivePrefix}command_version'],
       )!,
+      commandType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}command_type'],
+      ),
+      commandFingerprint: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}command_fingerprint'],
+      ),
+      issuedAtMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}issued_at_micros'],
+      ),
       outcome: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}outcome'],
@@ -3382,12 +4986,18 @@ class CommandReceiptRow extends DataClass
   final String sessionId;
   final String commandId;
   final int commandVersion;
+  final String? commandType;
+  final String? commandFingerprint;
+  final int? issuedAtMicros;
   final String outcome;
   final DateTime processedAt;
   const CommandReceiptRow({
     required this.sessionId,
     required this.commandId,
     required this.commandVersion,
+    this.commandType,
+    this.commandFingerprint,
+    this.issuedAtMicros,
     required this.outcome,
     required this.processedAt,
   });
@@ -3397,6 +5007,15 @@ class CommandReceiptRow extends DataClass
     map['session_id'] = Variable<String>(sessionId);
     map['command_id'] = Variable<String>(commandId);
     map['command_version'] = Variable<int>(commandVersion);
+    if (!nullToAbsent || commandType != null) {
+      map['command_type'] = Variable<String>(commandType);
+    }
+    if (!nullToAbsent || commandFingerprint != null) {
+      map['command_fingerprint'] = Variable<String>(commandFingerprint);
+    }
+    if (!nullToAbsent || issuedAtMicros != null) {
+      map['issued_at_micros'] = Variable<int>(issuedAtMicros);
+    }
     map['outcome'] = Variable<String>(outcome);
     map['processed_at'] = Variable<DateTime>(processedAt);
     return map;
@@ -3407,6 +5026,15 @@ class CommandReceiptRow extends DataClass
       sessionId: Value(sessionId),
       commandId: Value(commandId),
       commandVersion: Value(commandVersion),
+      commandType: commandType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(commandType),
+      commandFingerprint: commandFingerprint == null && nullToAbsent
+          ? const Value.absent()
+          : Value(commandFingerprint),
+      issuedAtMicros: issuedAtMicros == null && nullToAbsent
+          ? const Value.absent()
+          : Value(issuedAtMicros),
       outcome: Value(outcome),
       processedAt: Value(processedAt),
     );
@@ -3421,6 +5049,11 @@ class CommandReceiptRow extends DataClass
       sessionId: serializer.fromJson<String>(json['sessionId']),
       commandId: serializer.fromJson<String>(json['commandId']),
       commandVersion: serializer.fromJson<int>(json['commandVersion']),
+      commandType: serializer.fromJson<String?>(json['commandType']),
+      commandFingerprint: serializer.fromJson<String?>(
+        json['commandFingerprint'],
+      ),
+      issuedAtMicros: serializer.fromJson<int?>(json['issuedAtMicros']),
       outcome: serializer.fromJson<String>(json['outcome']),
       processedAt: serializer.fromJson<DateTime>(json['processedAt']),
     );
@@ -3432,6 +5065,9 @@ class CommandReceiptRow extends DataClass
       'sessionId': serializer.toJson<String>(sessionId),
       'commandId': serializer.toJson<String>(commandId),
       'commandVersion': serializer.toJson<int>(commandVersion),
+      'commandType': serializer.toJson<String?>(commandType),
+      'commandFingerprint': serializer.toJson<String?>(commandFingerprint),
+      'issuedAtMicros': serializer.toJson<int?>(issuedAtMicros),
       'outcome': serializer.toJson<String>(outcome),
       'processedAt': serializer.toJson<DateTime>(processedAt),
     };
@@ -3441,12 +5077,22 @@ class CommandReceiptRow extends DataClass
     String? sessionId,
     String? commandId,
     int? commandVersion,
+    Value<String?> commandType = const Value.absent(),
+    Value<String?> commandFingerprint = const Value.absent(),
+    Value<int?> issuedAtMicros = const Value.absent(),
     String? outcome,
     DateTime? processedAt,
   }) => CommandReceiptRow(
     sessionId: sessionId ?? this.sessionId,
     commandId: commandId ?? this.commandId,
     commandVersion: commandVersion ?? this.commandVersion,
+    commandType: commandType.present ? commandType.value : this.commandType,
+    commandFingerprint: commandFingerprint.present
+        ? commandFingerprint.value
+        : this.commandFingerprint,
+    issuedAtMicros: issuedAtMicros.present
+        ? issuedAtMicros.value
+        : this.issuedAtMicros,
     outcome: outcome ?? this.outcome,
     processedAt: processedAt ?? this.processedAt,
   );
@@ -3457,6 +5103,15 @@ class CommandReceiptRow extends DataClass
       commandVersion: data.commandVersion.present
           ? data.commandVersion.value
           : this.commandVersion,
+      commandType: data.commandType.present
+          ? data.commandType.value
+          : this.commandType,
+      commandFingerprint: data.commandFingerprint.present
+          ? data.commandFingerprint.value
+          : this.commandFingerprint,
+      issuedAtMicros: data.issuedAtMicros.present
+          ? data.issuedAtMicros.value
+          : this.issuedAtMicros,
       outcome: data.outcome.present ? data.outcome.value : this.outcome,
       processedAt: data.processedAt.present
           ? data.processedAt.value
@@ -3470,6 +5125,9 @@ class CommandReceiptRow extends DataClass
           ..write('sessionId: $sessionId, ')
           ..write('commandId: $commandId, ')
           ..write('commandVersion: $commandVersion, ')
+          ..write('commandType: $commandType, ')
+          ..write('commandFingerprint: $commandFingerprint, ')
+          ..write('issuedAtMicros: $issuedAtMicros, ')
           ..write('outcome: $outcome, ')
           ..write('processedAt: $processedAt')
           ..write(')'))
@@ -3477,8 +5135,16 @@ class CommandReceiptRow extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(sessionId, commandId, commandVersion, outcome, processedAt);
+  int get hashCode => Object.hash(
+    sessionId,
+    commandId,
+    commandVersion,
+    commandType,
+    commandFingerprint,
+    issuedAtMicros,
+    outcome,
+    processedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3486,6 +5152,9 @@ class CommandReceiptRow extends DataClass
           other.sessionId == this.sessionId &&
           other.commandId == this.commandId &&
           other.commandVersion == this.commandVersion &&
+          other.commandType == this.commandType &&
+          other.commandFingerprint == this.commandFingerprint &&
+          other.issuedAtMicros == this.issuedAtMicros &&
           other.outcome == this.outcome &&
           other.processedAt == this.processedAt);
 }
@@ -3495,6 +5164,9 @@ class CommandReceiptRecordsCompanion
   final Value<String> sessionId;
   final Value<String> commandId;
   final Value<int> commandVersion;
+  final Value<String?> commandType;
+  final Value<String?> commandFingerprint;
+  final Value<int?> issuedAtMicros;
   final Value<String> outcome;
   final Value<DateTime> processedAt;
   final Value<int> rowid;
@@ -3502,6 +5174,9 @@ class CommandReceiptRecordsCompanion
     this.sessionId = const Value.absent(),
     this.commandId = const Value.absent(),
     this.commandVersion = const Value.absent(),
+    this.commandType = const Value.absent(),
+    this.commandFingerprint = const Value.absent(),
+    this.issuedAtMicros = const Value.absent(),
     this.outcome = const Value.absent(),
     this.processedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3510,6 +5185,9 @@ class CommandReceiptRecordsCompanion
     required String sessionId,
     required String commandId,
     this.commandVersion = const Value.absent(),
+    this.commandType = const Value.absent(),
+    this.commandFingerprint = const Value.absent(),
+    this.issuedAtMicros = const Value.absent(),
     required String outcome,
     required DateTime processedAt,
     this.rowid = const Value.absent(),
@@ -3521,6 +5199,9 @@ class CommandReceiptRecordsCompanion
     Expression<String>? sessionId,
     Expression<String>? commandId,
     Expression<int>? commandVersion,
+    Expression<String>? commandType,
+    Expression<String>? commandFingerprint,
+    Expression<int>? issuedAtMicros,
     Expression<String>? outcome,
     Expression<DateTime>? processedAt,
     Expression<int>? rowid,
@@ -3529,6 +5210,9 @@ class CommandReceiptRecordsCompanion
       if (sessionId != null) 'session_id': sessionId,
       if (commandId != null) 'command_id': commandId,
       if (commandVersion != null) 'command_version': commandVersion,
+      if (commandType != null) 'command_type': commandType,
+      if (commandFingerprint != null) 'command_fingerprint': commandFingerprint,
+      if (issuedAtMicros != null) 'issued_at_micros': issuedAtMicros,
       if (outcome != null) 'outcome': outcome,
       if (processedAt != null) 'processed_at': processedAt,
       if (rowid != null) 'rowid': rowid,
@@ -3539,6 +5223,9 @@ class CommandReceiptRecordsCompanion
     Value<String>? sessionId,
     Value<String>? commandId,
     Value<int>? commandVersion,
+    Value<String?>? commandType,
+    Value<String?>? commandFingerprint,
+    Value<int?>? issuedAtMicros,
     Value<String>? outcome,
     Value<DateTime>? processedAt,
     Value<int>? rowid,
@@ -3547,6 +5234,9 @@ class CommandReceiptRecordsCompanion
       sessionId: sessionId ?? this.sessionId,
       commandId: commandId ?? this.commandId,
       commandVersion: commandVersion ?? this.commandVersion,
+      commandType: commandType ?? this.commandType,
+      commandFingerprint: commandFingerprint ?? this.commandFingerprint,
+      issuedAtMicros: issuedAtMicros ?? this.issuedAtMicros,
       outcome: outcome ?? this.outcome,
       processedAt: processedAt ?? this.processedAt,
       rowid: rowid ?? this.rowid,
@@ -3564,6 +5254,15 @@ class CommandReceiptRecordsCompanion
     }
     if (commandVersion.present) {
       map['command_version'] = Variable<int>(commandVersion.value);
+    }
+    if (commandType.present) {
+      map['command_type'] = Variable<String>(commandType.value);
+    }
+    if (commandFingerprint.present) {
+      map['command_fingerprint'] = Variable<String>(commandFingerprint.value);
+    }
+    if (issuedAtMicros.present) {
+      map['issued_at_micros'] = Variable<int>(issuedAtMicros.value);
     }
     if (outcome.present) {
       map['outcome'] = Variable<String>(outcome.value);
@@ -3583,6 +5282,9 @@ class CommandReceiptRecordsCompanion
           ..write('sessionId: $sessionId, ')
           ..write('commandId: $commandId, ')
           ..write('commandVersion: $commandVersion, ')
+          ..write('commandType: $commandType, ')
+          ..write('commandFingerprint: $commandFingerprint, ')
+          ..write('issuedAtMicros: $issuedAtMicros, ')
           ..write('outcome: $outcome, ')
           ..write('processedAt: $processedAt, ')
           ..write('rowid: $rowid')
@@ -5635,9 +7337,9 @@ class $MediaPromotionRecordsTable extends MediaPromotionRecords
   late final GeneratedColumn<String> roomNumber = GeneratedColumn<String>(
     'room_number',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _assignmentIdMeta = const VerificationMeta(
     'assignmentId',
@@ -5954,8 +7656,6 @@ class $MediaPromotionRecordsTable extends MediaPromotionRecords
         _roomNumberMeta,
         roomNumber.isAcceptableOrUnknown(data['room_number']!, _roomNumberMeta),
       );
-    } else if (isInserting) {
-      context.missing(_roomNumberMeta);
     }
     if (data.containsKey('assignment_id')) {
       context.handle(
@@ -6165,7 +7865,7 @@ class $MediaPromotionRecordsTable extends MediaPromotionRecords
       roomNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}room_number'],
-      )!,
+      ),
       assignmentId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}assignment_id'],
@@ -6265,7 +7965,7 @@ class MediaPromotionRow extends DataClass
   final String commandId;
   final String mediaId;
   final String sessionId;
-  final String roomNumber;
+  final String? roomNumber;
   final String? assignmentId;
   final String kind;
   final String stagedRelativePath;
@@ -6292,7 +7992,7 @@ class MediaPromotionRow extends DataClass
     required this.commandId,
     required this.mediaId,
     required this.sessionId,
-    required this.roomNumber,
+    this.roomNumber,
     this.assignmentId,
     required this.kind,
     required this.stagedRelativePath,
@@ -6322,7 +8022,9 @@ class MediaPromotionRow extends DataClass
     map['command_id'] = Variable<String>(commandId);
     map['media_id'] = Variable<String>(mediaId);
     map['session_id'] = Variable<String>(sessionId);
-    map['room_number'] = Variable<String>(roomNumber);
+    if (!nullToAbsent || roomNumber != null) {
+      map['room_number'] = Variable<String>(roomNumber);
+    }
     if (!nullToAbsent || assignmentId != null) {
       map['assignment_id'] = Variable<String>(assignmentId);
     }
@@ -6377,7 +8079,9 @@ class MediaPromotionRow extends DataClass
       commandId: Value(commandId),
       mediaId: Value(mediaId),
       sessionId: Value(sessionId),
-      roomNumber: Value(roomNumber),
+      roomNumber: roomNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(roomNumber),
       assignmentId: assignmentId == null && nullToAbsent
           ? const Value.absent()
           : Value(assignmentId),
@@ -6436,7 +8140,7 @@ class MediaPromotionRow extends DataClass
       commandId: serializer.fromJson<String>(json['commandId']),
       mediaId: serializer.fromJson<String>(json['mediaId']),
       sessionId: serializer.fromJson<String>(json['sessionId']),
-      roomNumber: serializer.fromJson<String>(json['roomNumber']),
+      roomNumber: serializer.fromJson<String?>(json['roomNumber']),
       assignmentId: serializer.fromJson<String?>(json['assignmentId']),
       kind: serializer.fromJson<String>(json['kind']),
       stagedRelativePath: serializer.fromJson<String>(
@@ -6472,7 +8176,7 @@ class MediaPromotionRow extends DataClass
       'commandId': serializer.toJson<String>(commandId),
       'mediaId': serializer.toJson<String>(mediaId),
       'sessionId': serializer.toJson<String>(sessionId),
-      'roomNumber': serializer.toJson<String>(roomNumber),
+      'roomNumber': serializer.toJson<String?>(roomNumber),
       'assignmentId': serializer.toJson<String?>(assignmentId),
       'kind': serializer.toJson<String>(kind),
       'stagedRelativePath': serializer.toJson<String>(stagedRelativePath),
@@ -6502,7 +8206,7 @@ class MediaPromotionRow extends DataClass
     String? commandId,
     String? mediaId,
     String? sessionId,
-    String? roomNumber,
+    Value<String?> roomNumber = const Value.absent(),
     Value<String?> assignmentId = const Value.absent(),
     String? kind,
     String? stagedRelativePath,
@@ -6529,7 +8233,7 @@ class MediaPromotionRow extends DataClass
     commandId: commandId ?? this.commandId,
     mediaId: mediaId ?? this.mediaId,
     sessionId: sessionId ?? this.sessionId,
-    roomNumber: roomNumber ?? this.roomNumber,
+    roomNumber: roomNumber.present ? roomNumber.value : this.roomNumber,
     assignmentId: assignmentId.present ? assignmentId.value : this.assignmentId,
     kind: kind ?? this.kind,
     stagedRelativePath: stagedRelativePath ?? this.stagedRelativePath,
@@ -6725,7 +8429,7 @@ class MediaPromotionRecordsCompanion
   final Value<String> commandId;
   final Value<String> mediaId;
   final Value<String> sessionId;
-  final Value<String> roomNumber;
+  final Value<String?> roomNumber;
   final Value<String?> assignmentId;
   final Value<String> kind;
   final Value<String> stagedRelativePath;
@@ -6782,7 +8486,7 @@ class MediaPromotionRecordsCompanion
     required String commandId,
     required String mediaId,
     required String sessionId,
-    required String roomNumber,
+    this.roomNumber = const Value.absent(),
     this.assignmentId = const Value.absent(),
     required String kind,
     required String stagedRelativePath,
@@ -6809,7 +8513,6 @@ class MediaPromotionRecordsCompanion
        commandId = Value(commandId),
        mediaId = Value(mediaId),
        sessionId = Value(sessionId),
-       roomNumber = Value(roomNumber),
        kind = Value(kind),
        stagedRelativePath = Value(stagedRelativePath),
        transientFilePath = Value(transientFilePath),
@@ -6885,7 +8588,7 @@ class MediaPromotionRecordsCompanion
     Value<String>? commandId,
     Value<String>? mediaId,
     Value<String>? sessionId,
-    Value<String>? roomNumber,
+    Value<String?>? roomNumber,
     Value<String?>? assignmentId,
     Value<String>? kind,
     Value<String>? stagedRelativePath,
@@ -7065,6 +8768,8 @@ class MediaPromotionRecordsCompanion
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $HousekeeperCatalogRecordsTable housekeeperCatalogRecords =
+      $HousekeeperCatalogRecordsTable(this);
   late final $WorkSessionRecordsTable workSessionRecords =
       $WorkSessionRecordsTable(this);
   late final $HousekeeperRecordsTable housekeeperRecords =
@@ -7077,6 +8782,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RoomNoteRecordsTable roomNoteRecords = $RoomNoteRecordsTable(
     this,
   );
+  late final $AssignmentNoteRecordsTable assignmentNoteRecords =
+      $AssignmentNoteRecordsTable(this);
+  late final $CartConsumableRecordsTable cartConsumableRecords =
+      $CartConsumableRecordsTable(this);
   late final $HistoryEventRecordsTable historyEventRecords =
       $HistoryEventRecordsTable(this);
   late final $CommandReceiptRecordsTable commandReceiptRecords =
@@ -7095,11 +8804,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
+    housekeeperCatalogRecords,
     workSessionRecords,
     housekeeperRecords,
     workAssignmentRecords,
     roomStateRecords,
     roomNoteRecords,
+    assignmentNoteRecords,
+    cartConsumableRecords,
     historyEventRecords,
     commandReceiptRecords,
     syncOutboxRecords,
@@ -7142,6 +8854,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         'work_session_records',
         limitUpdateKind: UpdateKind.delete,
       ),
+      result: [TableUpdate('assignment_note_records', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'work_session_records',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('cart_consumable_records', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'work_session_records',
+        limitUpdateKind: UpdateKind.delete,
+      ),
       result: [TableUpdate('history_event_records', kind: UpdateKind.delete)],
     ),
     WritePropagation(
@@ -7178,6 +8904,248 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       const DriftDatabaseOptions(storeDateTimeAsText: true);
 }
 
+typedef $$HousekeeperCatalogRecordsTableCreateCompanionBuilder =
+    HousekeeperCatalogRecordsCompanion Function({
+      required String id,
+      required String displayName,
+      required String paletteKey,
+      required int sortOrder,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$HousekeeperCatalogRecordsTableUpdateCompanionBuilder =
+    HousekeeperCatalogRecordsCompanion Function({
+      Value<String> id,
+      Value<String> displayName,
+      Value<String> paletteKey,
+      Value<int> sortOrder,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$HousekeeperCatalogRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $HousekeeperCatalogRecordsTable> {
+  $$HousekeeperCatalogRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paletteKey => $composableBuilder(
+    column: $table.paletteKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HousekeeperCatalogRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HousekeeperCatalogRecordsTable> {
+  $$HousekeeperCatalogRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paletteKey => $composableBuilder(
+    column: $table.paletteKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HousekeeperCatalogRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HousekeeperCatalogRecordsTable> {
+  $$HousekeeperCatalogRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paletteKey => $composableBuilder(
+    column: $table.paletteKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$HousekeeperCatalogRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HousekeeperCatalogRecordsTable,
+          HousekeeperCatalogRow,
+          $$HousekeeperCatalogRecordsTableFilterComposer,
+          $$HousekeeperCatalogRecordsTableOrderingComposer,
+          $$HousekeeperCatalogRecordsTableAnnotationComposer,
+          $$HousekeeperCatalogRecordsTableCreateCompanionBuilder,
+          $$HousekeeperCatalogRecordsTableUpdateCompanionBuilder,
+          (
+            HousekeeperCatalogRow,
+            BaseReferences<
+              _$AppDatabase,
+              $HousekeeperCatalogRecordsTable,
+              HousekeeperCatalogRow
+            >,
+          ),
+          HousekeeperCatalogRow,
+          PrefetchHooks Function()
+        > {
+  $$HousekeeperCatalogRecordsTableTableManager(
+    _$AppDatabase db,
+    $HousekeeperCatalogRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HousekeeperCatalogRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$HousekeeperCatalogRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HousekeeperCatalogRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String> paletteKey = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousekeeperCatalogRecordsCompanion(
+                id: id,
+                displayName: displayName,
+                paletteKey: paletteKey,
+                sortOrder: sortOrder,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String displayName,
+                required String paletteKey,
+                required int sortOrder,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousekeeperCatalogRecordsCompanion.insert(
+                id: id,
+                displayName: displayName,
+                paletteKey: paletteKey,
+                sortOrder: sortOrder,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HousekeeperCatalogRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HousekeeperCatalogRecordsTable,
+      HousekeeperCatalogRow,
+      $$HousekeeperCatalogRecordsTableFilterComposer,
+      $$HousekeeperCatalogRecordsTableOrderingComposer,
+      $$HousekeeperCatalogRecordsTableAnnotationComposer,
+      $$HousekeeperCatalogRecordsTableCreateCompanionBuilder,
+      $$HousekeeperCatalogRecordsTableUpdateCompanionBuilder,
+      (
+        HousekeeperCatalogRow,
+        BaseReferences<
+          _$AppDatabase,
+          $HousekeeperCatalogRecordsTable,
+          HousekeeperCatalogRow
+        >,
+      ),
+      HousekeeperCatalogRow,
+      PrefetchHooks Function()
+    >;
 typedef $$WorkSessionRecordsTableCreateCompanionBuilder =
     WorkSessionRecordsCompanion Function({
       required String id,
@@ -7299,6 +9267,58 @@ final class $$WorkSessionRecordsTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _roomNoteRecordsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $AssignmentNoteRecordsTable,
+    List<AssignmentNoteRow>
+  >
+  _assignmentNoteRecordsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.assignmentNoteRecords,
+        aliasName:
+            'work_session_records__id__assignment_note_records__session_id',
+      );
+
+  $$AssignmentNoteRecordsTableProcessedTableManager
+  get assignmentNoteRecordsRefs {
+    final manager = $$AssignmentNoteRecordsTableTableManager(
+      $_db,
+      $_db.assignmentNoteRecords,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _assignmentNoteRecordsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $CartConsumableRecordsTable,
+    List<CartConsumableRow>
+  >
+  _cartConsumableRecordsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.cartConsumableRecords,
+        aliasName:
+            'work_session_records__id__cart_consumable_records__session_id',
+      );
+
+  $$CartConsumableRecordsTableProcessedTableManager
+  get cartConsumableRecordsRefs {
+    final manager = $$CartConsumableRecordsTableTableManager(
+      $_db,
+      $_db.cartConsumableRecords,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _cartConsumableRecordsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -7576,6 +9596,58 @@ class $$WorkSessionRecordsTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> assignmentNoteRecordsRefs(
+    Expression<bool> Function($$AssignmentNoteRecordsTableFilterComposer f) f,
+  ) {
+    final $$AssignmentNoteRecordsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.assignmentNoteRecords,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$AssignmentNoteRecordsTableFilterComposer(
+                $db: $db,
+                $table: $db.assignmentNoteRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> cartConsumableRecordsRefs(
+    Expression<bool> Function($$CartConsumableRecordsTableFilterComposer f) f,
+  ) {
+    final $$CartConsumableRecordsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.cartConsumableRecords,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CartConsumableRecordsTableFilterComposer(
+                $db: $db,
+                $table: $db.cartConsumableRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 
@@ -7906,6 +9978,58 @@ class $$WorkSessionRecordsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> assignmentNoteRecordsRefs<T extends Object>(
+    Expression<T> Function($$AssignmentNoteRecordsTableAnnotationComposer a) f,
+  ) {
+    final $$AssignmentNoteRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.assignmentNoteRecords,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$AssignmentNoteRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.assignmentNoteRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> cartConsumableRecordsRefs<T extends Object>(
+    Expression<T> Function($$CartConsumableRecordsTableAnnotationComposer a) f,
+  ) {
+    final $$CartConsumableRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.cartConsumableRecords,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CartConsumableRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.cartConsumableRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> historyEventRecordsRefs<T extends Object>(
     Expression<T> Function($$HistoryEventRecordsTableAnnotationComposer a) f,
   ) {
@@ -8055,6 +10179,8 @@ class $$WorkSessionRecordsTableTableManager
             bool workAssignmentRecordsRefs,
             bool roomStateRecordsRefs,
             bool roomNoteRecordsRefs,
+            bool assignmentNoteRecordsRefs,
+            bool cartConsumableRecordsRefs,
             bool historyEventRecordsRefs,
             bool commandReceiptRecordsRefs,
             bool syncOutboxRecordsRefs,
@@ -8140,6 +10266,8 @@ class $$WorkSessionRecordsTableTableManager
                 workAssignmentRecordsRefs = false,
                 roomStateRecordsRefs = false,
                 roomNoteRecordsRefs = false,
+                assignmentNoteRecordsRefs = false,
+                cartConsumableRecordsRefs = false,
                 historyEventRecordsRefs = false,
                 commandReceiptRecordsRefs = false,
                 syncOutboxRecordsRefs = false,
@@ -8153,6 +10281,8 @@ class $$WorkSessionRecordsTableTableManager
                     if (workAssignmentRecordsRefs) db.workAssignmentRecords,
                     if (roomStateRecordsRefs) db.roomStateRecords,
                     if (roomNoteRecordsRefs) db.roomNoteRecords,
+                    if (assignmentNoteRecordsRefs) db.assignmentNoteRecords,
+                    if (cartConsumableRecordsRefs) db.cartConsumableRecords,
                     if (historyEventRecordsRefs) db.historyEventRecords,
                     if (commandReceiptRecordsRefs) db.commandReceiptRecords,
                     if (syncOutboxRecordsRefs) db.syncOutboxRecords,
@@ -8240,6 +10370,48 @@ class $$WorkSessionRecordsTableTableManager
                                 table,
                                 p0,
                               ).roomNoteRecordsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (assignmentNoteRecordsRefs)
+                        await $_getPrefetchedData<
+                          WorkSessionRow,
+                          $WorkSessionRecordsTable,
+                          AssignmentNoteRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WorkSessionRecordsTableReferences
+                              ._assignmentNoteRecordsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WorkSessionRecordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).assignmentNoteRecordsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (cartConsumableRecordsRefs)
+                        await $_getPrefetchedData<
+                          WorkSessionRow,
+                          $WorkSessionRecordsTable,
+                          CartConsumableRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WorkSessionRecordsTableReferences
+                              ._cartConsumableRecordsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WorkSessionRecordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).cartConsumableRecordsRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.sessionId == item.id,
@@ -8376,6 +10548,8 @@ typedef $$WorkSessionRecordsTableProcessedTableManager =
         bool workAssignmentRecordsRefs,
         bool roomStateRecordsRefs,
         bool roomNoteRecordsRefs,
+        bool assignmentNoteRecordsRefs,
+        bool cartConsumableRecordsRefs,
         bool historyEventRecordsRefs,
         bool commandReceiptRecordsRefs,
         bool syncOutboxRecordsRefs,
@@ -8747,6 +10921,7 @@ typedef $$WorkAssignmentRecordsTableCreateCompanionBuilder =
       required String id,
       required int cartNumber,
       required String housekeeperId,
+      Value<String?> territoryId,
       required DateTime assignedAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -8758,6 +10933,7 @@ typedef $$WorkAssignmentRecordsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<int> cartNumber,
       Value<String> housekeeperId,
+      Value<String?> territoryId,
       Value<DateTime> assignedAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8818,6 +10994,11 @@ class $$WorkAssignmentRecordsTableFilterComposer
 
   ColumnFilters<String> get housekeeperId => $composableBuilder(
     column: $table.housekeeperId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get territoryId => $composableBuilder(
+    column: $table.territoryId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8884,6 +11065,11 @@ class $$WorkAssignmentRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get territoryId => $composableBuilder(
+    column: $table.territoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get assignedAt => $composableBuilder(
     column: $table.assignedAt,
     builder: (column) => ColumnOrderings(column),
@@ -8942,6 +11128,11 @@ class $$WorkAssignmentRecordsTableAnnotationComposer
 
   GeneratedColumn<String> get housekeeperId => $composableBuilder(
     column: $table.housekeeperId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get territoryId => $composableBuilder(
+    column: $table.territoryId,
     builder: (column) => column,
   );
 
@@ -9024,6 +11215,7 @@ class $$WorkAssignmentRecordsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<int> cartNumber = const Value.absent(),
                 Value<String> housekeeperId = const Value.absent(),
+                Value<String?> territoryId = const Value.absent(),
                 Value<DateTime> assignedAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -9033,6 +11225,7 @@ class $$WorkAssignmentRecordsTableTableManager
                 id: id,
                 cartNumber: cartNumber,
                 housekeeperId: housekeeperId,
+                territoryId: territoryId,
                 assignedAt: assignedAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -9044,6 +11237,7 @@ class $$WorkAssignmentRecordsTableTableManager
                 required String id,
                 required int cartNumber,
                 required String housekeeperId,
+                Value<String?> territoryId = const Value.absent(),
                 required DateTime assignedAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -9053,6 +11247,7 @@ class $$WorkAssignmentRecordsTableTableManager
                 id: id,
                 cartNumber: cartNumber,
                 housekeeperId: housekeeperId,
+                territoryId: territoryId,
                 assignedAt: assignedAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -9973,6 +12168,803 @@ typedef $$RoomNoteRecordsTableProcessedTableManager =
       RoomNoteRow,
       PrefetchHooks Function({bool sessionId})
     >;
+typedef $$AssignmentNoteRecordsTableCreateCompanionBuilder =
+    AssignmentNoteRecordsCompanion Function({
+      required String sessionId,
+      required String assignmentId,
+      required String textValue,
+      required int updatedAtMicros,
+      Value<String?> lastCommandId,
+      Value<int?> deletedAtMicros,
+      Value<int> rowid,
+    });
+typedef $$AssignmentNoteRecordsTableUpdateCompanionBuilder =
+    AssignmentNoteRecordsCompanion Function({
+      Value<String> sessionId,
+      Value<String> assignmentId,
+      Value<String> textValue,
+      Value<int> updatedAtMicros,
+      Value<String?> lastCommandId,
+      Value<int?> deletedAtMicros,
+      Value<int> rowid,
+    });
+
+final class $$AssignmentNoteRecordsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $AssignmentNoteRecordsTable,
+          AssignmentNoteRow
+        > {
+  $$AssignmentNoteRecordsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $WorkSessionRecordsTable _sessionIdTable(_$AppDatabase db) =>
+      db.workSessionRecords.createAlias(
+        'assignment_note_records__session_id__work_session_records__id',
+      );
+
+  $$WorkSessionRecordsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$WorkSessionRecordsTableTableManager(
+      $_db,
+      $_db.workSessionRecords,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$AssignmentNoteRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $AssignmentNoteRecordsTable> {
+  $$AssignmentNoteRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get textValue => $composableBuilder(
+    column: $table.textValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMicros => $composableBuilder(
+    column: $table.updatedAtMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastCommandId => $composableBuilder(
+    column: $table.lastCommandId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAtMicros => $composableBuilder(
+    column: $table.deletedAtMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WorkSessionRecordsTableFilterComposer get sessionId {
+    final $$WorkSessionRecordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.workSessionRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkSessionRecordsTableFilterComposer(
+            $db: $db,
+            $table: $db.workSessionRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AssignmentNoteRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AssignmentNoteRecordsTable> {
+  $$AssignmentNoteRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get textValue => $composableBuilder(
+    column: $table.textValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMicros => $composableBuilder(
+    column: $table.updatedAtMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastCommandId => $composableBuilder(
+    column: $table.lastCommandId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAtMicros => $composableBuilder(
+    column: $table.deletedAtMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WorkSessionRecordsTableOrderingComposer get sessionId {
+    final $$WorkSessionRecordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.workSessionRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkSessionRecordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.workSessionRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AssignmentNoteRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AssignmentNoteRecordsTable> {
+  $$AssignmentNoteRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get textValue =>
+      $composableBuilder(column: $table.textValue, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtMicros => $composableBuilder(
+    column: $table.updatedAtMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastCommandId => $composableBuilder(
+    column: $table.lastCommandId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get deletedAtMicros => $composableBuilder(
+    column: $table.deletedAtMicros,
+    builder: (column) => column,
+  );
+
+  $$WorkSessionRecordsTableAnnotationComposer get sessionId {
+    final $$WorkSessionRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.sessionId,
+          referencedTable: $db.workSessionRecords,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$WorkSessionRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.workSessionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$AssignmentNoteRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AssignmentNoteRecordsTable,
+          AssignmentNoteRow,
+          $$AssignmentNoteRecordsTableFilterComposer,
+          $$AssignmentNoteRecordsTableOrderingComposer,
+          $$AssignmentNoteRecordsTableAnnotationComposer,
+          $$AssignmentNoteRecordsTableCreateCompanionBuilder,
+          $$AssignmentNoteRecordsTableUpdateCompanionBuilder,
+          (AssignmentNoteRow, $$AssignmentNoteRecordsTableReferences),
+          AssignmentNoteRow,
+          PrefetchHooks Function({bool sessionId})
+        > {
+  $$AssignmentNoteRecordsTableTableManager(
+    _$AppDatabase db,
+    $AssignmentNoteRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AssignmentNoteRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$AssignmentNoteRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AssignmentNoteRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> sessionId = const Value.absent(),
+                Value<String> assignmentId = const Value.absent(),
+                Value<String> textValue = const Value.absent(),
+                Value<int> updatedAtMicros = const Value.absent(),
+                Value<String?> lastCommandId = const Value.absent(),
+                Value<int?> deletedAtMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssignmentNoteRecordsCompanion(
+                sessionId: sessionId,
+                assignmentId: assignmentId,
+                textValue: textValue,
+                updatedAtMicros: updatedAtMicros,
+                lastCommandId: lastCommandId,
+                deletedAtMicros: deletedAtMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String sessionId,
+                required String assignmentId,
+                required String textValue,
+                required int updatedAtMicros,
+                Value<String?> lastCommandId = const Value.absent(),
+                Value<int?> deletedAtMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssignmentNoteRecordsCompanion.insert(
+                sessionId: sessionId,
+                assignmentId: assignmentId,
+                textValue: textValue,
+                updatedAtMicros: updatedAtMicros,
+                lastCommandId: lastCommandId,
+                deletedAtMicros: deletedAtMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$AssignmentNoteRecordsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sessionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sessionId,
+                                referencedTable:
+                                    $$AssignmentNoteRecordsTableReferences
+                                        ._sessionIdTable(db),
+                                referencedColumn:
+                                    $$AssignmentNoteRecordsTableReferences
+                                        ._sessionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$AssignmentNoteRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AssignmentNoteRecordsTable,
+      AssignmentNoteRow,
+      $$AssignmentNoteRecordsTableFilterComposer,
+      $$AssignmentNoteRecordsTableOrderingComposer,
+      $$AssignmentNoteRecordsTableAnnotationComposer,
+      $$AssignmentNoteRecordsTableCreateCompanionBuilder,
+      $$AssignmentNoteRecordsTableUpdateCompanionBuilder,
+      (AssignmentNoteRow, $$AssignmentNoteRecordsTableReferences),
+      AssignmentNoteRow,
+      PrefetchHooks Function({bool sessionId})
+    >;
+typedef $$CartConsumableRecordsTableCreateCompanionBuilder =
+    CartConsumableRecordsCompanion Function({
+      required String sessionId,
+      required String assignmentId,
+      required String itemId,
+      required String title,
+      required int quantity,
+      required int updatedAtMicros,
+      required String lastCommandId,
+      Value<int?> completedAtMicros,
+      Value<int?> deletedAtMicros,
+      Value<int> rowid,
+    });
+typedef $$CartConsumableRecordsTableUpdateCompanionBuilder =
+    CartConsumableRecordsCompanion Function({
+      Value<String> sessionId,
+      Value<String> assignmentId,
+      Value<String> itemId,
+      Value<String> title,
+      Value<int> quantity,
+      Value<int> updatedAtMicros,
+      Value<String> lastCommandId,
+      Value<int?> completedAtMicros,
+      Value<int?> deletedAtMicros,
+      Value<int> rowid,
+    });
+
+final class $$CartConsumableRecordsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $CartConsumableRecordsTable,
+          CartConsumableRow
+        > {
+  $$CartConsumableRecordsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $WorkSessionRecordsTable _sessionIdTable(_$AppDatabase db) =>
+      db.workSessionRecords.createAlias(
+        'cart_consumable_records__session_id__work_session_records__id',
+      );
+
+  $$WorkSessionRecordsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$WorkSessionRecordsTableTableManager(
+      $_db,
+      $_db.workSessionRecords,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CartConsumableRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $CartConsumableRecordsTable> {
+  $$CartConsumableRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMicros => $composableBuilder(
+    column: $table.updatedAtMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastCommandId => $composableBuilder(
+    column: $table.lastCommandId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completedAtMicros => $composableBuilder(
+    column: $table.completedAtMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAtMicros => $composableBuilder(
+    column: $table.deletedAtMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WorkSessionRecordsTableFilterComposer get sessionId {
+    final $$WorkSessionRecordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.workSessionRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkSessionRecordsTableFilterComposer(
+            $db: $db,
+            $table: $db.workSessionRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CartConsumableRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CartConsumableRecordsTable> {
+  $$CartConsumableRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMicros => $composableBuilder(
+    column: $table.updatedAtMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastCommandId => $composableBuilder(
+    column: $table.lastCommandId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get completedAtMicros => $composableBuilder(
+    column: $table.completedAtMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAtMicros => $composableBuilder(
+    column: $table.deletedAtMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WorkSessionRecordsTableOrderingComposer get sessionId {
+    final $$WorkSessionRecordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.workSessionRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkSessionRecordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.workSessionRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CartConsumableRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CartConsumableRecordsTable> {
+  $$CartConsumableRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtMicros => $composableBuilder(
+    column: $table.updatedAtMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastCommandId => $composableBuilder(
+    column: $table.lastCommandId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get completedAtMicros => $composableBuilder(
+    column: $table.completedAtMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get deletedAtMicros => $composableBuilder(
+    column: $table.deletedAtMicros,
+    builder: (column) => column,
+  );
+
+  $$WorkSessionRecordsTableAnnotationComposer get sessionId {
+    final $$WorkSessionRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.sessionId,
+          referencedTable: $db.workSessionRecords,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$WorkSessionRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.workSessionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$CartConsumableRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CartConsumableRecordsTable,
+          CartConsumableRow,
+          $$CartConsumableRecordsTableFilterComposer,
+          $$CartConsumableRecordsTableOrderingComposer,
+          $$CartConsumableRecordsTableAnnotationComposer,
+          $$CartConsumableRecordsTableCreateCompanionBuilder,
+          $$CartConsumableRecordsTableUpdateCompanionBuilder,
+          (CartConsumableRow, $$CartConsumableRecordsTableReferences),
+          CartConsumableRow,
+          PrefetchHooks Function({bool sessionId})
+        > {
+  $$CartConsumableRecordsTableTableManager(
+    _$AppDatabase db,
+    $CartConsumableRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CartConsumableRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CartConsumableRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CartConsumableRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> sessionId = const Value.absent(),
+                Value<String> assignmentId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int> updatedAtMicros = const Value.absent(),
+                Value<String> lastCommandId = const Value.absent(),
+                Value<int?> completedAtMicros = const Value.absent(),
+                Value<int?> deletedAtMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CartConsumableRecordsCompanion(
+                sessionId: sessionId,
+                assignmentId: assignmentId,
+                itemId: itemId,
+                title: title,
+                quantity: quantity,
+                updatedAtMicros: updatedAtMicros,
+                lastCommandId: lastCommandId,
+                completedAtMicros: completedAtMicros,
+                deletedAtMicros: deletedAtMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String sessionId,
+                required String assignmentId,
+                required String itemId,
+                required String title,
+                required int quantity,
+                required int updatedAtMicros,
+                required String lastCommandId,
+                Value<int?> completedAtMicros = const Value.absent(),
+                Value<int?> deletedAtMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CartConsumableRecordsCompanion.insert(
+                sessionId: sessionId,
+                assignmentId: assignmentId,
+                itemId: itemId,
+                title: title,
+                quantity: quantity,
+                updatedAtMicros: updatedAtMicros,
+                lastCommandId: lastCommandId,
+                completedAtMicros: completedAtMicros,
+                deletedAtMicros: deletedAtMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$CartConsumableRecordsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sessionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sessionId,
+                                referencedTable:
+                                    $$CartConsumableRecordsTableReferences
+                                        ._sessionIdTable(db),
+                                referencedColumn:
+                                    $$CartConsumableRecordsTableReferences
+                                        ._sessionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CartConsumableRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CartConsumableRecordsTable,
+      CartConsumableRow,
+      $$CartConsumableRecordsTableFilterComposer,
+      $$CartConsumableRecordsTableOrderingComposer,
+      $$CartConsumableRecordsTableAnnotationComposer,
+      $$CartConsumableRecordsTableCreateCompanionBuilder,
+      $$CartConsumableRecordsTableUpdateCompanionBuilder,
+      (CartConsumableRow, $$CartConsumableRecordsTableReferences),
+      CartConsumableRow,
+      PrefetchHooks Function({bool sessionId})
+    >;
 typedef $$HistoryEventRecordsTableCreateCompanionBuilder =
     HistoryEventRecordsCompanion Function({
       required String id,
@@ -10361,6 +13353,9 @@ typedef $$CommandReceiptRecordsTableCreateCompanionBuilder =
       required String sessionId,
       required String commandId,
       Value<int> commandVersion,
+      Value<String?> commandType,
+      Value<String?> commandFingerprint,
+      Value<int?> issuedAtMicros,
       required String outcome,
       required DateTime processedAt,
       Value<int> rowid,
@@ -10370,6 +13365,9 @@ typedef $$CommandReceiptRecordsTableUpdateCompanionBuilder =
       Value<String> sessionId,
       Value<String> commandId,
       Value<int> commandVersion,
+      Value<String?> commandType,
+      Value<String?> commandFingerprint,
+      Value<int?> issuedAtMicros,
       Value<String> outcome,
       Value<DateTime> processedAt,
       Value<int> rowid,
@@ -10427,6 +13425,21 @@ class $$CommandReceiptRecordsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get commandType => $composableBuilder(
+    column: $table.commandType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get commandFingerprint => $composableBuilder(
+    column: $table.commandFingerprint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get issuedAtMicros => $composableBuilder(
+    column: $table.issuedAtMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get outcome => $composableBuilder(
     column: $table.outcome,
     builder: (column) => ColumnFilters(column),
@@ -10480,6 +13493,21 @@ class $$CommandReceiptRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get commandType => $composableBuilder(
+    column: $table.commandType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get commandFingerprint => $composableBuilder(
+    column: $table.commandFingerprint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get issuedAtMicros => $composableBuilder(
+    column: $table.issuedAtMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get outcome => $composableBuilder(
     column: $table.outcome,
     builder: (column) => ColumnOrderings(column),
@@ -10528,6 +13556,21 @@ class $$CommandReceiptRecordsTableAnnotationComposer
 
   GeneratedColumn<int> get commandVersion => $composableBuilder(
     column: $table.commandVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get commandType => $composableBuilder(
+    column: $table.commandType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get commandFingerprint => $composableBuilder(
+    column: $table.commandFingerprint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get issuedAtMicros => $composableBuilder(
+    column: $table.issuedAtMicros,
     builder: (column) => column,
   );
 
@@ -10606,6 +13649,9 @@ class $$CommandReceiptRecordsTableTableManager
                 Value<String> sessionId = const Value.absent(),
                 Value<String> commandId = const Value.absent(),
                 Value<int> commandVersion = const Value.absent(),
+                Value<String?> commandType = const Value.absent(),
+                Value<String?> commandFingerprint = const Value.absent(),
+                Value<int?> issuedAtMicros = const Value.absent(),
                 Value<String> outcome = const Value.absent(),
                 Value<DateTime> processedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -10613,6 +13659,9 @@ class $$CommandReceiptRecordsTableTableManager
                 sessionId: sessionId,
                 commandId: commandId,
                 commandVersion: commandVersion,
+                commandType: commandType,
+                commandFingerprint: commandFingerprint,
+                issuedAtMicros: issuedAtMicros,
                 outcome: outcome,
                 processedAt: processedAt,
                 rowid: rowid,
@@ -10622,6 +13671,9 @@ class $$CommandReceiptRecordsTableTableManager
                 required String sessionId,
                 required String commandId,
                 Value<int> commandVersion = const Value.absent(),
+                Value<String?> commandType = const Value.absent(),
+                Value<String?> commandFingerprint = const Value.absent(),
+                Value<int?> issuedAtMicros = const Value.absent(),
                 required String outcome,
                 required DateTime processedAt,
                 Value<int> rowid = const Value.absent(),
@@ -10629,6 +13681,9 @@ class $$CommandReceiptRecordsTableTableManager
                 sessionId: sessionId,
                 commandId: commandId,
                 commandVersion: commandVersion,
+                commandType: commandType,
+                commandFingerprint: commandFingerprint,
+                issuedAtMicros: issuedAtMicros,
                 outcome: outcome,
                 processedAt: processedAt,
                 rowid: rowid,
@@ -11920,7 +14975,7 @@ typedef $$MediaPromotionRecordsTableCreateCompanionBuilder =
       required String commandId,
       required String mediaId,
       required String sessionId,
-      required String roomNumber,
+      Value<String?> roomNumber,
       Value<String?> assignmentId,
       required String kind,
       required String stagedRelativePath,
@@ -11950,7 +15005,7 @@ typedef $$MediaPromotionRecordsTableUpdateCompanionBuilder =
       Value<String> commandId,
       Value<String> mediaId,
       Value<String> sessionId,
-      Value<String> roomNumber,
+      Value<String?> roomNumber,
       Value<String?> assignmentId,
       Value<String> kind,
       Value<String> stagedRelativePath,
@@ -12512,7 +15567,7 @@ class $$MediaPromotionRecordsTableTableManager
                 Value<String> commandId = const Value.absent(),
                 Value<String> mediaId = const Value.absent(),
                 Value<String> sessionId = const Value.absent(),
-                Value<String> roomNumber = const Value.absent(),
+                Value<String?> roomNumber = const Value.absent(),
                 Value<String?> assignmentId = const Value.absent(),
                 Value<String> kind = const Value.absent(),
                 Value<String> stagedRelativePath = const Value.absent(),
@@ -12570,7 +15625,7 @@ class $$MediaPromotionRecordsTableTableManager
                 required String commandId,
                 required String mediaId,
                 required String sessionId,
-                required String roomNumber,
+                Value<String?> roomNumber = const Value.absent(),
                 Value<String?> assignmentId = const Value.absent(),
                 required String kind,
                 required String stagedRelativePath,
@@ -12695,6 +15750,11 @@ typedef $$MediaPromotionRecordsTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
+  $$HousekeeperCatalogRecordsTableTableManager get housekeeperCatalogRecords =>
+      $$HousekeeperCatalogRecordsTableTableManager(
+        _db,
+        _db.housekeeperCatalogRecords,
+      );
   $$WorkSessionRecordsTableTableManager get workSessionRecords =>
       $$WorkSessionRecordsTableTableManager(_db, _db.workSessionRecords);
   $$HousekeeperRecordsTableTableManager get housekeeperRecords =>
@@ -12705,6 +15765,10 @@ class $AppDatabaseManager {
       $$RoomStateRecordsTableTableManager(_db, _db.roomStateRecords);
   $$RoomNoteRecordsTableTableManager get roomNoteRecords =>
       $$RoomNoteRecordsTableTableManager(_db, _db.roomNoteRecords);
+  $$AssignmentNoteRecordsTableTableManager get assignmentNoteRecords =>
+      $$AssignmentNoteRecordsTableTableManager(_db, _db.assignmentNoteRecords);
+  $$CartConsumableRecordsTableTableManager get cartConsumableRecords =>
+      $$CartConsumableRecordsTableTableManager(_db, _db.cartConsumableRecords);
   $$HistoryEventRecordsTableTableManager get historyEventRecords =>
       $$HistoryEventRecordsTableTableManager(_db, _db.historyEventRecords);
   $$CommandReceiptRecordsTableTableManager get commandReceiptRecords =>

@@ -2,6 +2,24 @@ import 'package:drift/drift.dart';
 
 // App-wide canonical work-session projection.
 
+@DataClassName('HousekeeperCatalogRow')
+class HousekeeperCatalogRecords extends Table {
+  TextColumn get id => text()();
+  TextColumn get displayName => text()();
+  TextColumn get paletteKey => text()();
+  IntColumn get sortOrder => integer()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {sortOrder},
+  ];
+}
+
 @DataClassName('WorkSessionRow')
 class WorkSessionRecords extends Table {
   TextColumn get id => text()();
@@ -40,6 +58,7 @@ class WorkAssignmentRecords extends Table {
   TextColumn get id => text()();
   IntColumn get cartNumber => integer()();
   TextColumn get housekeeperId => text()();
+  TextColumn get territoryId => text().nullable()();
   DateTimeColumn get assignedAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();

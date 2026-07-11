@@ -12,6 +12,24 @@ final class WorkSessionCommandHandler {
     WorkSessionCommand command,
   ) async {
     final result = switch (command) {
+      final ToggleHousekeeperWorkItemCommand command =>
+        session.toggleHousekeeperWorkItem(
+          housekeeperId: command.housekeeperId,
+          displayName: command.displayName,
+          paletteKey: command.paletteKey,
+          changedAt: command.issuedAt,
+        ),
+      final SetAssignmentTerritoryCommand command =>
+        session.setAssignmentTerritory(
+          assignmentId: command.assignmentId,
+          territoryId: command.territoryId,
+          changedAt: command.issuedAt,
+        ),
+      final ToggleRoomSelectionCommand command => session.toggleRoomSelection(
+        assignmentId: command.assignmentId,
+        roomNumber: command.roomNumber,
+        changedAt: command.issuedAt,
+      ),
       final AssignRoomCommand command => session.assignRoom(
         assignmentId: command.assignmentId,
         roomNumber: command.roomNumber,
@@ -25,6 +43,7 @@ final class WorkSessionCommandHandler {
       final ReplaceAllRoomAssignmentsCommand command =>
         session.replaceAllRoomAssignments(
           roomNumbers: command.roomNumbers,
+          housekeepers: command.housekeepers,
           changedAt: command.issuedAt,
         ),
       final LockWorkdayCommand command => _asMutation(

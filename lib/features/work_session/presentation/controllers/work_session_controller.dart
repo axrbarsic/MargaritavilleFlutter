@@ -10,14 +10,30 @@ import '../../application/commands/work_session_command.dart';
 import '../../application/ports/room_schedule_notification_client.dart';
 import '../../application/work_session_command_handler.dart';
 import '../../application/work_session_seed.dart';
+import '../../data/repositories/drift_housekeeper_catalog_repository.dart';
 import '../../data/repositories/drift_work_session_repository.dart';
+import '../../domain/models/housekeeper.dart';
 import '../../domain/models/work_session.dart';
+import '../../domain/repositories/housekeeper_catalog_repository.dart';
 import '../../domain/repositories/work_session_repository.dart';
 
 final clockProvider = Provider<Clock>((ref) => const SystemClock());
 
 final workSessionRepositoryProvider = Provider<WorkSessionRepository>((ref) {
   return DriftWorkSessionRepository(ref.watch(appDatabaseProvider));
+});
+
+final housekeeperCatalogRepositoryProvider =
+    Provider<HousekeeperCatalogRepository>((ref) {
+      return DriftHousekeeperCatalogRepository(ref.watch(appDatabaseProvider));
+    });
+
+final housekeeperCatalogProvider = FutureProvider<List<Housekeeper>>((
+  ref,
+) async {
+  final repository = ref.watch(housekeeperCatalogRepositoryProvider);
+  await repository.ensureDefaults(ref.watch(clockProvider).now());
+  return repository.loadActive();
 });
 
 final roomScheduleNotificationClientProvider =
@@ -36,6 +52,9 @@ final class WorkSessionController extends AsyncNotifier<WorkSession> {
 
   @override
   Future<WorkSession> build() async {
+    await ref
+        .watch(housekeeperCatalogRepositoryProvider)
+        .ensureDefaults(ref.watch(clockProvider).now());
     final repository = ref.watch(workSessionRepositoryProvider);
     final existing = await repository.loadLatestSession();
     if (existing != null) return existing;
@@ -48,25 +67,47 @@ final class WorkSessionController extends AsyncNotifier<WorkSession> {
   Future<WorkSessionMutationStatus> toggleRoomSelection({
     required String assignmentId,
     required String roomNumber,
-  }) async {
-    final current = state.requireValue;
-    final assignment = current.assignment(assignmentId);
-    final isSelected = assignment?.room(roomNumber) != null;
-    final issuedAt = _nextTimestamp();
-    final command = isSelected
-        ? UnassignRoomCommand(
-            commandId: _commandId(),
-            issuedAt: issuedAt,
-            assignmentId: assignmentId,
-            roomNumber: roomNumber,
-          )
-        : AssignRoomCommand(
-            commandId: _commandId(),
-            issuedAt: issuedAt,
-            assignmentId: assignmentId,
-            roomNumber: roomNumber,
-          );
-    return _execute(command);
+  }) {
+    return _execute(
+      ToggleRoomSelectionCommand(
+        commandId: _commandId(),
+        issuedAt: _nextTimestamp(),
+        assignmentId: assignmentId,
+        roomNumber: roomNumber,
+      ),
+    );
+  }
+
+  Future<String?> toggleHousekeeperWorkItem(Housekeeper housekeeper) async {
+    final previous = state.requireValue.assignmentForHousekeeper(
+      housekeeper.id,
+    );
+    final status = await _execute(
+      ToggleHousekeeperWorkItemCommand(
+        commandId: _commandId(),
+        issuedAt: _nextTimestamp(),
+        housekeeperId: housekeeper.id,
+        displayName: housekeeper.displayName,
+        paletteKey: housekeeper.paletteKey,
+      ),
+    );
+    if (status != WorkSessionMutationStatus.changed) return null;
+    if (previous != null) return '';
+    return state.requireValue.assignmentForHousekeeper(housekeeper.id)?.id;
+  }
+
+  Future<WorkSessionMutationStatus> setAssignmentTerritory({
+    required String assignmentId,
+    required String territoryId,
+  }) {
+    return _execute(
+      SetAssignmentTerritoryCommand(
+        commandId: _commandId(),
+        issuedAt: _nextTimestamp(),
+        assignmentId: assignmentId,
+        territoryId: territoryId,
+      ),
+    );
   }
 
   Future<WorkSessionMutationStatus> lockWorkday() {
@@ -83,15 +124,22 @@ final class WorkSessionController extends AsyncNotifier<WorkSession> {
 
   Future<WorkSessionMutationStatus> activateAllRoomsForTesting({
     Random? random,
-  }) {
+  }) async {
+    final generator = random ?? Random();
+    final issuedAt = _nextTimestamp();
     final roomNumbers = const AllRoomsTestDataGenerator().shuffledRoomNumbers(
-      random ?? Random(),
+      generator,
     );
+    final housekeepers = await ref
+        .read(housekeeperCatalogRepositoryProvider)
+        .loadActive();
+    housekeepers.shuffle(generator);
     return _execute(
       ReplaceAllRoomAssignmentsCommand(
         commandId: _commandId(),
-        issuedAt: _nextTimestamp(),
+        issuedAt: issuedAt,
         roomNumbers: roomNumbers,
+        housekeepers: housekeepers,
       ),
     );
   }

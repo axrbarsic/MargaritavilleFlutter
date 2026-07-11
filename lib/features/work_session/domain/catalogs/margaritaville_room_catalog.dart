@@ -6,6 +6,15 @@ final class RoomTerritory {
 }
 
 abstract final class MargaritavilleRoomCatalog {
+  static const preferredTerritoryByCart = <int, String>{
+    1: 'A1',
+    2: 'B1',
+    3: 'A2',
+    4: 'B2',
+    5: 'A3',
+    6: 'B3',
+  };
+
   static final territories = <RoomTerritory>[
     RoomTerritory(
       id: 'A1',
@@ -228,6 +237,36 @@ abstract final class MargaritavilleRoomCatalog {
   );
 
   static bool contains(String roomNumber) => roomNumbers.contains(roomNumber);
+
+  static RoomTerritory? territory(String territoryId) {
+    for (final territory in territories) {
+      if (territory.id == territoryId) return territory;
+    }
+    return null;
+  }
+
+  static RoomTerritory? territoryForRoom(String roomNumber) {
+    final normalized = roomNumber.trim();
+    for (final territory in territories) {
+      if (territory.rooms.contains(normalized)) return territory;
+    }
+    return null;
+  }
+
+  static String preferredTerritoryId(
+    int cartNumber, {
+    Iterable<String> boundTerritoryIds = const [],
+  }) {
+    final preferred = preferredTerritoryByCart[cartNumber];
+    if (preferred != null && territory(preferred) != null) return preferred;
+    final bound = boundTerritoryIds.toSet();
+    return territories
+        .firstWhere(
+          (value) => !bound.contains(value.id),
+          orElse: () => territories.first,
+        )
+        .id;
+  }
 
   static List<String> _ids(List<int> values) {
     return List.unmodifiable(values.map((value) => '$value'));

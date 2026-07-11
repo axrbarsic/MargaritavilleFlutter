@@ -36,7 +36,7 @@ PendingRoomMediaPromotion _mapPromotion(MediaPromotionRow row) =>
       media: RoomMediaItem(
         id: row.mediaId,
         sessionId: row.sessionId,
-        roomNumber: row.roomNumber,
+        roomNumber: row.roomNumber!,
         assignmentId: row.assignmentId,
         kind: RoomMediaKind.values.byName(row.kind),
         relativePath: row.finalRelativePath,
@@ -68,7 +68,7 @@ MediaPromotionRecordsCompanion _promotionCompanion(
     commandId: promotion.commandId,
     mediaId: media.id,
     sessionId: media.sessionId,
-    roomNumber: media.roomNumber,
+    roomNumber: Value(media.roomNumber),
     assignmentId: Value(media.assignmentId),
     kind: media.kind.name,
     stagedRelativePath: promotion.stagedRelativePath,
@@ -111,6 +111,22 @@ void _validatePromotion(PendingRoomMediaPromotion promotion) {
 String _eventId(RoomDetailsCommand command) =>
     'room:${command.sessionId}:${command.commandId}';
 
+CommandLedgerEnvelope _ledgerEnvelope(RoomDetailsCommand command) {
+  return CommandLedgerEnvelope(
+    sessionId: command.sessionId,
+    commandId: command.commandId,
+    commandVersion: command.commandVersion,
+    commandType: _eventType(command),
+    commandFingerprint: CommandLedgerEnvelope.fingerprint(
+      _commandFingerprintPayload(command),
+    ),
+    issuedAt: command.issuedAt,
+    eventId: _eventId(command),
+    eventType: _eventType(command),
+    eventPayload: _eventPayload(command),
+  );
+}
+
 String _eventType(RoomDetailsCommand command) => switch (command) {
   SaveRoomNoteCommand() => 'room.note.updated',
   AddRoomMediaCommand() => 'room.media.added',
@@ -123,6 +139,21 @@ Map<String, Object?> _eventPayload(RoomDetailsCommand command) => {
     'mediaId': media.id,
     'kind': media.kind.name,
     'checksumSha256': media.checksumSha256,
+  },
+  if (command case DeleteRoomMediaCommand(:final mediaId)) 'mediaId': mediaId,
+};
+
+Map<String, Object?> _commandFingerprintPayload(RoomDetailsCommand command) => {
+  'roomNumber': command.roomNumber,
+  if (command case SaveRoomNoteCommand(:final text)) 'text': text,
+  if (command case AddRoomMediaCommand(:final media)) ...{
+    'mediaId': media.id,
+    'kind': media.kind.name,
+    'relativePath': media.relativePath,
+    'checksumSha256': media.checksumSha256,
+    'originDeviceId': media.originDeviceId,
+    'createdAtMicros': media.createdAt.microsecondsSinceEpoch,
+    'transcript': media.transcript,
   },
   if (command case DeleteRoomMediaCommand(:final mediaId)) 'mediaId': mediaId,
 };

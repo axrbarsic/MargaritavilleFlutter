@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/room_details/application/media/room_media_garbage_collector.dart';
 import 'package:margaritaville_flutter/features/room_details/application/media/room_media_promotion_recovery.dart';
@@ -79,6 +81,23 @@ void main() {
       expect(repository.quarantined, ['operation-poison']);
     },
   );
+
+  test('startup exposes a timeout instead of loading forever', () async {
+    final store = _ArtifactStore(failingMediaId: 'none');
+    final startup = RoomMediaStartupRecovery(
+      promotionRecovery: RoomMediaPromotionRecovery(
+        artifactStore: store,
+        repository: _NeverCompletingPromotionRepository(),
+      ),
+      garbageCollector: RoomMediaGarbageCollector(
+        artifactStore: store,
+        repository: const _GarbageRepository([]),
+      ),
+      promotionTimeout: const Duration(milliseconds: 20),
+    );
+
+    await expectLater(startup.run(), throwsA(isA<TimeoutException>()));
+  });
 }
 
 PendingRoomMediaPromotion _promotion(String id) => PendingRoomMediaPromotion(
@@ -138,6 +157,30 @@ final class _PromotionRepository implements RoomMediaPromotionRepository {
   }) async {
     quarantined.add(operationId);
   }
+
+  @override
+  Future<void> stageMediaPromotion(PendingRoomMediaPromotion promotion) async {}
+}
+
+final class _NeverCompletingPromotionRepository
+    implements RoomMediaPromotionRepository {
+  @override
+  Future<RoomDetailsCommitStatus> completeMediaPromotion(String operationId) =>
+      Completer<RoomDetailsCommitStatus>().future;
+
+  @override
+  Future<void> discardMediaPromotion(String operationId) async {}
+
+  @override
+  Future<List<PendingRoomMediaPromotion>> pendingMediaPromotions() =>
+      Completer<List<PendingRoomMediaPromotion>>().future;
+
+  @override
+  Future<void> quarantineMediaPromotion(
+    String operationId, {
+    required String reason,
+    required DateTime detectedAt,
+  }) async {}
 
   @override
   Future<void> stageMediaPromotion(PendingRoomMediaPromotion promotion) async {}

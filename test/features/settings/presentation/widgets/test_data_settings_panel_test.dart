@@ -19,7 +19,7 @@ void main() {
 
     expect(find.text('Заменить текущие назначения?'), findsOneWidget);
     expect(
-      find.textContaining('Все текущие назначения, статусы, VIP и расписание'),
+      find.textContaining('Уже существующие статусы, VIP и расписание'),
       findsOneWidget,
     );
     await tester.tap(find.text('Отмена'));

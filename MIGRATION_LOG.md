@@ -1156,3 +1156,95 @@ haptics. Физический Pixel сейчас заблокирован, по�
   и доказывает публикацию уже verified final photo без quarantine. Profile v6
   прошла guard восьми IOS frameworks и установлена с сохранением data container;
   физический запуск ожидает только разблокировки iPhone.
+
+## 2026-07-11 — Физический startup incident и начало Checkpoint 15
+
+- На разблокированном iPhone 17 Pro Max старая сохранённая v6-копия снова
+  оставалась на «Проверяю локальные медиа...». Снятый по Wi-Fi контейнер доказал:
+  SQLite `integrity_check=ok`, `user_version=6`, один pending promotion, final
+  JPEG существует, его размер `1 792 104` байта и SHA-256 точно совпадает с
+  durable journal. Потери или повреждения байтов не было; зависал сам startup
+  recovery/доступ к контейнеру. Диагностический снимок сохранён во временном
+  `/tmp/margaritaville-device-live` и не является частью репозитория.
+- Alex явно разрешил не сохранять данные этой тестовой iPhone-копии. Старое
+  приложение вместе с data container удалено, свежая profile-сборка прошла
+  deep codesign и bundle guard восьми IOS frameworks, установлена и запущена.
+  Повторный physical audit: ровно один Runner, `integrity_check=ok`, schema v7,
+  одна начальная смена, `pending_media=0`. Startup gate больше не висит.
+- Чтобы аналогичный I/O/SQLite stall больше не оставлял бесконечный loading,
+  startup recovery получил явные bounded deadlines: 8 секунд на promotion и
+  4 секунды на garbage collection. Timeout переводит gate в существующее
+  русское error/retry-состояние и не удаляет данные автоматически.
+- Checkpoint 15 начат через общий фундамент Cart Details: runtime-валидируемый
+  `ContentOwnerRef`, Drift v7 с assignment notes, шестью donor-расходниками и
+  микросекундным LWW, XOR-owner constraints для manifest/promotion и общий
+  transactional content ledger с command fingerprint. Независимый challenger
+  запретил преждевременно переводить все work-session commands: destructive
+  graph writer сначала должен быть заменён на diff/upsert, иначе assignment FK
+  или каскады сотрут Cart Details при обычной мутации смены.
+
+## 2026-07-11 — Work Setup build 37: каталог, тележки и физический v9
+
+- После прямого повторного аудита Swift build 37 исправлена прежняя ложная
+  модель «две заранее созданные уборщицы». Свежая смена теперь имеет ноль
+  тележек, но показывает отдельный полный каталог из 20 уборщиц. Тап по имени
+  создаёт первый свободный cart `1...100`, повторный тап удаляет work item и его
+  комнаты. Предпочтительные зоны перенесены точно: `1→A1`, `2→B1`, `3→A2`,
+  `4→B2`, `5→A3`, `6→B3`; зона хранится отдельно у каждой тележки, а её смена
+  не удаляет комнаты прежней зоны.
+- Drift v9 получил независимый `housekeeper_catalog_records`: точный порядок и
+  внутренние ID всех 20 записей донора, soft delete и persistence
+  переименования. Повторный default seed не перезаписывает пользовательское имя
+  и не воскрешает удалённую запись. Hydration действующей смены разрешает имя и
+  палитру через актуальный каталог, поэтому переименование отражается на уже
+  назначенной тележке после reload.
+- Выбор комнаты теперь является одной `ToggleRoomSelectionCommand`, решение
+  add/remove принимается внутри общей serialized command lane. Тест двух быстрых
+  тапов доказывает две последовательные инверсии без lost update. Номер другой
+  тележки disabled в UI и дополнительно защищён доменным conflict guard.
+- Тест «все номера» использует полный persistent-каталог даже при пустой смене,
+  распределяет весь номерной фонд round-robin и выбирает начальную зону по
+  первой отсортированной комнате, как donor. Существующие status, VIP, schedule
+  и timestamps сохраняются. Legacy несколько carts одного housekeeper
+  объединяются в одну Summary-секцию с общими rooms/territories.
+- Миграционные тесты покрывают прямые v2/v3/v4/v5/v6/v7/v8→v9, physical
+  intermediate v5, v7 assignment с `NULL territory_id` и fallback `cart 1→A1`,
+  а также v8→v9 seed каталога. Код разрезан на отдельные setup-actions и
+  migration helpers; file-size guard снова зелёный.
+- Полный software gate зелёный: format, analyze, `235` Flutter tests,
+  file-size, Drift reproducibility, architecture и Pigeon guards. Подписанная
+  profile-сборка прошла deep codesign и bundle guard восьми IOS frameworks,
+  установлена и запущена на физическом iPhone 17 Pro Max. Снятая с устройства
+  база: `integrity_check=ok`, `user_version=9`, одна смена и ровно 20 активных
+  catalog rows (`sort_order 0...19`) в точном порядке build 37. На устройстве
+  работает ровно один `/Runner.app/Runner`.
+- Открытые ограничения зафиксированы честно: редактор каталога add/rename/
+  palette/remove, donor-canonicalization, compact reorder и восстановление
+  defaults после удаления последней записи ещё не перенесены в Settings;
+  удаление catalog entry пока не снимает активную тележку. Setup-команды ещё не
+  переведены с destructive graph replace на общий durable
+  receipt/history/outbox ledger. Поэтому Work Setup logic smoke доказан, но
+  полный sync-ready parity пока не объявляется.
+
+## 2026-07-11 — Физический Pixel 8: repair промежуточной v3
+
+- Обновление profile build `0.1.0 (37)` поверх существующей Android beta
+  воспроизвело пользовательский экран «Не удалось восстановить локальные
+  медиа». Снятая через `run-as` база Pixel 8 была целой
+  (`integrity_check=ok`), но имела `user_version=3` без физической таблицы
+  `command_receipt_records`. Первая попытка v3→v9 доходила до добавления v7
+  columns в несуществующую таблицу, транзакция откатывалась, а recovery
+  показывал исходную SQLite-ошибку.
+- `_addReceiptV7ColumnsIfMissing` теперь распознаёт эту точную pre-release форму:
+  создаёт текущую receipt projection и неразрушающе восстанавливает уже
+  применённые `(session_id, command_id)` из append-only history перед
+  продолжением миграции. Отдельный migration test удаляет receipts из
+  canonical v3, сохраняет session/history и доказывает backfill плюс успешный
+  v3→v9 без потери смены.
+- Исправленный profile APK установлен поверх той же проблемной базы на
+  физический Pixel 8 `44171FDJH003R5`. Device log: startup recovery завершён за
+  `304 ms`, `recovered=0`, `quarantined=0`, SQLite/FATAL ошибок нет. Повторно
+  снятая база: `integrity_check=ok`, `user_version=9`, receipt table существует,
+  20 активных catalog rows и одна сохранённая смена. Физический screenshot
+  подтверждает главную матрицу вместо error/retry gate; видимы `Ana` и
+  `Kerlange`.

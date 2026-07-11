@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/work_session/application/all_rooms_test_data_generator.dart';
 import 'package:margaritaville_flutter/features/work_session/application/commands/work_session_command.dart';
 import 'package:margaritaville_flutter/features/work_session/application/work_session_command_handler.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_housekeeper_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
@@ -38,6 +39,7 @@ void main() {
         Random(42),
       );
       final handler = WorkSessionCommandHandler(repository);
+      final housekeepers = MargaritavilleHousekeeperCatalog.housekeepers(now);
 
       final result = await handler.execute(
         session,
@@ -45,6 +47,7 @@ void main() {
           commandId: 'all-rooms-1',
           issuedAt: now.add(const Duration(minutes: 1)),
           roomNumbers: roomNumbers,
+          housekeepers: housekeepers,
         ),
       );
 
@@ -57,17 +60,12 @@ void main() {
       expect(repository.writeCount, 1);
       expect(persisted.id, session.id);
       expect(persisted.workdayLocked, isTrue);
+      expect(persisted.activeAssignments, hasLength(housekeepers.length));
       expect(
-        persisted.activeAssignments.map((assignment) => assignment.id),
-        session.activeAssignments.map((assignment) => assignment.id),
-      );
-      expect(
-        persisted.activeAssignments.map(
-          (assignment) => assignment.housekeeper.id,
-        ),
-        session.activeAssignments.map(
-          (assignment) => assignment.housekeeper.id,
-        ),
+        persisted.activeAssignments
+            .map((assignment) => assignment.housekeeper.id)
+            .toSet(),
+        housekeepers.map((value) => value.id).toSet(),
       );
       expect(
         persistedRooms,
@@ -81,8 +79,84 @@ void main() {
         ),
         isTrue,
       );
+      for (final assignment in persisted.activeAssignments) {
+        final firstRoom =
+            assignment.activeRooms.map((room) => room.roomNumber).toList()
+              ..sort();
+        expect(
+          assignment.territoryId,
+          MargaritavilleRoomCatalog.territoryForRoom(firstRoom.first)?.id,
+        );
+      }
     },
   );
+
+  test('replacement preserves existing room status, VIP and schedule', () {
+    final dueAt = now.add(const Duration(hours: 2));
+    var session = _session(now);
+    session = session
+        .advanceRoom(
+          roomNumber: '101',
+          changedAt: now.add(const Duration(microseconds: 1)),
+        )
+        .session;
+    session = session
+        .setRoomVip(
+          roomNumber: '101',
+          isVip: true,
+          changedAt: now.add(const Duration(microseconds: 2)),
+        )
+        .session;
+    session = session
+        .setRoomSchedule(
+          roomNumber: '101',
+          scheduledFor: dueAt,
+          changedAt: now.add(const Duration(microseconds: 3)),
+        )
+        .session;
+
+    final result = session.replaceAllRoomAssignments(
+      roomNumbers: const AllRoomsTestDataGenerator().shuffledRoomNumbers(
+        Random(7),
+      ),
+      housekeepers: MargaritavilleHousekeeperCatalog.housekeepers(now),
+      changedAt: now.add(const Duration(minutes: 1)),
+    );
+
+    final preserved = result.session.room('101')!;
+    expect(preserved.phase.name, 'open');
+    expect(preserved.isVip, isTrue);
+    expect(preserved.scheduledFor, dueAt);
+    expect(preserved.timestamps.selectedAt, now);
+  });
+
+  test('replacement never creates carts outside the donor 1 to 100 range', () {
+    final housekeepers = [
+      for (var index = 1; index <= 101; index++)
+        Housekeeper(
+          id: 'housekeeper-$index',
+          displayName: 'Housekeeper $index',
+          paletteKey: 'ruby',
+          updatedAt: now,
+        ),
+    ];
+
+    final result = _session(now).replaceAllRoomAssignments(
+      roomNumbers: const AllRoomsTestDataGenerator().shuffledRoomNumbers(
+        Random(11),
+      ),
+      housekeepers: housekeepers,
+      changedAt: now.add(const Duration(minutes: 1)),
+    );
+
+    expect(result.session.activeAssignments, hasLength(100));
+    expect(
+      result.session.activeAssignments
+          .map((assignment) => assignment.cartNumber)
+          .reduce((left, right) => left > right ? left : right),
+      100,
+    );
+  });
 }
 
 WorkSession _session(DateTime now) {

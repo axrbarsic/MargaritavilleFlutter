@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show Value, Variable;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_housekeeper_catalog_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_work_session_repository.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
 import 'package:margaritaville_flutter/shared/persistence/app_database.dart';
 
@@ -138,6 +140,34 @@ void main() {
       expect(foreignKeyFailures, isEmpty);
     },
   );
+
+  test(
+    'active assignment resolves the current persistent catalog name',
+    () async {
+      final now = DateTime.utc(2027, 2, 10, 12);
+      final catalog = DriftHousekeeperCatalogRepository(database);
+      await catalog.ensureDefaults(now);
+      final session = _canonicalSession();
+      await repository.replaceSession(session);
+      final assignment = session.activeAssignments.first;
+      await catalog.save(
+        Housekeeper(
+          id: assignment.housekeeper.id,
+          displayName: 'Renamed in catalog',
+          paletteKey: assignment.housekeeper.paletteKey,
+          updatedAt: now.add(const Duration(minutes: 1)),
+        ),
+        sortOrder: 7,
+      );
+
+      final reloaded = await repository.loadSession(session.id);
+
+      expect(
+        reloaded?.activeAssignments.first.housekeeper.displayName,
+        'Renamed in catalog',
+      );
+    },
+  );
 }
 
 WorkSession _canonicalSession() {
@@ -203,7 +233,6 @@ Future<void> _insertSessionProjections(
         MediaManifestRecordsCompanion.insert(
           id: 'media-1',
           sessionId: sessionId,
-          assignmentId: const Value('cart-1'),
           roomNumber: const Value('101'),
           kind: 'photo',
           relativePath: 'rooms/101/photo.jpg',

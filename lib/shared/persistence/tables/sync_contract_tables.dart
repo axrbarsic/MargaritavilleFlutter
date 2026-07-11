@@ -25,6 +25,9 @@ class CommandReceiptRecords extends Table {
       text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
   TextColumn get commandId => text()();
   IntColumn get commandVersion => integer().withDefault(const Constant(1))();
+  TextColumn get commandType => text().nullable()();
+  TextColumn get commandFingerprint => text().nullable()();
+  IntColumn get issuedAtMicros => integer().nullable()();
   TextColumn get outcome => text()();
   DateTimeColumn get processedAt => dateTime()();
 
@@ -84,6 +87,13 @@ class MediaManifestRecords extends Table {
 
   @override
   Set<Column<Object>> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'CHECK ((room_number IS NOT NULL AND length(trim(room_number)) > 0 '
+        'AND assignment_id IS NULL) OR (room_number IS NULL AND '
+        'assignment_id IS NOT NULL AND length(trim(assignment_id)) > 0))',
+  ];
 }
 
 @DataClassName('MediaPromotionRow')
@@ -93,7 +103,7 @@ class MediaPromotionRecords extends Table {
   TextColumn get mediaId => text().unique()();
   TextColumn get sessionId =>
       text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
-  TextColumn get roomNumber => text()();
+  TextColumn get roomNumber => text().nullable()();
   TextColumn get assignmentId => text().nullable()();
   TextColumn get kind => text()();
   TextColumn get stagedRelativePath => text()();
@@ -118,4 +128,11 @@ class MediaPromotionRecords extends Table {
 
   @override
   Set<Column<Object>> get primaryKey => {operationId};
+
+  @override
+  List<String> get customConstraints => const [
+    'CHECK ((room_number IS NOT NULL AND length(trim(room_number)) > 0 '
+        'AND assignment_id IS NULL) OR (room_number IS NULL AND '
+        'assignment_id IS NOT NULL AND length(trim(assignment_id)) > 0))',
+  ];
 }

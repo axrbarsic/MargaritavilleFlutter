@@ -1,8 +1,7 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 
 import '../../../../shared/persistence/app_database.dart';
+import '../../../../shared/persistence/drift_command_ledger.dart';
 import '../../application/commands/room_details_command.dart';
 import '../../domain/models/pending_room_media_promotion.dart';
 import '../../domain/models/room_details_snapshot.dart';
@@ -56,94 +55,18 @@ final class DriftRoomDetailsRepository implements RoomDetailsRepository {
 
   @override
   Future<RoomDetailsCommitStatus> commit(RoomDetailsCommand command) =>
-      _database.transaction(() => _commit(command));
+      _commit(command);
 
   Future<RoomDetailsCommitStatus> _commit(RoomDetailsCommand command) async {
-    if (!await _claim(command)) {
-      return RoomDetailsCommitStatus.duplicate;
-    }
-    final changed = switch (command) {
-      final SaveRoomNoteCommand value => await _saveNote(value),
-      final AddRoomMediaCommand value => await _addMedia(value),
-      final DeleteRoomMediaCommand value => await _deleteMedia(value),
-    };
-    if (!changed) {
-      await _finishReceipt(command, RoomDetailsCommitStatus.ignored);
-      return RoomDetailsCommitStatus.ignored;
-    }
-    final eventId = _eventId(command);
-    await _database
-        .into(_database.historyEventRecords)
-        .insert(
-          HistoryEventRecordsCompanion.insert(
-            id: eventId,
-            sessionId: command.sessionId,
-            commandId: command.commandId,
-            eventType: _eventType(command),
-            payloadJson: jsonEncode(_eventPayload(command)),
-            happenedAt: command.issuedAt,
-          ),
-        );
-    await _database
-        .into(_database.syncOutboxRecords)
-        .insert(
-          SyncOutboxRecordsCompanion.insert(
-            eventId: eventId,
-            sessionId: command.sessionId,
-          ),
-        );
-    await _finishReceipt(command, RoomDetailsCommitStatus.applied);
-    return RoomDetailsCommitStatus.applied;
-  }
-
-  Future<bool> _claim(RoomDetailsCommand command) async {
-    final inserted = await _database
-        .into(_database.commandReceiptRecords)
-        .insertReturningOrNull(
-          CommandReceiptRecordsCompanion.insert(
-            sessionId: command.sessionId,
-            commandId: command.commandId,
-            commandVersion: Value(command.commandVersion),
-            outcome: 'processing',
-            processedAt: command.issuedAt,
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
-    if (inserted != null) return true;
-
-    final query = _database.select(_database.commandReceiptRecords)
-      ..where(
-        (row) =>
-            row.sessionId.equals(command.sessionId) &
-            row.commandId.equals(command.commandId),
-      )
-      ..limit(1);
-    final existing = await query.getSingle();
-    if (existing.commandVersion != command.commandVersion) {
-      throw StateError(
-        'Command ${command.commandId} version ${command.commandVersion} '
-        'conflicts with processed version ${existing.commandVersion}',
-      );
-    }
-    return false;
-  }
-
-  Future<void> _finishReceipt(
-    RoomDetailsCommand command,
-    RoomDetailsCommitStatus status,
-  ) {
-    final update = _database.update(_database.commandReceiptRecords)
-      ..where(
-        (row) =>
-            row.sessionId.equals(command.sessionId) &
-            row.commandId.equals(command.commandId),
-      );
-    return update.write(
-      CommandReceiptRecordsCompanion(
-        outcome: Value(status.name),
-        processedAt: Value(command.issuedAt),
-      ),
+    final status = await DriftCommandLedger(_database).commit(
+      envelope: _ledgerEnvelope(command),
+      mutate: () => switch (command) {
+        final SaveRoomNoteCommand value => _saveNote(value),
+        final AddRoomMediaCommand value => _addMedia(value),
+        final DeleteRoomMediaCommand value => _deleteMedia(value),
+      },
     );
+    return RoomDetailsCommitStatus.values.byName(status.name);
   }
 
   Future<bool> _saveNote(SaveRoomNoteCommand command) async {

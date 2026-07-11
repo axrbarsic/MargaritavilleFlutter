@@ -107,19 +107,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
 
   @override
   Widget build(BuildContext context) {
-    final sections = widget.session.activeAssignments
-        .map((assignment) {
-          final rooms = assignment.activeRooms
-              .where(
-                (room) =>
-                    _activeFilter == null ||
-                    room.displayStatus == _activeFilter,
-              )
-              .toList();
-          return (assignment: assignment, rooms: rooms);
-        })
-        .where((section) => section.rooms.isNotEmpty)
-        .toList();
+    final sections = _summarySections(widget.session, _activeFilter);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -235,4 +223,28 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
       widget.visualPolicy.vipHdrLightEnabled ||
       widget.visualPolicy.vipJellyEnabled ||
       widget.visualPolicy.statusPulseEnabled;
+}
+
+List<({WorkAssignment assignment, List<RoomState> rooms})> _summarySections(
+  WorkSession session,
+  RoomDisplayStatus? activeFilter,
+) {
+  final byHousekeeper =
+      <String, ({WorkAssignment assignment, List<RoomState> rooms})>{};
+  final assignments = session.activeAssignments.toList()
+    ..sort((left, right) => left.cartNumber.compareTo(right.cartNumber));
+  for (final assignment in assignments) {
+    final section = byHousekeeper.putIfAbsent(
+      assignment.housekeeper.id,
+      () => (assignment: assignment, rooms: <RoomState>[]),
+    );
+    section.rooms.addAll(
+      assignment.activeRooms.where(
+        (room) => activeFilter == null || room.displayStatus == activeFilter,
+      ),
+    );
+  }
+  return byHousekeeper.values
+      .where((section) => section.rooms.isNotEmpty)
+      .toList(growable: false);
 }

@@ -11,7 +11,7 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  test('canonical v5 to v6 is a lossless no-op', () async {
+  test('canonical v5 to v9 preserves journal and adds content owner', () async {
     final schema = await verifier.schemaAt(5);
     addTearDown(schema.close);
     _seedSession(schema);
@@ -32,7 +32,7 @@ void main() {
     ''');
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 6);
+    await verifier.migrateAndValidate(database, 9);
 
     final journal = await database.select(database.mediaPromotionRecords).get();
     expect(journal.single.operationId, 'operation-v5');
@@ -40,16 +40,14 @@ void main() {
     await database.close();
   });
 
-  test(
-    'intermediate physical v5 journal is repaired without data loss',
-    () async {
-      final schema = await verifier.schemaAt(5);
-      addTearDown(schema.close);
-      _seedSession(schema);
-      final raw = schema.rawDatabase;
-      raw.execute('ALTER TABLE media_promotion_records RENAME TO canonical_v5');
-      raw.execute(_intermediateJournalSql);
-      raw.execute('''
+  test('intermediate physical v5 journal repairs safely into v9', () async {
+    final schema = await verifier.schemaAt(5);
+    addTearDown(schema.close);
+    _seedSession(schema);
+    final raw = schema.rawDatabase;
+    raw.execute('ALTER TABLE media_promotion_records RENAME TO canonical_v5');
+    raw.execute(_intermediateJournalSql);
+    raw.execute('''
       INSERT INTO media_promotion_records (
         operation_id, command_id, media_id, session_id, room_number, kind,
         staged_relative_path, final_relative_path, checksum_sha256, byte_length,
@@ -62,25 +60,22 @@ void main() {
         '2027-02-10T12:30:00.000Z', 'image/jpeg', 'jpg'
       )
     ''');
-      raw.execute('DROP TABLE canonical_v5');
+    raw.execute('DROP TABLE canonical_v5');
 
-      final database = AppDatabase.forTesting(schema.newConnection());
-      await verifier.migrateAndValidate(database, 6);
+    final database = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(database, 9);
 
-      final journal = await database
-          .select(database.mediaPromotionRecords)
-          .get();
-      expect(journal, hasLength(1));
-      expect(journal.single.operationId, 'operation-v5');
-      expect(
-        journal.single.transientFilePath,
-        '/tmp/margaritaville-recovery-missing-source',
-      );
-      expect(journal.single.quarantinedAt, isNull);
-      expect(journal.single.failureReason, isNull);
-      await database.close();
-    },
-  );
+    final journal = await database.select(database.mediaPromotionRecords).get();
+    expect(journal, hasLength(1));
+    expect(journal.single.operationId, 'operation-v5');
+    expect(
+      journal.single.transientFilePath,
+      '/tmp/margaritaville-recovery-missing-source',
+    );
+    expect(journal.single.quarantinedAt, isNull);
+    expect(journal.single.failureReason, isNull);
+    await database.close();
+  });
 }
 
 void _seedSession(InitializedSchema schema) {
