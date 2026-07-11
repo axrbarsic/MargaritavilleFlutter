@@ -1,5 +1,77 @@
 import 'package:flutter/material.dart';
 
+final class AppearanceSettingSegmentedRow<T extends Object>
+    extends StatelessWidget {
+  const AppearanceSettingSegmentedRow({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.segments,
+    required this.value,
+    required this.onChanged,
+    super.key,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<ButtonSegment<T>> segments;
+  final T value;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(icon, color: const Color(0xFF7BFFA4), size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFFB8C9BD),
+                        fontSize: 12.5,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SegmentedButton<T>(
+            segments: segments,
+            selected: {value},
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) => onChanged(selection.single),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 final class AppearanceSettingToggleRow extends StatelessWidget {
   const AppearanceSettingToggleRow({
     required this.title,

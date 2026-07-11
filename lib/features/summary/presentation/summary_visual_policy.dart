@@ -1,3 +1,12 @@
+enum SummaryGridColumns {
+  four(4),
+  three(3);
+
+  const SummaryGridColumns(this.count);
+
+  final int count;
+}
+
 final class SummaryVisualPolicy {
   const SummaryVisualPolicy({
     this.liveCellsEnabled = false,
@@ -8,6 +17,7 @@ final class SummaryVisualPolicy {
     this.sdrGlowEnabled = true,
     this.vipJellySpeed = 0.75,
     this.springIntensity = 0.72,
+    this.gridColumns = SummaryGridColumns.four,
   });
 
   static const balanced = SummaryVisualPolicy();
@@ -20,6 +30,7 @@ final class SummaryVisualPolicy {
   final bool sdrGlowEnabled;
   final double vipJellySpeed;
   final double springIntensity;
+  final SummaryGridColumns gridColumns;
 
   bool get transientPulseEnabled => liveCellsEnabled || statusPulseEnabled;
 }

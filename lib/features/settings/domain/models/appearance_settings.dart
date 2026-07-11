@@ -1,4 +1,5 @@
 import 'app_background_mode.dart';
+import 'summary_grid_preference.dart';
 
 final class AppearanceSettings {
   const AppearanceSettings({
@@ -9,6 +10,7 @@ final class AppearanceSettings {
     required this.vipHdrLightEnabled,
     required this.statusHdrPulseEnabled,
     required this.vividStatusPaletteEnabled,
+    this.summaryGridPreference = SummaryGridPreference.four,
     this.backgroundMode = AppBackgroundMode.matrixRain,
     this.matrixSpeed = 1,
   });
@@ -21,6 +23,7 @@ final class AppearanceSettings {
     vipHdrLightEnabled: false,
     statusHdrPulseEnabled: false,
     vividStatusPaletteEnabled: true,
+    summaryGridPreference: SummaryGridPreference.four,
     backgroundMode: AppBackgroundMode.matrixRain,
     matrixSpeed: 1,
   );
@@ -32,6 +35,7 @@ final class AppearanceSettings {
   final bool vipHdrLightEnabled;
   final bool statusHdrPulseEnabled;
   final bool vividStatusPaletteEnabled;
+  final SummaryGridPreference summaryGridPreference;
   final AppBackgroundMode backgroundMode;
   final double matrixSpeed;
 
@@ -43,6 +47,7 @@ final class AppearanceSettings {
     bool? vipHdrLightEnabled,
     bool? statusHdrPulseEnabled,
     bool? vividStatusPaletteEnabled,
+    SummaryGridPreference? summaryGridPreference,
     AppBackgroundMode? backgroundMode,
     double? matrixSpeed,
   }) {
@@ -56,6 +61,8 @@ final class AppearanceSettings {
           statusHdrPulseEnabled ?? this.statusHdrPulseEnabled,
       vividStatusPaletteEnabled:
           vividStatusPaletteEnabled ?? this.vividStatusPaletteEnabled,
+      summaryGridPreference:
+          summaryGridPreference ?? this.summaryGridPreference,
       backgroundMode: backgroundMode ?? this.backgroundMode,
       matrixSpeed: matrixSpeed ?? this.matrixSpeed,
     );
@@ -79,6 +86,7 @@ final class AppearanceSettings {
         other.vipHdrLightEnabled == vipHdrLightEnabled &&
         other.statusHdrPulseEnabled == statusHdrPulseEnabled &&
         other.vividStatusPaletteEnabled == vividStatusPaletteEnabled &&
+        other.summaryGridPreference == summaryGridPreference &&
         other.backgroundMode == backgroundMode &&
         other.matrixSpeed == matrixSpeed;
   }
@@ -92,6 +100,7 @@ final class AppearanceSettings {
     vipHdrLightEnabled,
     statusHdrPulseEnabled,
     vividStatusPaletteEnabled,
+    summaryGridPreference,
     backgroundMode,
     matrixSpeed,
   );

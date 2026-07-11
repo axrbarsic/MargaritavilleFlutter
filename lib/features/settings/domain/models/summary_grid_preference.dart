@@ -1,0 +1,1 @@
+enum SummaryGridPreference { four, three }

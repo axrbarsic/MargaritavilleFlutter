@@ -1,6 +1,7 @@
 import '../../../../shared/persistence/settings_key_value_store.dart';
 import '../../domain/models/app_background_mode.dart';
 import '../../domain/models/appearance_settings.dart';
+import '../../domain/models/summary_grid_preference.dart';
 import '../../domain/repositories/appearance_settings_repository.dart';
 
 final class PreferencesAppearanceSettingsRepository
@@ -21,6 +22,8 @@ final class PreferencesAppearanceSettingsRepository
       'margaritaville.appearance.status_hdr_pulse_enabled.v1';
   static const vividStatusPaletteEnabledKey =
       'margaritaville.appearance.vivid_status_palette_enabled.v1';
+  static const summaryGridPreferenceKey =
+      'margaritaville.appearance.summary_grid_columns.v1';
   static const backgroundModeKey =
       'margaritaville.appearance.background_mode.v1';
   static const matrixSpeedKey = 'margaritaville.appearance.matrix_speed.v1';
@@ -50,6 +53,9 @@ final class PreferencesAppearanceSettingsRepository
       vividStatusPaletteEnabled:
           await _store.readBool(vividStatusPaletteEnabledKey) ??
           defaults.vividStatusPaletteEnabled,
+      summaryGridPreference: _summaryGridPreference(
+        await _store.readString(summaryGridPreferenceKey),
+      ),
       backgroundMode: _backgroundMode(
         await _store.readString(backgroundModeKey),
       ),
@@ -72,6 +78,10 @@ final class PreferencesAppearanceSettingsRepository
         vividStatusPaletteEnabledKey,
         value.vividStatusPaletteEnabled,
       ),
+      _store.writeString(
+        summaryGridPreferenceKey,
+        value.summaryGridPreference.name,
+      ),
       _store.writeString(backgroundModeKey, value.backgroundMode.name),
       _store.writeDouble(matrixSpeedKey, value.matrixSpeed),
     ]);
@@ -82,5 +92,12 @@ final class PreferencesAppearanceSettingsRepository
       if (mode.name == rawValue) return mode;
     }
     return AppearanceSettings.defaults.backgroundMode;
+  }
+
+  SummaryGridPreference _summaryGridPreference(String? rawValue) {
+    for (final preference in SummaryGridPreference.values) {
+      if (preference.name == rawValue) return preference;
+    }
+    return AppearanceSettings.defaults.summaryGridPreference;
   }
 }

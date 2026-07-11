@@ -11,10 +11,10 @@ abstract final class SummaryLayoutTokens {
   static const gridColumns = 4;
   static const tileHeight = 98.0;
   static const tileCornerRadius = 16.0;
-  static double tileWidthForSection(double width) {
+  static double tileWidthForSection(double width, {int columns = gridColumns}) {
     const horizontalInsets = sectionPadding * 2;
-    const interColumnGaps = gridSpacing * (gridColumns - 1);
-    return ((width - horizontalInsets - interColumnGaps) / gridColumns)
+    final interColumnGaps = gridSpacing * (columns - 1);
+    return ((width - horizontalInsets - interColumnGaps) / columns)
         .clamp(0, double.infinity)
         .toDouble();
   }

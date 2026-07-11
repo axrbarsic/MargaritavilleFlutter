@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/app_background_mode.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
+import 'package:margaritaville_flutter/features/settings/domain/models/summary_grid_preference.dart';
 
 void main() {
   test('visual settings use the active Swift build 37 defaults', () {
@@ -14,6 +15,7 @@ void main() {
     expect(settings.statusHdrPulseEnabled, isFalse);
     expect(settings.backgroundMode, AppBackgroundMode.matrixRain);
     expect(settings.matrixSpeed, 1);
+    expect(settings.summaryGridPreference, SummaryGridPreference.four);
   });
 
   test('visual settings clamp donor-controlled ranges', () {

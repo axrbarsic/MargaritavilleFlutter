@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../work_session/presentation/controllers/work_session_controller.dart';
 import '../domain/models/appearance_settings.dart';
+import '../domain/models/summary_grid_preference.dart';
 import 'controllers/appearance_settings_controller.dart';
 import 'widgets/appearance_settings_controls.dart';
 import 'widgets/appearance_settings_panel.dart';
@@ -103,6 +104,27 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
           'Только активные режимы, которые можно реально оценить на основном экране.',
       child: Column(
         children: [
+          AppearanceSettingSegmentedRow<SummaryGridPreference>(
+            key: const Key('setting-summary-grid-columns'),
+            title: 'Ячеек в ряд',
+            subtitle:
+                '4 — точная donor-сетка; 3 — более широкие ячейки той же высоты.',
+            icon: Icons.grid_view_rounded,
+            segments: const [
+              ButtonSegment(
+                value: SummaryGridPreference.four,
+                label: Text('4'),
+              ),
+              ButtonSegment(
+                value: SummaryGridPreference.three,
+                label: Text('3'),
+              ),
+            ],
+            value: settings.summaryGridPreference,
+            onChanged: (value) =>
+                unawaited(controller.setSummaryGridPreference(value)),
+          ),
+          const Divider(height: 18),
           AppearanceSettingToggleRow(
             key: const Key('setting-live-cells'),
             title: 'Живые ячейки',

@@ -41,6 +41,13 @@ extension _EdrOverlaySynchronization on EdrOverlayController {
         !membershipMatches;
     try {
       if (configureContent) {
+        final layoutChanged =
+            _sentLayoutGeneration >= 0 &&
+            _sentLayoutGeneration != layoutGeneration;
+        if (layoutChanged) {
+          _pendingConfigurations.clear();
+          _replaceRenderedTiles(const {});
+        }
         final geometryRevision = ++_geometryRevision;
         final nextRenderedTiles = <String, GlobalKey>{
           for (final roomId in visibleRoomIds)

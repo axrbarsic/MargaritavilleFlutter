@@ -27,6 +27,7 @@ final class SummaryScreen extends ConsumerStatefulWidget {
     this.visualPolicy = SummaryVisualPolicy.balanced,
     this.onOpenSettings,
     this.scrollController,
+    this.edrController,
     super.key,
   });
 
@@ -35,6 +36,7 @@ final class SummaryScreen extends ConsumerStatefulWidget {
   final SummaryVisualPolicy visualPolicy;
   final VoidCallback? onOpenSettings;
   final ScrollController? scrollController;
+  final EdrOverlayController? edrController;
 
   @override
   ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
@@ -46,6 +48,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
   Timer? _scheduleTimer;
   late final SummaryVisualPulseCoordinator _visualPulses;
   late final EdrOverlayController _edrWindow;
+  late final bool _ownsEdrController;
   late final ScrollController _scrollController;
   late final bool _ownsScrollController;
   (double, double, double, AxisDirection)? _lastEdrLayoutMetrics;
@@ -58,7 +61,8 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
     _scrollController.addListener(_synchronizeEdrScrollOffset);
     _visualPulses = SummaryVisualPulseCoordinator()
       ..addListener(_onVisualEventsChanged);
-    _edrWindow = EdrOverlayController();
+    _ownsEdrController = widget.edrController == null;
+    _edrWindow = widget.edrController ?? EdrOverlayController();
     if (!widget.enableSchedulePolling) return;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -70,13 +74,24 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
   }
 
   @override
+  void didUpdateWidget(covariant SummaryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.visualPolicy.gridColumns == widget.visualPolicy.gridColumns) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _edrWindow.requestGeometrySync();
+    });
+  }
+
+  @override
   void dispose() {
     _scheduleTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _visualPulses
       ..removeListener(_onVisualEventsChanged)
       ..dispose();
-    _edrWindow.dispose();
+    if (_ownsEdrController) _edrWindow.dispose();
     _scrollController.removeListener(_synchronizeEdrScrollOffset);
     if (_ownsScrollController) _scrollController.dispose();
     super.dispose();

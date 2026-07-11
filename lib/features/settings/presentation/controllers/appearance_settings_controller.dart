@@ -6,6 +6,7 @@ import '../../../../shared/persistence/shared_preferences_settings_key_value_sto
 import '../../data/repositories/preferences_appearance_settings_repository.dart';
 import '../../domain/models/app_background_mode.dart';
 import '../../domain/models/appearance_settings.dart';
+import '../../domain/models/summary_grid_preference.dart';
 import '../../domain/repositories/appearance_settings_repository.dart';
 
 final appearanceSettingsRepositoryProvider =
@@ -56,6 +57,12 @@ final class AppearanceSettingsController
   Future<void> setVividStatusPaletteEnabled(bool enabled) {
     return _update(
       (value) => value.copyWith(vividStatusPaletteEnabled: enabled),
+    );
+  }
+
+  Future<void> setSummaryGridPreference(SummaryGridPreference preference) {
+    return _update(
+      (value) => value.copyWith(summaryGridPreference: preference),
     );
   }
 

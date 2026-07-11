@@ -6,6 +6,7 @@ import 'package:margaritaville_flutter/features/interaction/domain/margaritavill
 import 'package:margaritaville_flutter/features/interaction/domain/repositories/interaction_sound_settings_repository.dart';
 import 'package:margaritaville_flutter/features/interaction/presentation/controllers/interaction_sound_settings_controller.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
+import 'package:margaritaville_flutter/features/settings/domain/models/summary_grid_preference.dart';
 import 'package:margaritaville_flutter/features/settings/domain/repositories/appearance_settings_repository.dart';
 import 'package:margaritaville_flutter/features/settings/presentation/appearance_settings_screen.dart';
 import 'package:margaritaville_flutter/features/settings/presentation/controllers/appearance_settings_controller.dart';
@@ -91,6 +92,22 @@ void main() {
     await tester.ensureVisible(allRoomsAction);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('summary grid selector persists three columns', (tester) async {
+    final repository = _MemoryAppearanceSettingsRepository();
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+
+    final selector = find.byKey(const Key('setting-summary-grid-columns'));
+    await tester.ensureVisible(selector);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: selector, matching: find.text('3')).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(repository.value.summaryGridPreference, SummaryGridPreference.three);
   });
 }
 

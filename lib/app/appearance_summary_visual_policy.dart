@@ -1,4 +1,5 @@
 import '../features/settings/domain/models/appearance_settings.dart';
+import '../features/settings/domain/models/summary_grid_preference.dart';
 import '../features/summary/presentation/summary_visual_policy.dart';
 
 abstract final class AppearanceSummaryVisualPolicy {
@@ -11,6 +12,10 @@ abstract final class AppearanceSummaryVisualPolicy {
       vividStatusPaletteEnabled: settings.vividStatusPaletteEnabled,
       vipJellySpeed: settings.vipJellySpeed,
       springIntensity: settings.cellSpringIntensity,
+      gridColumns: switch (settings.summaryGridPreference) {
+        SummaryGridPreference.four => SummaryGridColumns.four,
+        SummaryGridPreference.three => SummaryGridColumns.three,
+      },
     );
   }
 }

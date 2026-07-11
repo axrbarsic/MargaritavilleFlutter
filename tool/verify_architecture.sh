@@ -229,6 +229,16 @@ if rg -n "scaleForSectionWidth|geometryScale" \
   failed=1
 fi
 
+if ! rg -U -q 'didUpdateWidget[\s\S]*gridColumns[\s\S]*requestGeometrySync' \
+    lib/features/summary/presentation/summary_screen.dart || \
+   ! rg -q 'layoutChanged' \
+    lib/shared/edr/edr_overlay_synchronization.dart || \
+   ! rg -q '_replaceRenderedTiles\(const \{\}\)' \
+    lib/shared/edr/edr_overlay_synchronization.dart; then
+  echo "ERROR: смена 4/3 колонок обязана сбрасывать EDR geometry и ownership до нового ready"
+  failed=1
+fi
+
 if rg -n "MethodChannel|BasicMessageChannel" \
   packages/interaction_foundation/lib \
   packages/interaction_foundation/ios/Classes \

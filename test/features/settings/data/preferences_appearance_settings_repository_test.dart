@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/settings/data/repositories/preferences_appearance_settings_repository.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/app_background_mode.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
+import 'package:margaritaville_flutter/features/settings/domain/models/summary_grid_preference.dart';
 import 'package:margaritaville_flutter/shared/persistence/settings_key_value_store.dart';
 
 void main() {
@@ -21,11 +22,12 @@ void main() {
       vividStatusPaletteEnabled: false,
       backgroundMode: AppBackgroundMode.off,
       matrixSpeed: 1.7,
+      summaryGridPreference: SummaryGridPreference.three,
     );
     await repository.save(expected);
 
     expect(await repository.load(), expected);
-    expect(store.values.length, 9);
+    expect(store.values.length, 10);
     expect(
       store.values.values,
       everyElement(isNot(isA<Map<Object?, Object?>>())),

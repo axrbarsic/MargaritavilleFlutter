@@ -44,6 +44,7 @@ final class SummaryAssignmentSection extends StatelessWidget {
         builder: (context, constraints) {
           final tileWidth = SummaryLayoutTokens.tileWidthForSection(
             constraints.maxWidth,
+            columns: visualPolicy.gridColumns.count,
           );
           return Padding(
             padding: const EdgeInsets.all(SummaryLayoutTokens.sectionPadding),
