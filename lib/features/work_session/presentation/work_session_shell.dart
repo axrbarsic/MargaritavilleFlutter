@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/appearance_summary_visual_policy.dart';
+import '../../housekeeper_catalog/presentation/controllers/housekeeper_catalog_controller.dart';
 import '../../settings/domain/models/appearance_settings.dart';
 import '../../settings/presentation/appearance_settings_screen.dart';
 import '../../settings/presentation/controllers/appearance_settings_controller.dart';
@@ -16,6 +17,7 @@ final class WorkSessionShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(workSessionControllerProvider);
     final appearance = ref.watch(appearanceSettingsControllerProvider);
+    final catalogById = ref.watch(housekeeperCatalogByIdProvider);
     final visualPolicy = AppearanceSummaryVisualPolicy.fromSettings(
       appearance.value ?? AppearanceSettings.defaults,
     );
@@ -25,6 +27,7 @@ final class WorkSessionShell extends ConsumerWidget {
               session: session,
               enableSchedulePolling: true,
               visualPolicy: visualPolicy,
+              housekeeperCatalogById: catalogById,
               onOpenSettings: () => _openSettings(context),
             )
           : WorkSetupScreen(session: session),

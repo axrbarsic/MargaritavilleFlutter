@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
+import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
 import '../../../work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../../../work_session/domain/models/work_assignment.dart';
@@ -15,6 +16,7 @@ import 'summary_minimum_scale_text.dart';
 final class SummaryAssignmentSection extends StatelessWidget {
   const SummaryAssignmentSection({
     required this.assignment,
+    this.housekeeper,
     required this.onAdvance,
     required this.onReset,
     required this.onToggleVip,
@@ -27,6 +29,7 @@ final class SummaryAssignmentSection extends StatelessWidget {
   });
 
   final WorkAssignment assignment;
+  final Housekeeper? housekeeper;
   final ValueChanged<RoomState> onAdvance;
   final ValueChanged<RoomState> onReset;
   final ValueChanged<RoomState> onToggleVip;
@@ -56,6 +59,7 @@ final class SummaryAssignmentSection extends StatelessWidget {
               children: [
                 SummaryAssignmentHeader(
                   assignment: assignment,
+                  housekeeper: housekeeper,
                   rooms: visibleRooms,
                 ),
                 const SizedBox(
@@ -99,24 +103,25 @@ final class SummaryAssignmentHeader extends StatelessWidget {
   const SummaryAssignmentHeader({
     required this.assignment,
     required this.rooms,
+    this.housekeeper,
     super.key,
   });
 
   final WorkAssignment assignment;
   final List<RoomState> rooms;
+  final Housekeeper? housekeeper;
 
   @override
   Widget build(BuildContext context) {
-    final palette = MargaritavilleColors.housekeeper(
-      assignment.housekeeper.paletteKey,
-    );
+    final resolved = housekeeper ?? assignment.housekeeper;
+    final palette = MargaritavilleColors.housekeeper(resolved.paletteKey);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
       children: [
         Flexible(
           child: DecoratedBox(
-            key: Key('summary-housekeeper-name-${assignment.housekeeper.id}'),
+            key: Key('summary-housekeeper-name-${resolved.id}'),
             decoration: BoxDecoration(
               color: Color.alphaBlend(
                 Colors.black.withValues(alpha: 0.34),
@@ -132,7 +137,7 @@ final class SummaryAssignmentHeader extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: SummaryMinimumScaleText(
-                text: assignment.housekeeper.displayName,
+                text: resolved.displayName,
                 style: SummaryTypography.housekeeperName(palette),
                 minimumScaleFactor: 0.62,
                 alignment: Alignment.centerLeft,

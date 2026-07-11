@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../housekeeper_catalog/presentation/widgets/housekeeper_catalog_settings_panel.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
 import '../domain/models/appearance_settings.dart';
 import '../domain/models/summary_grid_preference.dart';
@@ -28,6 +29,8 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
               sliver: SliverList.list(
                 children: [
                   _header(context),
+                  const SizedBox(height: 18),
+                  const HousekeeperCatalogSettingsPanel(),
                   const SizedBox(height: 18),
                   state.when(
                     data: (settings) => Column(
@@ -135,19 +138,6 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
             onChanged: (value) =>
                 unawaited(controller.setLiveCellsEnabled(value)),
           ),
-          if (settings.liveCellsEnabled)
-            AppearanceSettingSliderRow(
-              key: const Key('setting-spring-intensity'),
-              title: 'Сила пружины',
-              icon: Icons.open_with_rounded,
-              value: settings.cellSpringIntensity,
-              minimum: 0,
-              maximum: 1,
-              defaultValue: 0.72,
-              valueLabel: (value) => '${(value * 100).round()}%',
-              onChanged: (value) =>
-                  unawaited(controller.setCellSpringIntensity(value)),
-            ),
           const Divider(height: 18),
           AppearanceSettingToggleRow(
             key: const Key('setting-vip-jelly'),
@@ -159,19 +149,6 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
             onChanged: (value) =>
                 unawaited(controller.setVipJellyEnabled(value)),
           ),
-          if (settings.vipJellyEnabled)
-            AppearanceSettingSliderRow(
-              key: const Key('setting-vip-jelly-speed'),
-              title: 'Скорость желе',
-              icon: Icons.speed_rounded,
-              value: settings.vipJellySpeed,
-              minimum: 0.2,
-              maximum: 2.5,
-              defaultValue: 0.75,
-              valueLabel: (value) => '${value.toStringAsFixed(2)}x',
-              onChanged: (value) =>
-                  unawaited(controller.setVipJellySpeed(value)),
-            ),
           const Divider(height: 18),
           AppearanceSettingToggleRow(
             key: const Key('setting-vip-hdr-light'),

@@ -3,37 +3,23 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/time/clock.dart';
+import '../../../../core/time/clock_provider.dart';
 import '../../../../shared/persistence/app_database_provider.dart';
+import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
+import '../../../housekeeper_catalog/presentation/controllers/housekeeper_catalog_controller.dart';
 import '../../application/all_rooms_test_data_generator.dart';
 import '../../application/commands/work_session_command.dart';
 import '../../application/ports/room_schedule_notification_client.dart';
 import '../../application/work_session_command_handler.dart';
 import '../../application/work_session_seed.dart';
-import '../../data/repositories/drift_housekeeper_catalog_repository.dart';
 import '../../data/repositories/drift_work_session_repository.dart';
-import '../../domain/models/housekeeper.dart';
 import '../../domain/models/work_session.dart';
-import '../../domain/repositories/housekeeper_catalog_repository.dart';
 import '../../domain/repositories/work_session_repository.dart';
 
-final clockProvider = Provider<Clock>((ref) => const SystemClock());
+export '../../../../core/time/clock_provider.dart' show clockProvider;
 
 final workSessionRepositoryProvider = Provider<WorkSessionRepository>((ref) {
   return DriftWorkSessionRepository(ref.watch(appDatabaseProvider));
-});
-
-final housekeeperCatalogRepositoryProvider =
-    Provider<HousekeeperCatalogRepository>((ref) {
-      return DriftHousekeeperCatalogRepository(ref.watch(appDatabaseProvider));
-    });
-
-final housekeeperCatalogProvider = FutureProvider<List<Housekeeper>>((
-  ref,
-) async {
-  final repository = ref.watch(housekeeperCatalogRepositoryProvider);
-  await repository.ensureDefaults(ref.watch(clockProvider).now());
-  return repository.loadActive();
 });
 
 final roomScheduleNotificationClientProvider =

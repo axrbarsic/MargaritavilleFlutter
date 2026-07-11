@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
 import '../../../work_session/domain/models/work_assignment.dart';
 import '../../../work_session/domain/models/work_session.dart';
 
@@ -8,6 +9,7 @@ final class SetupRoomGrid extends StatelessWidget {
     required this.roomNumbers,
     required this.session,
     required this.selectedAssignment,
+    required this.catalogById,
     required this.onRoomTap,
     super.key,
   });
@@ -15,6 +17,7 @@ final class SetupRoomGrid extends StatelessWidget {
   final List<String> roomNumbers;
   final WorkSession session;
   final WorkAssignment selectedAssignment;
+  final Map<String, Housekeeper> catalogById;
   final ValueChanged<String> onRoomTap;
 
   @override
@@ -34,14 +37,16 @@ final class SetupRoomGrid extends StatelessWidget {
         final owner = _owner(roomNumber);
         final isSelected = owner?.id == selectedAssignment.id;
         final isBlocked = owner != null && !isSelected;
+        final selectedHousekeeper = _resolved(selectedAssignment);
+        final ownerHousekeeper = owner == null ? null : _resolved(owner);
         return Semantics(
           button: true,
           enabled: !isBlocked,
           label: 'Номер $roomNumber',
           value: isSelected
-              ? 'выбран для ${selectedAssignment.housekeeper.displayName}'
+              ? 'выбран для ${selectedHousekeeper.displayName}'
               : isBlocked
-              ? 'занят ${owner.housekeeper.displayName}'
+              ? 'занят ${ownerHousekeeper!.displayName}'
               : 'не выбран',
           hint: isBlocked ? null : 'Нажмите, чтобы изменить выбор',
           child: GestureDetector(
@@ -78,7 +83,7 @@ final class SetupRoomGrid extends StatelessWidget {
                     ),
                     if (isBlocked)
                       Text(
-                        owner.housekeeper.displayName,
+                        ownerHousekeeper!.displayName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall,
@@ -98,5 +103,9 @@ final class SetupRoomGrid extends StatelessWidget {
       if (assignment.room(roomNumber) != null) return assignment;
     }
     return null;
+  }
+
+  Housekeeper _resolved(WorkAssignment assignment) {
+    return catalogById[assignment.housekeeper.id] ?? assignment.housekeeper;
   }
 }

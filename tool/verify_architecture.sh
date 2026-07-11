@@ -52,9 +52,58 @@ if [[ "$replace_session_files" != "$expected_replace_session_files" ]] || \
   failed=1
 fi
 
+if rg -n "package:(flutter|flutter_riverpod|drift)" \
+  lib/features/housekeeper_catalog/domain --glob '*.dart'; then
+  echo "ERROR: housekeeper catalog domain imports a framework package"
+  failed=1
+fi
+
+catalog_commit_files=$(rg -l 'commitCommand\(' \
+  lib/features/housekeeper_catalog \
+  --glob '*.dart' | sort || true)
+expected_catalog_commit_files=$(printf '%s\n' \
+  'lib/features/housekeeper_catalog/application/housekeeper_catalog_command_handler.dart' \
+  'lib/features/housekeeper_catalog/data/repositories/drift_housekeeper_catalog_repository.dart' \
+  'lib/features/housekeeper_catalog/domain/repositories/housekeeper_catalog_repository.dart')
+if [[ "$catalog_commit_files" != "$expected_catalog_commit_files" ]]; then
+  echo "ERROR: catalog mutations must pass through the aggregate ledger boundary"
+  failed=1
+fi
+
+catalog_write_files=$(rg -l \
+  'into\(_database\.housekeeperCatalogRecords|update\(_database\.housekeeperCatalogRecords' \
+  lib/features --glob '*.dart' | sort || true)
+if [[ "$catalog_write_files" != \
+  'lib/features/housekeeper_catalog/data/repositories/drift_housekeeper_catalog_repository.dart' ]]; then
+  echo "ERROR: catalog projection has more than one production writer"
+  failed=1
+fi
+
+if rg -n 'work_session/(data|presentation)' \
+  lib/features/housekeeper_catalog --glob '*.dart'; then
+  echo "ERROR: housekeeper catalog must not depend on work-session outer layers"
+  failed=1
+fi
+
+if rg -n '\b(save|remove)\(' \
+  lib/features/housekeeper_catalog/application \
+  lib/features/housekeeper_catalog/presentation --glob '*.dart' || \
+   rg -n 'delete|restore|reorder|Icons\.delete' \
+  lib/features/housekeeper_catalog/presentation --glob '*.dart'; then
+  echo "ERROR: Catalog Editor exposes a bypass or a deferred mutation"
+  failed=1
+fi
+
 if rg -n "package:(flutter|flutter_riverpod|shared_preferences)" \
   lib/features/settings/domain --glob '*.dart'; then
   echo "ERROR: settings domain imports a framework package"
+  failed=1
+fi
+
+if rg -n \
+  'HapticFeedback|UI(Impact|Selection|Notification)FeedbackGenerator|Vibrator|performHapticFeedback|VibrationEffect' \
+  lib ios/Runner android/app/src/main --glob '*.dart' --glob '*.swift' --glob '*.kt'; then
+  echo "ERROR: haptics must pass through the typed InteractionFoundation"
   failed=1
 fi
 

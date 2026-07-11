@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
-import '../../../work_session/domain/models/housekeeper.dart';
+import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
 
 final class HousekeeperSelector extends StatelessWidget {
   const HousekeeperSelector({

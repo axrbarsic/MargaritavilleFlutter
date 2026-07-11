@@ -21,10 +21,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Настройки'), findsOneWidget);
+    expect(find.text('Уборщицы'), findsOneWidget);
+    expect(find.text('Изменить имена и цвета'), findsOneWidget);
     expect(find.text('Экспериментальное'), findsOneWidget);
     expect(find.text('Живые ячейки'), findsOneWidget);
     expect(find.text('VIP-желе'), findsOneWidget);
-    expect(find.text('Скорость желе'), findsOneWidget);
+    expect(find.text('Сила пружины'), findsNothing);
+    expect(find.text('Скорость желе'), findsNothing);
     expect(find.text('VIP HDR-свет'), findsOneWidget);
     expect(find.text('HDR-всплеск статуса'), findsOneWidget);
     expect(find.text('Сочная палитра'), findsOneWidget);

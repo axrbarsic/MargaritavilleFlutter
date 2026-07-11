@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../../shared/persistence/app_database.dart';
 import '../../../../shared/persistence/drift_command_ledger.dart';
-import '../../domain/models/housekeeper.dart';
+import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
 import '../../domain/models/room_state.dart';
 import '../../domain/models/room_timestamps.dart';
 import '../../domain/models/work_assignment.dart';

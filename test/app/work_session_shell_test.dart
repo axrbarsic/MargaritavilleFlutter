@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_app.dart';
 import 'package:margaritaville_flutter/core/time/clock.dart';
+import 'package:margaritaville_flutter/design/margaritaville_colors.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/application/housekeeper_catalog_command_handler.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/domain/commands/housekeeper_catalog_command.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/presentation/controllers/housekeeper_catalog_controller.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/app_background_mode.dart';
 import 'package:margaritaville_flutter/features/settings/domain/models/appearance_settings.dart';
 import 'package:margaritaville_flutter/features/settings/domain/repositories/appearance_settings_repository.dart';
@@ -10,6 +14,7 @@ import 'package:margaritaville_flutter/features/settings/presentation/controller
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
 import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_work_session_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/presentation/controllers/work_session_controller.dart';
+import 'package:margaritaville_flutter/features/work_setup/presentation/work_setup_screen.dart';
 import 'package:margaritaville_flutter/shared/edr/edr_overlay_controller.dart';
 import 'package:margaritaville_flutter/shared/persistence/app_database_provider.dart';
 
@@ -51,6 +56,21 @@ void main() {
     expect(find.text('A1'), findsOneWidget);
     await tester.tap(find.byKey(const Key('setup-room-101')));
     await tester.pumpAndSettle();
+    final providerContainer = ProviderScope.containerOf(
+      tester.element(find.byType(WorkSetupScreen)),
+    );
+    await HousekeeperCatalogCommandHandler(
+      providerContainer.read(housekeeperCatalogRepositoryProvider),
+    ).execute(
+      RenameHousekeeperCommand(
+        commandId: 'setup-live-name',
+        issuedAt: DateTime.utc(2027, 2, 10, 12, 1),
+        housekeeperId: 'kerlange',
+        displayName: 'Kerlange Setup',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Kerlange Setup'), findsNWidgets(2));
     await tester.tap(find.byKey(const Key('lock-workday')));
     await tester.pumpAndSettle();
 
@@ -63,6 +83,18 @@ void main() {
       EdrOverlayController.presentationSuspendDeadline,
     );
     expect(find.text('Экспериментальное'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('open-housekeeper-catalog')));
+    await tester.pumpAndSettle();
+    final catalogName = find.byKey(const Key('housekeeper-name-kerlange'));
+    await tester.enterText(catalogName, 'Kerlange Live');
+    tester.widget<TextField>(catalogName).onSubmitted?.call('Kerlange Live');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('housekeeper-palette-kerlange')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ruby').last);
+    await tester.pumpAndSettle();
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
     final statusPulse = find.byKey(const Key('setting-status-hdr-pulse'));
     await tester.ensureVisible(statusPulse);
     await tester.pumpAndSettle();
@@ -78,12 +110,37 @@ void main() {
           .statusPulseEnabled,
       isTrue,
     );
+    expect(find.text('Kerlange Live'), findsOneWidget);
+    final badge = tester.widget<DecoratedBox>(
+      find.byKey(const Key('summary-housekeeper-name-kerlange')),
+    );
+    final badgeDecoration = badge.decoration as BoxDecoration;
+    expect(
+      badgeDecoration.border?.top.color,
+      MargaritavilleColors.housekeeper('ruby').withValues(alpha: 0.72),
+    );
+    final catalogRow =
+        (await database.select(database.housekeeperCatalogRecords).get())
+            .singleWhere((value) => value.id == 'kerlange');
+    final sessionSnapshot =
+        (await database.select(database.housekeeperRecords).get()).singleWhere(
+          (value) => value.id == 'kerlange',
+        );
+    expect(catalogRow.displayName, 'Kerlange Live');
+    expect(catalogRow.paletteKey, 'ruby');
+    expect(sessionSnapshot.displayName, 'Kerlange Setup');
+    expect(
+      (await database.select(database.workSessionRecords).get()),
+      hasLength(1),
+    );
 
     await tester.longPress(find.byKey(const Key('summary-room-101')));
     await tester.pumpAndSettle();
 
     final saved = await repository.loadLatestSession();
     expect(saved?.room('101')?.phase.name, 'open');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
   });
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
 import '../../../work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import '../../../work_session/domain/models/work_assignment.dart';
 import '../../../work_session/domain/models/work_session.dart';
@@ -9,6 +10,8 @@ final class WorkSetupAssignmentCard extends StatelessWidget {
   const WorkSetupAssignmentCard({
     required this.session,
     required this.assignment,
+    required this.housekeeper,
+    required this.catalogById,
     required this.focused,
     required this.onFocus,
     required this.onRemove,
@@ -19,6 +22,8 @@ final class WorkSetupAssignmentCard extends StatelessWidget {
 
   final WorkSession session;
   final WorkAssignment assignment;
+  final Housekeeper housekeeper;
+  final Map<String, Housekeeper> catalogById;
   final bool focused;
   final VoidCallback onFocus;
   final VoidCallback onRemove;
@@ -53,7 +58,7 @@ final class WorkSetupAssignmentCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      assignment.housekeeper.displayName,
+                      housekeeper.displayName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -96,6 +101,7 @@ final class WorkSetupAssignmentCard extends StatelessWidget {
                 roomNumbers: territory.rooms,
                 session: session,
                 selectedAssignment: assignment,
+                catalogById: catalogById,
                 onRoomTap: onRoomTap,
               ),
             ],

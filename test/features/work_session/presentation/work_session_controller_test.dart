@@ -3,6 +3,9 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/core/time/clock.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/domain/models/housekeeper_catalog_command_descriptor.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/domain/models/housekeeper_catalog_mutation.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/presentation/controllers/housekeeper_catalog_controller.dart';
 import 'package:margaritaville_flutter/features/work_session/application/ports/room_schedule_notification_client.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_housekeeper_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_room_catalog.dart';
@@ -245,13 +248,21 @@ final class _MemoryHousekeeperCatalogRepository
   Stream<List<Housekeeper>> watchActive() => Stream.value([...housekeepers]);
 
   @override
-  Future<void> save(Housekeeper housekeeper, {required int sortOrder}) async {}
-
-  @override
-  Future<void> remove(
-    String housekeeperId, {
-    required DateTime changedAt,
-  }) async {}
+  Future<HousekeeperCatalogMutation> commitCommand({
+    required HousekeeperCatalogCommandDescriptor descriptor,
+    required HousekeeperCatalogMutation Function(
+      HousekeeperCatalogSnapshot snapshot,
+    )
+    mutate,
+  }) async {
+    return mutate(
+      HousekeeperCatalogSnapshot(
+        active: [...housekeepers],
+        reservedIds: housekeepers.map((value) => value.id).toSet(),
+        nextSortOrder: housekeepers.length,
+      ),
+    );
+  }
 }
 
 final class _RecordingNotificationClient

@@ -3,9 +3,10 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show Value, Variable;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/application/housekeeper_catalog_command_handler.dart';
+import 'package:margaritaville_flutter/features/housekeeper_catalog/domain/commands/housekeeper_catalog_command.dart';
 import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_housekeeper_catalog_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_work_session_repository.dart';
-import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
 import 'package:margaritaville_flutter/shared/persistence/app_database.dart';
 
@@ -150,14 +151,13 @@ void main() {
       final session = _canonicalSession();
       await repository.replaceSession(session);
       final assignment = session.activeAssignments.first;
-      await catalog.save(
-        Housekeeper(
-          id: assignment.housekeeper.id,
+      await HousekeeperCatalogCommandHandler(catalog).execute(
+        RenameHousekeeperCommand(
+          commandId: 'rename-for-session-projection',
+          issuedAt: now.add(const Duration(minutes: 1)),
+          housekeeperId: assignment.housekeeper.id,
           displayName: 'Renamed in catalog',
-          paletteKey: assignment.housekeeper.paletteKey,
-          updatedAt: now.add(const Duration(minutes: 1)),
         ),
-        sortOrder: 7,
       );
 
       final reloaded = await repository.loadSession(session.id);

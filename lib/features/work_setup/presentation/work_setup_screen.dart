@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../work_session/domain/catalogs/margaritaville_housekeeper_catalog.dart';
-import '../../work_session/domain/models/housekeeper.dart';
+import '../../housekeeper_catalog/domain/catalogs/margaritaville_housekeeper_catalog.dart';
+import '../../housekeeper_catalog/domain/models/housekeeper.dart';
+import '../../housekeeper_catalog/presentation/controllers/housekeeper_catalog_controller.dart';
 import '../../work_session/domain/models/work_assignment.dart';
 import '../../work_session/domain/models/work_session.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
@@ -44,6 +45,7 @@ final class _WorkSetupScreenState extends ConsumerState<WorkSetupScreen> {
     final housekeepers =
         persistedCatalog ??
         MargaritavilleHousekeeperCatalog.housekeepers(widget.session.startedAt);
+    final catalogById = {for (final value in housekeepers) value.id: value};
     final selectedHousekeeperIds = assignments
         .map((value) => value.housekeeper.id)
         .toSet();
@@ -101,6 +103,10 @@ final class _WorkSetupScreenState extends ConsumerState<WorkSetupScreen> {
                 WorkSetupAssignmentCard(
                   session: widget.session,
                   assignment: assignment,
+                  housekeeper:
+                      catalogById[assignment.housekeeper.id] ??
+                      assignment.housekeeper,
+                  catalogById: catalogById,
                   focused: assignment.id == _focusedAssignmentId,
                   onFocus: () =>
                       setState(() => _focusedAssignmentId = assignment.id),

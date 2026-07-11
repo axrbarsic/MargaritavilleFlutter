@@ -1355,3 +1355,70 @@ haptics. Физический Pixel сейчас заблокирован, по�
   `housekeeper-catalog:margaritaville`, reactive provider и Settings editor с
   измеренными build-37 bounds. Delete/restore и судьба active assignment всё
   ещё явно deferred до продуктового решения.
+
+## 2026-07-11 — Checkpoint 15D: durable Catalog Editor build 37
+
+- Catalog Editor завершён через отдельный feature boundary
+  `features/housekeeper_catalog`: pure commands/rules, application handler,
+  repository port, единственный Drift writer и reactive presentation. Старые
+  work-session пути оставлены только временными export-shims для совместимости
+  тестов; catalog больше не импортирует outer layers work-session.
+- `Add`, `Rename` и `SetPalette` проходят через aggregate ledger
+  `housekeeper-catalog:margaritaville`. Authoritative catalog читается внутри
+  transaction; add резервирует tombstoned IDs и `MAX(sortOrder)+1`, rename и
+  palette выполняют только field-specific update. Exact duplicate не вызывает
+  reducer, collision command ID/fingerprint полностью откатывается, ignored
+  пишет только receipt.
+- Ledger получил schema-neutral post-mutation payload hook: event содержит
+  окончательный `housekeeperId` и allow-listed `changedFields`, но не имя или
+  raw draft. Schema остаётся v10.
+- Settings получили отдельный экран `Уборщицы`: donor-тексты, add 48×48,
+  поле add 48 pt, rename 46 pt, видимый palette swatch 38×38 и десять цветов
+  build 37. Rename фиксируется по submit/focus loss, не на каждый символ;
+  ошибки записи остаются русским UI-state без unhandled async exception и не
+  стирают draft. Delete/restore/reorder намеренно отсутствуют.
+- Catalog StreamProvider является единым presentation source. Work Setup
+  selector, assignment card, blocked-room label/semantics и locked Summary
+  резолвят актуальное имя/цвет по stable ID с fallback на embedded session
+  snapshot. Shell test доказывает live rename/palette после возврата из Settings,
+  при этом session snapshot и число смен не меняются.
+- По прямому решению Alex удалены UI-ползунки `Сила пружины` и `Скорость желе`;
+  переключатели `Живые ячейки` и `VIP-желе` сохранены. Persisted runtime values
+  пока остаются совместимыми typed defaults без разрушительной миграции.
+- Проектный `AGENTS.md` получил универсальный haptic contract: каждое
+  дискретное действие по умолчанию имеет typed cue через InteractionFoundation;
+  прямые platform haptic API вне foundation запрещены architecture guard.
+- После tests-first исправлений полный `tool/quality_gate.sh` зелёный:
+  `263` Flutter tests, Android JVM, Pigeon, voice/media contracts, Drift
+  reproducibility, format/analyze, file-size 300 и architecture guard.
+  Два повторных read-only integrated review дали `PASS` без P0/P1.
+- Свежий physical iPhone profile build `0.1.0 (37)` прошёл deep codesign и
+  bundle guard восьми IOS frameworks, установлен на iPhone 17 Pro Max штатным
+  terminate-before-install runbook и запущен ровно одним Runner. После первого
+  live открытия остановленная база: `integrity_check=ok`, schema v10, 20
+  активных уборщиц и одна смена; приложение затем перезапущено одним Runner.
+- Неблокирующий residual: painted/touch parity palette swatch и ручной
+  add/rename/palette perceptual smoke ещё проверить на физическом экране до
+  заявления полного визуального паритета; software/device runtime gate 15D
+  завершён.
+
+### Очередь после 15D без смены главной цели
+
+- Следующий узкий migration checkpoint: устранить раздвоенный haptic/sound при
+  удержании кнопки Settings, сделать терпимую hit geometry и ровно один cue в
+  commit-моменте с gesture-order regression test.
+- Затем отдельный foundation checkpoint: инвентаризация haptic coverage всех
+  существующих действий и принуждение typed interaction policy для будущих UI.
+- Work Setup parity backlog: donor-аудит поиска уборщиц по первой букве,
+  иерархии Building → floor → rooms, rapid single-tap/haptic/HDR selection и
+  автопрокрутки новой assignment-card под selector.
+- QA tooling backlog: интерактивный стенд 3/4 колонок с несколькими статусами и
+  VIP, числовыми `fontSize/scaleX/scaleY` для номера/времени и typed snapshot по
+  кнопке `Зафиксировать`. Snapshot не заменяет donor metrics и не меняет
+  production tokens автоматически.
+- Deployment backlog: Flutter Web/PWA review build на GitHub Pages. Он служит
+  UI/navigation/calibration стендом и не доказывает native EDR/Gainmap,
+  haptics, camera/Speech, SQLite или physical performance.
+- Visual-runtime backlog: разобрать присланное видео задержки VIP-кляксы при
+  изменении интерфейса по lease/layout/frame-commit contract, без таймерной
+  маскировки симптома.

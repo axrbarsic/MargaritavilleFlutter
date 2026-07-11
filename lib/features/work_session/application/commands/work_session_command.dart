@@ -1,4 +1,4 @@
-import '../../domain/models/housekeeper.dart';
+import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
 
 sealed class WorkSessionCommand {
   const WorkSessionCommand({

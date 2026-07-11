@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/edr/edr_overlay_controller.dart';
 import '../../../shared/edr/edr_overlay_scope.dart';
 import '../../../shared/edr/edr_window_surface.dart';
+import '../../housekeeper_catalog/domain/models/housekeeper.dart';
 import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../room_details/presentation/room_details_screen.dart';
 import '../../work_session/domain/models/room_state.dart';
@@ -29,6 +30,7 @@ final class SummaryScreen extends ConsumerStatefulWidget {
     this.onOpenSettings,
     this.scrollController,
     this.edrController,
+    this.housekeeperCatalogById = const {},
     super.key,
   });
 
@@ -38,6 +40,7 @@ final class SummaryScreen extends ConsumerStatefulWidget {
   final Future<void> Function()? onOpenSettings;
   final ScrollController? scrollController;
   final EdrOverlayController? edrController;
+  final Map<String, Housekeeper> housekeeperCatalogById;
 
   @override
   ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
@@ -160,7 +163,10 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
                                       height:
                                           SummaryLayoutTokens.sectionSpacing,
                                     ),
-                                  _edrSection(sections[index]),
+                                  _edrSection(
+                                    sections[index],
+                                    widget.housekeeperCatalogById,
+                                  ),
                                 ],
                               ],
                             ),
@@ -204,10 +210,12 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
 
   Widget _edrSection(
     ({WorkAssignment assignment, List<RoomState> rooms}) section,
+    Map<String, Housekeeper> catalogById,
   ) {
     final assignment = section.assignment;
     return SummaryAssignmentSection(
       assignment: assignment,
+      housekeeper: catalogById[assignment.housekeeper.id],
       rooms: section.rooms,
       onAdvance: _advanceRoom,
       onReset: _resetRoom,

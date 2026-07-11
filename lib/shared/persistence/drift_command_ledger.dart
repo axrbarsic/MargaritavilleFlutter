@@ -108,6 +108,7 @@ final class DriftCommandLedger {
   Future<CommandLedgerStatus> commit({
     required CommandLedgerEnvelope envelope,
     required Future<bool> Function() mutate,
+    Map<String, Object?> Function()? eventPayloadAfterMutation,
     Future<void> Function()? onApplied,
   }) {
     return _database.transaction(() async {
@@ -128,7 +129,9 @@ final class DriftCommandLedger {
               commandId: envelope.commandId,
               eventType: envelope.eventType,
               eventVersion: Value(envelope.commandVersion),
-              payloadJson: jsonEncode(envelope.eventPayload),
+              payloadJson: jsonEncode(
+                eventPayloadAfterMutation?.call() ?? envelope.eventPayload,
+              ),
               happenedAt: envelope.issuedAt,
             ),
           );

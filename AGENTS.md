@@ -65,6 +65,26 @@
 - Фактическую cadence/FPS проверять на физических iPhone и Pixel; simulator и
   emulator подходят для функционального QA, но не являются performance-гейтом.
 
+## Универсальная Тактильная Отдача
+
+- Каждое дискретное подтверждённое действие пользователя во всём приложении
+  по умолчанию обязано иметь семантический haptic cue: navigation, selection,
+  toggle, confirm, warning, destructive action и status change. Отсутствие cue
+  допускается только как явное документированное исключение с тестом.
+- Новые экраны и controls наследуют этот контракт автоматически. Нельзя
+  откладывать haptics как декоративную доработку после реализации функции.
+- Flutter/UI вызывает только единый typed `InteractionFoundation` boundary.
+  Прямые `HapticFeedback`, `UIFeedbackGenerator`, `Vibrator` и platform-channel
+  обходы вне foundation запрещены и должны ломать architecture guard.
+- Быстрые повторные tap должны получать мгновенный cue без ожидания Drift,
+  сети, HDR frame commit или звука. Cue привязывается к принятому локальному
+  действию/пороговому событию, а durable command выполняется следом.
+- Не вибрировать на каждый кадр drag/scroll/animation и не дублировать haptics
+  системной клавиатуры. Для непрерывного жеста cue допустим только на дискретных
+  detent/commit/cancel порогах.
+- Звук, haptic и HDR/visual pulse координируются одной interaction policy, но
+  отказ звука или native HDR не должен задерживать тактильную отдачу.
+
 ## Проверка
 
 - Основная iOS parity/performance-проверка — физический iPhone 17 Pro Max:
