@@ -27,12 +27,18 @@ abstract final class SummaryTypography {
     tabularFigures: true,
   );
 
+  static TextStyle roomNumberAtScale(double scale) =>
+      roomNumber.copyWith(fontSize: 44 * scale);
+
   static TextStyle get roomTime => _role(
     size: 16,
     color: MargaritavilleColors.roomForeground,
     androidWidth: 110,
     tabularFigures: true,
   );
+
+  static TextStyle roomTimeAtScale(double scale) =>
+      roomTime.copyWith(fontSize: 16 * scale);
 
   static TextStyle _role({
     required double size,

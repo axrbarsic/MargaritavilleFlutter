@@ -98,7 +98,7 @@ shared_visual_runtime="../SharedAppFoundation/Sources/SharedAppFoundation/Visual
 
 if ! rg -q "https://github.com/axrbarsic/SharedAppFoundation\.git" \
     ios/Runner.xcodeproj/project.pbxproj || \
-   ! rg -q "375e63aed9a8c14d09e692b936d278c83afeca37" \
+   ! rg -q "da9d5edc9b0dc8ba331a2accd4b6dd69e1c9732a" \
     ios/Runner.xcodeproj/project.pbxproj \
     ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved; then
   echo "ERROR: SharedAppFoundation должен быть закреплён точным remote revision"
@@ -223,9 +223,33 @@ if find ios/Runner -maxdepth 1 -type f \
   failed=1
 fi
 
-if rg -n "scaleForSectionWidth|geometryScale" \
-  lib/features/summary test/features/summary --glob '*.dart'; then
-  echo "ERROR: donor Summary geometry must stay fixed; only column width is flexible"
+if ! rg -q 'TargetPlatform\.android => SummaryLayoutTokens\.tileWidthForSection' \
+    lib/features/summary/presentation/summary_tile_geometry.dart || \
+   ! rg -q 'SummaryLayoutTokens\.iosHeightScale' \
+    lib/features/summary/presentation/summary_tile_geometry.dart || \
+   ! rg -q 'TargetPlatform\.iOS when columns == SummaryGridColumns\.three' \
+    lib/features/summary/presentation/summary_tile_geometry.dart || \
+   ! rg -q 'static const iosHeightScale = 0\.75' \
+    lib/features/summary/presentation/summary_layout_tokens.dart; then
+  echo "ERROR: Summary tile geometry lost Android square/iOS 25%-shorter contract"
+  failed=1
+fi
+
+if ! rg -q 'verticalGap: 6 \* contentScale' ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q 'DONOR_TILE_HEIGHT_DP' \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/hdr/runtime/VipHdrLabelLayout.kt || \
+   ! rg -q 'roomNumberAtScale' \
+    lib/features/summary/presentation/widgets/room_status_tile.dart; then
+  echo "ERROR: Flutter/iOS/Android tile labels must share the compact geometry scale"
+  failed=1
+fi
+
+if rg -q 'primaryFontSize: 44 \* contentScale' \
+    ios/Runner/EdrOverlayPlugin.swift || \
+   { [[ -d "$shared_visual_runtime" ]] && \
+     ! rg -q 'scaleX: 1' \
+       "$shared_visual_runtime/VisualRuntimeLabelsView.swift"; }; then
+  echo "ERROR: compact iOS labels must preserve font width and compress only vertically"
   failed=1
 fi
 

@@ -73,7 +73,7 @@ void main() {
     );
     final snapshot = bridge.tiles.single;
     expect(tileSize.width, closeTo(130.67, 0.01));
-    expect(tileSize.height, 98);
+    expect(tileSize.height, 73.5);
     expect(paintedSize, tileSize);
     expect(snapshot.width, closeTo(tileSize.width, 0.001));
     expect(snapshot.height, tileSize.height);
@@ -116,6 +116,7 @@ void main() {
     await tester.pump();
     await tester.pump();
     final fourColumnWidth = bridge.tiles.single.width;
+    expect(bridge.tiles.single.height, 98);
 
     columns.value = SummaryGridColumns.three;
     await tester.pump();
@@ -123,6 +124,14 @@ void main() {
     await tester.pump();
 
     expect(bridge.tiles.single.width, greaterThan(fourColumnWidth));
+    expect(bridge.tiles.single.height, 73.5);
+
+    columns.value = SummaryGridColumns.four;
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+
+    expect(bridge.tiles.single.width, closeTo(fourColumnWidth, 0.001));
     expect(bridge.tiles.single.height, 98);
     debugDefaultTargetPlatformOverride = null;
   });

@@ -792,7 +792,7 @@
 			repositoryURL = "https://github.com/axrbarsic/SharedAppFoundation.git";
 			requirement = {
 				kind = revision;
-				revision = 375e63aed9a8c14d09e692b936d278c83afeca37;
+				revision = da9d5edc9b0dc8ba331a2accd4b6dd69e1c9732a;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

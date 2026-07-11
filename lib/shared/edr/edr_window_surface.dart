@@ -55,6 +55,14 @@ final class _EdrWindowSurfaceState extends State<EdrWindowSurface> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(key: widget.controller.surfaceKey);
+    return NotificationListener<SizeChangedLayoutNotification>(
+      onNotification: (_) {
+        widget.controller.requestGeometrySync();
+        return false;
+      },
+      child: SizeChangedLayoutNotifier(
+        child: SizedBox.expand(key: widget.controller.surfaceKey),
+      ),
+    );
   }
 }

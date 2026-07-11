@@ -23,14 +23,22 @@ internal class VipHdrLabelRenderer(
     ) {
         val primary = cell.primaryText?.takeIf(String::isNotEmpty) ?: return
         val bounds = cell.shape.bounds
+        val logicalHeight = (bounds.bottom - bounds.top) / density
+        val metrics = VipHdrLabelLayout.resolve(logicalHeight)
+        if (metrics.contentScale <= 0f) return
         val horizontalPadding = LABEL_HORIZONTAL_PADDING_DP * density
-        val verticalPadding = LABEL_VERTICAL_PADDING_DP * density
-        val gap = LABEL_GAP_DP * density
+        val verticalPadding = metrics.verticalPaddingDp * density
+        val gap = metrics.gapDp * density
         val availableWidth = bounds.right - bounds.left - horizontalPadding * 2f
         if (availableWidth <= 0f) return
 
         val secondary = cell.secondaryText.orEmpty()
-        val timeHeight = if (secondary.isEmpty()) 0f else TIME_FONT_SIZE_SP * density
+        val timeHeight =
+            if (secondary.isEmpty()) {
+                0f
+            } else {
+                fontLineHeightPx(metrics.secondaryFontSizeSp * density, timeTypeface)
+            }
         val roomTop = bounds.top + verticalPadding
         val roomBottom =
             if (secondary.isEmpty()) {
@@ -46,7 +54,7 @@ internal class VipHdrLabelRenderer(
             centerY = (roomTop + roomBottom) / 2f,
             availableWidth = availableWidth,
             availableHeight = (roomBottom - roomTop).coerceAtLeast(1f),
-            baseSizePx = ROOM_FONT_SIZE_SP * density,
+            baseSizePx = metrics.primaryFontSizeSp * density,
             minimumScale = 0.50f,
             typeface = roomTypeface,
         )
@@ -59,7 +67,7 @@ internal class VipHdrLabelRenderer(
                 centerY = bounds.bottom - verticalPadding - timeHeight / 2f,
                 availableWidth = availableWidth,
                 availableHeight = timeHeight,
-                baseSizePx = TIME_FONT_SIZE_SP * density,
+                baseSizePx = metrics.secondaryFontSizeSp * density,
                 minimumScale = 0.62f,
                 typeface = timeTypeface,
             )
@@ -89,6 +97,16 @@ internal class VipHdrLabelRenderer(
         canvas.drawText(text, centerX, baseline, paint)
     }
 
+    private fun fontLineHeightPx(
+        sizePx: Float,
+        typeface: Typeface,
+    ): Float {
+        paint.typeface = typeface
+        paint.textSize = sizePx
+        val metrics = paint.fontMetrics
+        return (metrics.descent - metrics.ascent).coerceAtLeast(1f)
+    }
+
     private fun loadTypeface(width: Int): Typeface =
         runCatching {
             Typeface.Builder(context.assets, FONT_ASSET_PATH)
@@ -99,10 +117,6 @@ internal class VipHdrLabelRenderer(
     private companion object {
         const val FONT_ASSET_PATH = "flutter_assets/assets/fonts/NunitoSans-Variable.ttf"
         const val ROOM_FOREGROUND_ARGB = 0xFF050505.toInt()
-        const val ROOM_FONT_SIZE_SP = 44f
-        const val TIME_FONT_SIZE_SP = 16f
         const val LABEL_HORIZONTAL_PADDING_DP = 4f
-        const val LABEL_VERTICAL_PADDING_DP = 10f
-        const val LABEL_GAP_DP = 6f
     }
 }

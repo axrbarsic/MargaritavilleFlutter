@@ -33,6 +33,7 @@ void main() {
       pulseEvent: pulse,
       left: 20,
       width: 96,
+      height: 98,
     );
 
     expect(snapshot.left, 20);

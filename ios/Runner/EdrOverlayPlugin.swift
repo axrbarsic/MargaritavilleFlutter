@@ -206,6 +206,7 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
       frame.height > 0
     else { return nil }
 
+    let contentScale = min(1, max(0, CGFloat(snapshot.height) / 98))
     return VisualTileDescriptor(
       stableID: snapshot.roomId,
       frame: frame,
@@ -215,7 +216,14 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
       ),
       labels: VisualRuntimeLabels(
         primaryText: snapshot.roomId,
-        secondaryText: snapshot.timeText
+        secondaryText: snapshot.timeText,
+        verticalGap: 6 * contentScale,
+        contentInsets: VisualRuntimeInsets(
+          top: 10 * contentScale,
+          leading: 4,
+          bottom: 10 * contentScale,
+          trailing: 4
+        )
       ),
       effectSeed: stableSeed(snapshot.roomId),
       highDynamicRangeEnabled: snapshot.vipHdrEnabled,

@@ -33,6 +33,20 @@ class AndroidEdrSceneGeometryTest {
         assertEquals(-24f, transform.tile(scrolled, 0.0, 0.0, 10.0, 10.0).top, 0.001f)
     }
 
+    @Test
+    fun `square and wide logical tiles preserve independent physical bounds`() {
+        val transform = AndroidRootPixelTransform(2.5f, 0, 0)
+        val geometry = geometry().copy(viewportLeft = 0.0, viewportTop = 0.0, scrollOffsetY = 0.0)
+
+        val square = transform.tile(geometry, 0.0, 0.0, 72.4, 72.4)
+        val wide = transform.tile(geometry, 0.0, 0.0, 99.2, 72.4)
+
+        assertEquals(181f, square.right - square.left, 0.001f)
+        assertEquals(181f, square.bottom - square.top, 0.001f)
+        assertEquals(248f, wide.right - wide.left, 0.001f)
+        assertEquals(181f, wide.bottom - wide.top, 0.001f)
+    }
+
     private fun geometry() =
         AndroidEdrGeometry(
             surfaceSessionId = 1,

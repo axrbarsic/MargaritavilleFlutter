@@ -15,15 +15,27 @@ void main() {
   ) async {
     final selectedAt = DateTime(2027, 2, 10, 12);
     final room = RoomState.pending(roomNumber: '1', selectedAt: selectedAt);
+    for (final size in const [
+      Size(72.4, 72.4),
+      Size(99.2, 72.4),
+      Size(96, 98),
+      Size(130.6666667, 73.5),
+    ]) {
+      await tester.pumpWidget(
+        _tile(
+          room: room,
+          policy: const SummaryVisualPolicy(),
+          size: size,
+          contentScale: size.height / 98,
+        ),
+      );
 
-    await tester.pumpWidget(
-      _tile(room: room, policy: const SummaryVisualPolicy()),
-    );
-
-    expect(
-      tester.getSize(find.byKey(const Key('summary-room-surface-1'))),
-      const Size(96, 98),
-    );
+      final surface = find.byKey(const Key('summary-room-surface-1'));
+      final renderBox = tester.renderObject<RenderBox>(surface);
+      expect(tester.getSize(surface), size);
+      expect(renderBox.paintBounds, Offset.zero & size);
+      expect(tester.takeException(), isNull);
+    }
   });
 
   testWidgets('VIP HDR setting owns the static SDR light fallback', (
@@ -146,17 +158,20 @@ Widget _tile({
   required RoomState room,
   required SummaryVisualPolicy policy,
   SummaryVisualPulseEvent? pulseEvent,
+  Size size = const Size(96, 98),
+  double contentScale = 1,
 }) {
   return MaterialApp(
     home: Scaffold(
       body: Center(
         child: SizedBox(
-          width: 96,
-          height: 98,
+          width: size.width,
+          height: size.height,
           child: RoomStatusTile(
             room: room,
             visualPolicy: policy,
             pulseEvent: pulseEvent,
+            contentScale: contentScale,
             onAdvance: () {},
             onReset: () {},
             onToggleVip: () {},

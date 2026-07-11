@@ -26,8 +26,12 @@ final class RoomStatusTile extends StatefulWidget {
     required this.onOpenMedia,
     this.visualPolicy = SummaryVisualPolicy.balanced,
     this.pulseEvent,
+    this.contentScale = 1,
+    this.fontScale = 1,
+    this.compressTextVertically = false,
     super.key,
-  });
+  }) : assert(contentScale > 0 && contentScale <= 1),
+       assert(fontScale > 0 && fontScale <= 1);
 
   final RoomState room;
   final VoidCallback onAdvance;
@@ -37,6 +41,9 @@ final class RoomStatusTile extends StatefulWidget {
   final VoidCallback onOpenMedia;
   final SummaryVisualPolicy visualPolicy;
   final SummaryVisualPulseEvent? pulseEvent;
+  final double contentScale;
+  final double fontScale;
+  final bool compressTextVertically;
 
   @override
   State<RoomStatusTile> createState() => _RoomStatusTileState();
@@ -125,9 +132,9 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 4,
-                        vertical: 10,
+                        vertical: 10 * widget.contentScale,
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -138,18 +145,24 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
                                 'summary-room-number-text-${room.roomNumber}',
                               ),
                               text: room.roomNumber,
-                              style: SummaryTypography.roomNumber,
+                              style: SummaryTypography.roomNumberAtScale(
+                                widget.fontScale,
+                              ),
                               minimumScaleFactor: 0.50,
+                              compressHeightOnly: widget.compressTextVertically,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6 * widget.contentScale),
                           SummaryMinimumScaleText(
                             key: Key(
                               'summary-room-time-text-${room.roomNumber}',
                             ),
                             text: _time(_timestamp),
-                            style: SummaryTypography.roomTime,
+                            style: SummaryTypography.roomTimeAtScale(
+                              widget.fontScale,
+                            ),
                             minimumScaleFactor: 0.62,
+                            compressHeightOnly: widget.compressTextVertically,
                           ),
                         ],
                       ),

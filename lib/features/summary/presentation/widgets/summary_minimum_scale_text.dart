@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 final class SummaryMinimumScaleText extends StatelessWidget {
@@ -8,6 +10,7 @@ final class SummaryMinimumScaleText extends StatelessWidget {
     this.alignment = Alignment.center,
     this.textAlign = TextAlign.center,
     this.shrinkWrap = false,
+    this.compressHeightOnly = false,
     super.key,
   }) : assert(minimumScaleFactor > 0 && minimumScaleFactor <= 1);
 
@@ -17,6 +20,7 @@ final class SummaryMinimumScaleText extends StatelessWidget {
   final Alignment alignment;
   final TextAlign textAlign;
   final bool shrinkWrap;
+  final bool compressHeightOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +37,53 @@ final class SummaryMinimumScaleText extends StatelessWidget {
         final availableWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : painter.width;
-        final rawScale = painter.width <= 0
+        final widthScale = painter.width <= 0
             ? 1.0
             : availableWidth / painter.width;
-        final scale = rawScale.clamp(minimumScaleFactor, 1.0).toDouble();
+        final heightScale = constraints.hasBoundedHeight && painter.height > 0
+            ? constraints.maxHeight / painter.height
+            : 1.0;
+        final fontScale = compressHeightOnly
+            ? widthScale
+            : math.min(widthScale, heightScale);
+        final scale = fontScale.clamp(minimumScaleFactor, 1.0).toDouble();
+        final fittedStyle = style.copyWith(fontSize: baseFontSize * scale);
+        if (compressHeightOnly && constraints.hasBoundedHeight) {
+          final fittedPainter = TextPainter(
+            text: TextSpan(text: text, style: fittedStyle),
+            maxLines: 1,
+            textDirection: Directionality.of(context),
+            textScaler: TextScaler.noScaling,
+          )..layout();
+          final verticalScale = fittedPainter.height <= 0
+              ? 1.0
+              : math
+                    .min(1.0, constraints.maxHeight / fittedPainter.height)
+                    .toDouble();
+          return ClipRect(
+            child: SizedBox.expand(
+              child: OverflowBox(
+                minHeight: fittedPainter.height,
+                maxHeight: fittedPainter.height,
+                alignment: alignment,
+                child: Transform.scale(
+                  scaleX: 1,
+                  scaleY: verticalScale,
+                  alignment: alignment,
+                  child: Text(
+                    text,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.visible,
+                    textAlign: textAlign,
+                    textScaler: TextScaler.noScaling,
+                    style: fittedStyle,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         return Align(
           alignment: alignment,
           widthFactor: shrinkWrap || !constraints.hasBoundedWidth ? 1 : null,
@@ -48,7 +95,7 @@ final class SummaryMinimumScaleText extends StatelessWidget {
             overflow: TextOverflow.clip,
             textAlign: textAlign,
             textScaler: TextScaler.noScaling,
-            style: style.copyWith(fontSize: baseFontSize * scale),
+            style: fittedStyle,
           ),
         );
       },

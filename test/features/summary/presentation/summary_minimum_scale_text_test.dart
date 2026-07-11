@@ -3,15 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/summary_minimum_scale_text.dart';
 
 void main() {
-  testWidgets('minimum scale responds to width and never to a short box', (
+  testWidgets('minimum scale responds to both bounded width and height', (
     tester,
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Center(
           child: SizedBox(
-            width: 88,
-            height: 8,
+            width: 200,
+            height: 36,
             child: SummaryMinimumScaleText(
               text: '147',
               style: TextStyle(fontSize: 44),
@@ -23,8 +23,14 @@ void main() {
     );
 
     final rendered = tester.widget<Text>(find.text('147'));
-    expect(rendered.style?.fontSize, closeTo(44 * (88 / 132), 0.01));
-    expect(rendered.style!.fontSize, greaterThan(22));
+    expect(rendered.style!.fontSize, lessThan(44));
+    expect(rendered.style!.fontSize, greaterThanOrEqualTo(22));
+    final painter = TextPainter(
+      text: TextSpan(text: '147', style: rendered.style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    expect(painter.height, lessThanOrEqualTo(36.01));
   });
 
   testWidgets('minimum factor is the hard lower bound', (tester) async {

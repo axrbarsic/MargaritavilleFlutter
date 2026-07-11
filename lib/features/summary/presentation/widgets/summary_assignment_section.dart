@@ -5,6 +5,7 @@ import '../../../work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../../../work_session/domain/models/work_assignment.dart';
 import '../summary_layout_tokens.dart';
+import '../summary_tile_geometry.dart';
 import '../summary_typography.dart';
 import '../summary_visual_policy.dart';
 import '../summary_visual_pulse.dart';
@@ -42,10 +43,12 @@ final class SummaryAssignmentSection extends StatelessWidget {
     return MediaQuery.withNoTextScaling(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final tileWidth = SummaryLayoutTokens.tileWidthForSection(
-            constraints.maxWidth,
-            columns: visualPolicy.gridColumns.count,
+          final tileGeometry = SummaryTileGeometryResolver.resolve(
+            sectionWidth: constraints.maxWidth,
+            columns: visualPolicy.gridColumns,
+            platform: Theme.of(context).platform,
           );
+          if (tileGeometry.size.isEmpty) return const SizedBox.shrink();
           return Padding(
             padding: const EdgeInsets.all(SummaryLayoutTokens.sectionPadding),
             child: Column(
@@ -64,8 +67,8 @@ final class SummaryAssignmentSection extends StatelessWidget {
                   children: [
                     for (final room in visibleRooms)
                       SizedBox(
-                        width: tileWidth,
-                        height: SummaryLayoutTokens.tileHeight,
+                        width: tileGeometry.size.width,
+                        height: tileGeometry.size.height,
                         child: RoomStatusTile(
                           room: room,
                           onAdvance: () => onAdvance(room),
@@ -75,6 +78,10 @@ final class SummaryAssignmentSection extends StatelessWidget {
                           onOpenMedia: () => onOpenMedia(room),
                           visualPolicy: visualPolicy,
                           pulseEvent: pulseEventFor?.call(room.roomNumber),
+                          contentScale: tileGeometry.contentScale,
+                          fontScale: tileGeometry.fontScale,
+                          compressTextVertically:
+                              tileGeometry.compressTextVertically,
                         ),
                       ),
                   ],

@@ -9,7 +9,8 @@ abstract final class SummaryLayoutTokens {
   static const sectionHeaderGridGap = 14.0;
   static const gridSpacing = 8.0;
   static const gridColumns = 4;
-  static const tileHeight = 98.0;
+  static const donorTileHeight = 98.0;
+  static const iosHeightScale = 0.75;
   static const tileCornerRadius = 16.0;
   static double tileWidthForSection(double width, {int columns = gridColumns}) {
     const horizontalInsets = sectionPadding * 2;

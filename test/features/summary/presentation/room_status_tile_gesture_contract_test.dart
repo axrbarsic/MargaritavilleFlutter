@@ -202,21 +202,41 @@ void main() {
     ]);
     expect(find.byKey(const Key('room-action-media')), findsOneWidget);
   });
+
+  testWidgets('wide three-column tile keeps its full rectangular hit target', (
+    tester,
+  ) async {
+    final harness = _RoomGestureHarness(
+      tileSize: const Size(99.2, 72.4),
+      contentScale: 72.4 / 98,
+    );
+    addTearDown(harness.dispose);
+    await tester.pumpWidget(harness.app());
+    await tester.pump();
+    final point = tester.getBottomRight(harness.tile) - const Offset(1, 1);
+    final hold = await tester.startGesture(point);
+    await tester.pump(const Duration(milliseconds: 460));
+    await hold.up();
+    expect(harness.advances, 1);
+  });
 }
 
 final class _RoomGestureHarness {
+  _RoomGestureHarness({
+    this.tileSize = const Size(96, 98),
+    this.contentScale = 1,
+  });
+  final Size tileSize;
+  final double contentScale;
   final bridge = RecordingFeedbackBridge();
   final scrollController = ScrollController();
   late final feedbackController = MargaritavilleFeedbackController(
     runtime: InteractionFeedbackRuntime(bridge: bridge),
   );
   var advances = 0;
-
   Finder get tile => find.byKey(const Key('summary-room-101'));
-
   List<InteractionFeedbackCue> get cues =>
       bridge.requests.map((request) => request.cue).toList();
-
   Offset tileCenter(WidgetTester tester) => tester.getCenter(tile);
 
   Widget app() {
@@ -247,8 +267,8 @@ final class _RoomGestureHarness {
                     const SizedBox(height: 40),
                     Center(
                       child: SizedBox(
-                        width: 96,
-                        height: 98,
+                        width: tileSize.width,
+                        height: tileSize.height,
                         child: RoomStatusTile(
                           room: room,
                           onAdvance: () => advances++,
@@ -256,6 +276,7 @@ final class _RoomGestureHarness {
                           onToggleVip: () {},
                           onSchedule: () {},
                           onOpenMedia: () {},
+                          contentScale: contentScale,
                         ),
                       ),
                     ),

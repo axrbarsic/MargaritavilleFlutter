@@ -11,6 +11,7 @@ abstract final class EdrTileSnapshotFactory {
     required SummaryVisualPolicy policy,
     required double left,
     required double width,
+    required double height,
     SummaryVisualPulseEvent? pulseEvent,
   }) {
     final baseColor = policy.vividStatusPaletteEnabled
@@ -28,7 +29,7 @@ abstract final class EdrTileSnapshotFactory {
       left: left,
       top: 0,
       width: width,
-      height: SummaryLayoutTokens.tileHeight,
+      height: height,
       baseColorArgb: baseColor.toARGB32(),
       cornerRadius: SummaryLayoutTokens.tileCornerRadius,
       vipHdrEnabled: room.isVip && policy.vipHdrLightEnabled,

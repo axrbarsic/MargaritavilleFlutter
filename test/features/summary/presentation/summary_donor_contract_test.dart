@@ -28,7 +28,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: MargaritavilleTheme.dark,
+        theme: MargaritavilleTheme.dark.copyWith(platform: TargetPlatform.iOS),
         home: Scaffold(
           body: Center(
             child: SizedBox(
@@ -107,14 +107,14 @@ void main() {
     );
   });
 
-  testWidgets('assignment section keeps donor four-column geometry', (
+  testWidgets('iOS four-column section restores the donor cell geometry', (
     tester,
   ) async {
     final assignment = donorAssignment();
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: MargaritavilleTheme.dark,
+        theme: MargaritavilleTheme.dark.copyWith(platform: TargetPlatform.iOS),
         home: Scaffold(
           body: SingleChildScrollView(
             child: SizedBox(
@@ -140,6 +140,16 @@ void main() {
     expect(tester.getSize(firstTile).width, closeTo(96, 0.01));
     expect(tester.getSize(firstTile).height, 98);
     expect(tester.getSize(firstSurface), const Size(96, 98));
+    final number = tester.widget<SummaryMinimumScaleText>(
+      find.byKey(const Key('summary-room-number-text-101')),
+    );
+    final time = tester.widget<SummaryMinimumScaleText>(
+      find.byKey(const Key('summary-room-time-text-101')),
+    );
+    expect(number.style.fontSize, 44);
+    expect(time.style.fontSize, 16);
+    expect(number.compressHeightOnly, isFalse);
+    expect(time.compressHeightOnly, isFalse);
     expect(
       tester.getTopLeft(secondTile).dx - tester.getTopRight(firstTile).dx,
       closeTo(8, 0.01),
@@ -210,13 +220,11 @@ void main() {
         ),
       ),
     );
-
     final badge = find.byKey(const Key('summary-housekeeper-name-ketty'));
     final label = find.text('Omelene PM');
     final badgeRect = tester.getRect(badge);
     final labelRect = tester.getRect(label);
     final labelWidget = tester.widget<Text>(label);
-
     expect(tester.takeException(), isNull);
     expect(labelWidget.overflow, TextOverflow.clip);
     expect(badgeRect.width, closeTo(labelRect.width + 24, 0.01));
@@ -230,7 +238,9 @@ void main() {
       const sectionWidth = 329.6;
       await tester.pumpWidget(
         MaterialApp(
-          theme: MargaritavilleTheme.dark,
+          theme: MargaritavilleTheme.dark.copyWith(
+            platform: TargetPlatform.android,
+          ),
           home: Scaffold(
             body: MediaQuery(
               data: const MediaQueryData(textScaler: TextScaler.linear(1.15)),
@@ -251,15 +261,14 @@ void main() {
           ),
         ),
       );
-
       final firstTile = find.byKey(const Key('summary-room-101'));
       final firstSurface = find.byKey(const Key('summary-room-surface-101'));
       final secondTile = find.byKey(const Key('summary-room-102'));
       final fifthTile = find.byKey(const Key('summary-room-105'));
       expect(tester.getSize(firstTile).width, closeTo(72.4, 0.01));
-      expect(tester.getSize(firstTile).height, 98);
+      expect(tester.getSize(firstTile).height, closeTo(72.4, 0.01));
       expect(tester.getSize(firstSurface).width, closeTo(72.4, 0.01));
-      expect(tester.getSize(firstSurface).height, 98);
+      expect(tester.getSize(firstSurface).height, closeTo(72.4, 0.01));
       expect(
         tester.getTopLeft(secondTile).dx - tester.getTopRight(firstTile).dx,
         closeTo(8, 0.01),
@@ -268,7 +277,6 @@ void main() {
         tester.getTopLeft(fifthTile).dy - tester.getBottomLeft(firstTile).dy,
         closeTo(8, 0.01),
       );
-
       final name = tester.widget<Text>(find.text('Ketty'));
       expect(name.style?.fontSize, 25);
       final nameBadge = tester.widget<DecoratedBox>(
