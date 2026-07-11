@@ -135,6 +135,26 @@ void main() {
       everyElement(MargaritavilleSoundAsset.uiRolloverTick.id),
     );
   });
+
+  test('settings commit is one combined haptic and sound request', () async {
+    final bridge = _FakeInteractionFeedbackBridge();
+    final controller = MargaritavilleFeedbackController(
+      runtime: InteractionFeedbackRuntime(bridge: bridge),
+    );
+    addTearDown(controller.dispose);
+    await controller.initialize();
+
+    controller.settingsOpenCommitted();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(bridge.requests, hasLength(1));
+    expect(bridge.requests.single.cue, InteractionFeedbackCue.confirm);
+    expect(
+      bridge.requests.single.soundId,
+      MargaritavilleSoundAsset.uiRolloverTick.id,
+    );
+    expect(bridge.requests.single.soundPriority, 70);
+  });
 }
 
 final class _FakeInteractionFeedbackBridge

@@ -1422,3 +1422,48 @@ haptics. Физический Pixel сейчас заблокирован, по�
 - Visual-runtime backlog: разобрать присланное видео задержки VIP-кляксы при
   изменении интерфейса по lease/layout/frame-commit contract, без таймерной
   маскировки симптома.
+
+## 2026-07-11 — Срочное ответвление U1: единый Settings long-press (device gate pending)
+
+- Ручная pointer/timer state machine кнопки Settings заменена штатным
+  `LongPressGestureRecognizer` с commit на `460 ms`. Обычный tap, ранний release,
+  отменённое движение и semantic tap не открывают экран и не дают feedback;
+  accessibility публикует только long-press action.
+- Settings больше не воспроизводит промежуточную дробь `start/warning/commit` и
+  отдельный navigation sound. После успешного захвата route-level lock создаётся
+  один combined request: один `confirm` haptic и один settings sound. Тот же lock
+  удерживается до завершения route Future, поэтому повторный physical/semantic
+  commit не создаёт ни второй route, ни второй feedback.
+- Hit target расширен до `54×48 pt`, но прежний `48×48` visual box выровнен слева:
+  центр иконки и target существующего selection puzzle остались на прежней
+  координате. Четыре внутренние точки краёв проверены gesture tests.
+- Tests-first набор разделён на файлы до 300 строк: пять feedback-controller,
+  шесть settings-hold и два puzzle/filter tests. Итоговый `tool/quality_gate.sh`
+  зелёный: `268` Flutter tests, Android JVM, Pigeon/media/voice contracts, Drift
+  reproducibility, format/analyze, file-size и architecture guards.
+- Три свежих read-only integrated review после исправления route-lock и после
+  окончательного test split дали `PASS` без P0/P1; финальный review также без P2.
+  Rollout metadata фактически показала `gpt-5.6-sol/high`; ожидаемая named-role
+  Terra/xhigh маршрутизация этой поверхностью не была доказана, поэтому результаты
+  учитываются как более сильная независимая Sol-проверка, а не как заявленный
+  role-routing.
+- Physical iPhone 17 Pro Max profile build подписан, bundle guard проверил восемь
+  embedded IOS frameworks, приложение установлено и запущено штатным
+  terminate-before-install runbook. После live startup остановленный snapshot:
+  `integrity_check=ok`, schema `v10`, 20 catalog rows, одна смена; приложение
+  перезапущено ровно одним Runner.
+- Physical Pixel 8 `44171FDJH003R5` получил текущий profile APK поверх
+  существующего data container и открыл сохранённую Summary. Accessibility dump
+  подтвердил Settings contract: `clickable=false`, `long-clickable=true`, bounds
+  `[56,188][225,338]`. Реальные ADB pointer sequences дали точный oracle:
+  короткий tap и отменённый 340-ms hold с выходом за slop оставили главный экран
+  и добавили `0` package vibration events; успешный 650-ms hold открыл Settings
+  ровно один раз и добавил ровно `1` системный haptic event от
+  `com.alex.margaritaville.flutter.beta`. Back вернул тот же Settings target;
+  процесс остался жив, FATAL/SQLite crash не обнаружены.
+- U1 закрыт: full software gate, два физических runtime path (iPhone profile/
+  storage и Pixel interaction/haptic), integrated review и журнал доказаны.
+  Субъективную громкость звука и силу iPhone haptic автоматический trace не
+  измеряет, но code-level combined request и Pixel system history подтверждают
+  отсутствие double-fire. Следующий шаг — отдельный commit/push U1, затем возврат
+  к ближайшему незакрытому donor migration gap по прямой команде Alex.

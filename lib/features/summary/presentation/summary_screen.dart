@@ -56,6 +56,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
   late final ScrollController _scrollController;
   late final bool _ownsScrollController;
   (double, double, double, AxisDirection)? _lastEdrLayoutMetrics;
+  var _settingsPresentationInFlight = false;
 
   @override
   void initState() {
@@ -127,7 +128,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
                 },
                 onOpenSettings: widget.onOpenSettings == null
                     ? () => _showSettingsNotice(context)
-                    : () => unawaited(_withEdrOccluded(widget.onOpenSettings!)),
+                    : () => unawaited(_openSettingsOnce()),
                 onOpenSelection: _unlockWorkday,
               ),
               const SizedBox(height: SummaryLayoutTokens.headerContentGap),
@@ -186,6 +187,20 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
 
   void _onVisualEventsChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _openSettingsOnce() async {
+    final openSettings = widget.onOpenSettings;
+    if (openSettings == null || _settingsPresentationInFlight) return;
+    _settingsPresentationInFlight = true;
+    try {
+      MargaritavilleFeedbackScope.maybeControllerOf(
+        context,
+      )?.settingsOpenCommitted();
+      await _withEdrOccluded(openSettings);
+    } finally {
+      _settingsPresentationInFlight = false;
+    }
   }
 
   bool _synchronizeEdrViewport(ScrollMetricsNotification notification) {

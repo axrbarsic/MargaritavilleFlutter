@@ -67,16 +67,20 @@ final class _SummaryHeaderState extends State<SummaryHeader> {
                   child: HoldActionTarget(
                     key: const Key('summary-open-settings'),
                     semanticLabel: 'Открыть настройки',
-                    onHoldStart: feedback?.holdStart,
-                    onHoldWarning: feedback?.holdWarning,
-                    onHoldCommit: feedback?.holdCommit,
-                    onActivate: () => _openSettings(feedback),
-                    child: const SizedBox.square(
-                      dimension: 48,
-                      child: Icon(
-                        Icons.menu_rounded,
-                        size: 29,
-                        color: MargaritavilleColors.secondaryText,
+                    onActivate: _openSettings,
+                    child: const SizedBox(
+                      width: 54,
+                      height: 48,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox.square(
+                          dimension: 48,
+                          child: Icon(
+                            Icons.menu_rounded,
+                            size: 29,
+                            color: MargaritavilleColors.secondaryText,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -142,8 +146,7 @@ final class _SummaryHeaderState extends State<SummaryHeader> {
     return rooms.where((room) => room.displayStatus == status).length;
   }
 
-  void _openSettings(MargaritavilleFeedbackController? feedback) {
-    feedback?.settingsOpened();
+  void _openSettings() {
     widget.onOpenSettings();
   }
 

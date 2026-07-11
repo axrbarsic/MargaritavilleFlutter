@@ -59,6 +59,11 @@ final class MargaritavilleFeedbackController {
 
   void settingsOpened() => _playSound(MargaritavilleSoundEvent.settingsOpen);
 
+  void settingsOpenCommitted() => _emit(
+    MargaritavilleSoundEvent.settingsOpen,
+    InteractionFeedbackCue.confirm,
+  );
+
   void selectionOpened() => _playSound(MargaritavilleSoundEvent.selectionOpen);
 
   void updateSoundAssignments(MargaritavilleSoundAssignments assignments) {
