@@ -4,14 +4,17 @@
 
 Debug-only стенд проверяет реальный HDR headroom Android-композитора отдельно от
 Flutter/Dart UI. Он не меняет production manifest и не подключён к Dart call
-sites. Одинаковые базовые плашки рисуются как обычный SDR bitmap и как bitmap с
-Android `Gainmap`; доказательством служит не разница цвета на скриншоте, а
-`Display.hdrSdrRatio > 1.02` после показа gainmap-контента.
+sites. Стенд использует production `VipHdrOverlayHost`/`VipHdrRuntime`, одну
+overlay-поверхность и общий `AndroidVsyncFrameClock`. Доказательством служит не
+разница цвета на скриншоте, а `Display.hdrSdrRatio > 1.02` после показа
+gainmap-контента.
 
 ## Контракт
 
 - UI-toolkit HDR запрашивается только на API 34+ и только если `Display.isHdr`.
-- На API 35+ запрашивается `Window.setDesiredHdrHeadroom(2f)`.
+- На API 35+ по умолчанию запрашивается автоматический
+  `Window.setDesiredHdrHeadroom(0f)`; intent extra позволяет сравнить явные
+  диагностические requests без изменения системной яркости.
 - Максимальная частота выбирается динамически среди режимов текущего разрешения
   и передаётся через `preferredRefreshRate`; это hint, который ОС вправе
   отклонить из-за Battery Saver, thermal state, пользовательской политики или
@@ -31,6 +34,17 @@ adb -s 44171FDJH003R5 shell am start -n \
 adb -s 44171FDJH003R5 logcat -d -s MargaritaHdrProbe:I AndroidRuntime:E '*:S'
 ```
 
+Управляемый headroom sweep без изменения системной яркости:
+
+```sh
+adb -s 44171FDJH003R5 shell am start -n \
+  com.alex.margaritaville.flutter.beta/.hdr.HdrProbeActivity \
+  --ef windowHeadroom 0.0 --ef signalHeadroom 5.0
+```
+
+Допустимый `windowHeadroom`: `0` (automatic) или `1...10000`; signal —
+`1...10000`. Некорректные extras безопасно возвращаются к automatic/5.
+
 ## Проверенный baseline — 2026-07-10
 
 Физический Pixel 8 `44171FDJH003R5` (`shiba`), Android 17 / API 37:
@@ -43,7 +57,11 @@ adb -s 44171FDJH003R5 logcat -d -s MargaritaHdrProbe:I AndroidRuntime:E '*:S'
 - Battery Saver: false; thermal status: 0.
 
 Это доказывает, что Android UI-toolkit window + gainmap путь получает настоящий
-headroom примерно 2× на данном устройстве и не является имитацией SDR-glow.
+headroom и не является имитацией SDR-glow. При production automatic request и
+неизменной автобrightness на том же устройстве измерено около 5×; это локальный
+compositor ratio, а не измерение абсолютных нит панели.
+
+Production integration contract: [VIP_HDR_RUNTIME.md](VIP_HDR_RUNTIME.md).
 
 ## Первичные источники
 

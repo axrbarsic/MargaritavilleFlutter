@@ -87,8 +87,9 @@ fi
 
 if rg -n "MethodChannel|BasicMessageChannel" \
   lib/shared/edr ios/Runner \
+  android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr \
   --glob '*.dart' --glob 'Edr*.swift' \
-  --glob '!*.g.dart' --glob '!*.g.swift'; then
+  --glob '*.kt' --glob '!*.g.dart' --glob '!*.g.swift' --glob '!*.g.kt'; then
   echo "ERROR: EDR bridge must remain generated and type-safe through Pigeon"
   failed=1
 fi
@@ -97,7 +98,7 @@ shared_visual_runtime="../SharedAppFoundation/Sources/SharedAppFoundation/Visual
 
 if ! rg -q "https://github.com/axrbarsic/SharedAppFoundation\.git" \
     ios/Runner.xcodeproj/project.pbxproj || \
-   ! rg -q "af78f15f3424c5b1f13284cd47d3eca84f83fcb7" \
+   ! rg -q "375e63aed9a8c14d09e692b936d278c83afeca37" \
     ios/Runner.xcodeproj/project.pbxproj \
     ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved; then
   echo "ERROR: SharedAppFoundation должен быть закреплён точным remote revision"
@@ -128,6 +129,12 @@ if [[ -d "$shared_visual_runtime" ]]; then
     echo "ERROR: Metal и CoreGraphics пути потеряли 16-bit/high-range контракт"
     failed=1
   fi
+
+  if ! rg -q "tileContainer\.layer\.setAffineTransform" \
+      "$shared_visual_runtime/VisualRuntimeWindowOverlayView.swift"; then
+    echo "ERROR: shared VisualRuntime потерял единый scroll transform"
+    failed=1
+  fi
 fi
 
 if rg -n "SingleChildScrollView|Edr(Row|Tile|Viewport)Surface|UiKitView" \
@@ -150,6 +157,59 @@ fi
 if ! rg -q "import SharedAppFoundation" ios/Runner/EdrOverlayPlugin.swift || \
    ! rg -q "SharedAppFoundation" ios/Runner.xcodeproj/project.pbxproj; then
   echo "ERROR: Runner обязан использовать общий SharedAppFoundation VisualRuntime"
+  failed=1
+fi
+
+if ! rg -q "updateWindowGeometry" pigeons/edr_overlay_api.dart \
+    lib/shared/edr/edr_overlay_controller.dart \
+    ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q "surfaceSessionId" pigeons/edr_overlay_api.dart \
+    lib/shared/edr/edr_overlay_controller.dart || \
+   ! rg -q "layoutGeneration" pigeons/edr_overlay_api.dart \
+    lib/shared/edr/edr_overlay_controller.dart || \
+   ! rg -U -q 'windowReady\([[:space:]]*int surfaceSessionId,[[:space:]]*int activationId,[[:space:]]*int contentRevision' \
+    pigeons/edr_overlay_api.dart; then
+  echo "ERROR: EDR content/session/layout и scroll geometry снова смешаны"
+  failed=1
+fi
+
+android_hdr_runtime="android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/hdr/runtime"
+android_hdr_foundation="android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/hdr/HdrDisplayFoundation.kt"
+
+android_frame_clock_count=$(rg -o "Choreographer\.FrameCallback" \
+  "$android_hdr_runtime" --glob '*.kt' | wc -l | tr -d ' ')
+if [[ "$android_frame_clock_count" != "1" ]]; then
+  echo "ERROR: Android HDR runtime обязан владеть ровно одним Choreographer frame clock"
+  failed=1
+fi
+
+if ! rg -q "setDesiredHdrHeadroom" "$android_hdr_foundation" || \
+   ! rg -q "preferredRefreshRate" "$android_hdr_foundation" || \
+   ! rg -q "Gainmap" "$android_hdr_runtime/Api34GainmapBitmapFactory.kt" || \
+   ! rg -q "registerFrameCommitCallback" "$android_hdr_runtime/VipHdrOverlaySurface.kt" || \
+   ! rg -q "canvas\.clipRect\(viewport\.left" "$android_hdr_runtime/VipHdrOverlaySurface.kt"; then
+  echo "ERROR: Android HDR/headroom/frame-commit/viewport-clip контракт повреждён"
+  failed=1
+fi
+
+if rg -n "screenBrightness" \
+  android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta; then
+  echo "ERROR: HDR runtime не должен менять яркость всего Android window"
+  failed=1
+fi
+
+if rg -n '\b(60|90|120)(\.0+)?[fF]?\b' \
+  "$android_hdr_foundation" lib/shared/visual_runtime --glob '*.kt' --glob '*.dart'; then
+  echo "ERROR: refresh policy не должен hardcode частоту по модели устройства"
+  failed=1
+fi
+
+edr_tile_measurement_count=$(rg -o "renderObject\.localToGlobal\(" \
+  lib/shared/edr --glob '*.dart' --glob '!generated/**' | wc -l | tr -d ' ')
+if [[ "$edr_tile_measurement_count" != "1" ]] || \
+   ! rg -q "renderObject\.localToGlobal\(" \
+    lib/shared/edr/edr_overlay_geometry_cache.dart; then
+  echo "ERROR: tile geometry должна измеряться только при rebuild layout cache"
   failed=1
 fi
 

@@ -1,82 +1,161 @@
 package com.alex.margaritaville.flutter.beta.hdr
 
 import android.app.Activity
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Gainmap
 import android.graphics.Paint
 import android.graphics.RectF
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.Display
 import android.view.View
 import android.view.WindowManager
-import java.util.function.Consumer
+import com.alex.margaritaville.flutter.beta.hdr.runtime.AndroidVsyncFrameClock
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrCellVisual
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrOverlayHost
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrPointPx
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrPulse
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrRectPx
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrScene
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrShapePx
 
 class HdrProbeActivity : Activity() {
-    private lateinit var probeView: HdrProbeView
-    private val ratioListener = Consumer<Display> { display ->
-        if (Build.VERSION.SDK_INT >= 34) {
-            val ratio = if (display.isHdrSdrRatioAvailable) display.hdrSdrRatio else 1f
-            probeView.updateHdrSdrRatio(ratio)
-            Log.i(TAG, "live hdrSdrRatio=$ratio proven=${ratio > PROOF_THRESHOLD}")
-        }
-    }
+    private lateinit var backgroundView: ProbeBackgroundView
+    private lateinit var overlayHost: VipHdrOverlayHost
+    private var windowHeadroomRequest = 0f
+    private var signalHeadroom = 5f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        windowHeadroomRequest =
+            intent.getFloatExtra(EXTRA_WINDOW_HEADROOM, 0f).takeIf {
+                it.isFinite() && (it == 0f || it in 1f..10_000f)
+            } ?: 0f
+        signalHeadroom =
+            intent.getFloatExtra(
+                EXTRA_SIGNAL_HEADROOM,
+                if (windowHeadroomRequest == 0f) 5f else windowHeadroomRequest,
+            ).takeIf { it.isFinite() && it in 1f..10_000f } ?: 5f
 
-        val applied = HdrDisplayFoundation.applyProbeContract(this)
-        val diagnostics = HdrDisplayFoundation.inspect(this)
-        Log.i(TAG, "contract=$applied")
-        Log.i(TAG, diagnostics.logLine())
-
-        probeView = HdrProbeView(this, diagnostics)
-        setContentView(probeView)
-
-        if (Build.VERSION.SDK_INT >= 34) {
-            display?.registerHdrSdrRatioChangedListener(mainExecutor, ratioListener)
-        }
+        backgroundView =
+            ProbeBackgroundView(
+                context = this,
+                windowHeadroomRequest = windowHeadroomRequest,
+                signalHeadroom = signalHeadroom,
+                onGeometryChanged = ::submitScene,
+            )
+        setContentView(backgroundView)
+        overlayHost =
+            VipHdrOverlayHost(
+                activity = this,
+                frameClock = AndroidVsyncFrameClock(),
+                requestedHeadroom = windowHeadroomRequest,
+                maximumSignalHeadroom = signalHeadroom,
+            )
     }
 
     override fun onResume() {
         super.onResume()
-        probeView.postDelayed(
+        backgroundView.postDelayed(
             {
                 val diagnostics = HdrDisplayFoundation.inspect(this)
-                probeView.updateDiagnostics(diagnostics)
-                val proven = diagnostics.hdrSdrRatio > PROOF_THRESHOLD
-                Log.i(TAG, "settled ${diagnostics.logLine()} proven=$proven")
+                backgroundView.updateDiagnostics(diagnostics)
+                Log.i(
+                    TAG,
+                    "settled request=$windowHeadroomRequest signal=$signalHeadroom " +
+                        "${diagnostics.logLine()} runtime=${overlayHost.snapshot}",
+                )
             },
             SETTLE_DELAY_MS,
         )
     }
 
     override fun onDestroy() {
-        if (Build.VERSION.SDK_INT >= 34) {
-            display?.unregisterHdrSdrRatioChangedListener(ratioListener)
-        }
+        if (::overlayHost.isInitialized) overlayHost.close()
         super.onDestroy()
+    }
+
+    private fun submitScene(geometry: ProbeGeometry) {
+        if (!::overlayHost.isInitialized) return
+        val jaggedShape = geometry.hdrRect.toJaggedPolygon(notchPx = 9f * backgroundView.density)
+        overlayHost.submit(
+            VipHdrScene(
+                revision = geometry.revision,
+                viewportPx = geometry.viewport,
+                cells =
+                    listOf(
+                        VipHdrCellVisual(
+                            id = "gainmap-hdr-reference",
+                            shape = jaggedShape,
+                            baseColorArgb = Color.rgb(180, 180, 180),
+                            desiredHeadroom = signalHeadroom,
+                        ),
+                        VipHdrCellVisual(
+                            id = "shared-vsync-pulse",
+                            shape =
+                                VipHdrShapePx.RoundedRect(
+                                    bounds = geometry.pulseRect,
+                                    cornerRadiusPx = 12f * backgroundView.density,
+                                ),
+                            baseColorArgb = Color.rgb(0, 210, 170),
+                            desiredHeadroom = 1.5f,
+                            opacity = 0.85f,
+                            pulse =
+                                VipHdrPulse(
+                                    periodMillis = 1_400,
+                                    minimumOpacity = 0.35f,
+                                ),
+                        ),
+                    ),
+            ),
+        )
+    }
+
+    private fun VipHdrRectPx.toJaggedPolygon(notchPx: Float): VipHdrShapePx.Polygon {
+        val midX = (left + right) / 2f
+        val midY = (top + bottom) / 2f
+        return VipHdrShapePx.Polygon(
+            points =
+                listOf(
+                    VipHdrPointPx(left, top),
+                    VipHdrPointPx(midX - notchPx, top),
+                    VipHdrPointPx(midX, top + notchPx),
+                    VipHdrPointPx(midX + notchPx, top),
+                    VipHdrPointPx(right, top),
+                    VipHdrPointPx(right, midY - notchPx),
+                    VipHdrPointPx(right - notchPx, midY),
+                    VipHdrPointPx(right, midY + notchPx),
+                    VipHdrPointPx(right, bottom),
+                    VipHdrPointPx(left, bottom),
+                ),
+        )
     }
 
     companion object {
         const val TAG = "MargaritaHdrProbe"
+        const val EXTRA_WINDOW_HEADROOM = "windowHeadroom"
+        const val EXTRA_SIGNAL_HEADROOM = "signalHeadroom"
         private const val SETTLE_DELAY_MS = 1_500L
-        private const val PROOF_THRESHOLD = 1.02f
     }
 }
 
-private class HdrProbeView(
+private data class ProbeGeometry(
+    val revision: Long,
+    val viewport: VipHdrRectPx,
+    val sdrRect: RectF,
+    val hdrRect: VipHdrRectPx,
+    val pulseRect: VipHdrRectPx,
+)
+
+private class ProbeBackgroundView(
     context: Activity,
-    diagnostics: HdrDisplayDiagnostics,
+    private val windowHeadroomRequest: Float,
+    private val signalHeadroom: Float,
+    private val onGeometryChanged: (ProbeGeometry) -> Unit,
 ) : View(context) {
-    private var diagnostics = diagnostics
-    private var liveRatio = diagnostics.hdrSdrRatio
-    private val density = resources.displayMetrics.density
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    val density = resources.displayMetrics.density
+    private var diagnostics = HdrDisplayFoundation.inspect(context)
+    private var geometry: ProbeGeometry? = null
     private val textPaint =
         Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
@@ -87,35 +166,59 @@ private class HdrProbeView(
             color = Color.rgb(190, 200, 210)
             textSize = 13f * density
         }
-    private val sdrBitmap = createReferenceBitmap(withGainmap = false)
-    private val hdrBitmap = createReferenceBitmap(withGainmap = true)
+    private val sdrPaint = Paint().apply { color = Color.rgb(180, 180, 180) }
 
     init {
         setBackgroundColor(Color.BLACK)
-        contentDescription = "HDR probe with SDR and gainmap HDR reference patches"
-    }
-
-    fun updateHdrSdrRatio(value: Float) {
-        liveRatio = value
-        invalidate()
+        contentDescription = "Production VIP HDR runtime probe"
     }
 
     fun updateDiagnostics(value: HdrDisplayDiagnostics) {
         diagnostics = value
-        liveRatio = value.hdrSdrRatio
         invalidate()
+    }
+
+    override fun onSizeChanged(
+        width: Int,
+        height: Int,
+        oldWidth: Int,
+        oldHeight: Int,
+    ) {
+        super.onSizeChanged(width, height, oldWidth, oldHeight)
+        if (width <= 0 || height <= 0) return
+        val margin = 20f * density
+        val gap = 12f * density
+        val top = 125f * density
+        val patchWidth = (width - margin * 2f - gap) / 2f
+        val patchHeight = minOf(patchWidth * 1.25f, height - top - 170f * density)
+        val sdrRect = RectF(margin, top, margin + patchWidth, top + patchHeight)
+        val hdrRect = VipHdrRectPx(sdrRect.right + gap, top, width - margin, top + patchHeight)
+        val pulseRect =
+            VipHdrRectPx(
+                left = hdrRect.left + 18f * density,
+                top = hdrRect.bottom - 54f * density,
+                right = hdrRect.right - 18f * density,
+                bottom = hdrRect.bottom - 18f * density,
+            )
+        geometry =
+            ProbeGeometry(
+                revision = System.nanoTime(),
+                viewport = VipHdrRectPx(0f, 0f, width.toFloat(), height.toFloat()),
+                sdrRect = sdrRect,
+                hdrRect = hdrRect,
+                pulseRect = pulseRect,
+            ).also(onGeometryChanged)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val margin = 20f * density
-        var baseline = margin + 20f * density
-
-        canvas.drawText("Margaritaville · Android HDR probe", margin, baseline, textPaint)
+        var baseline = 40f * density
+        canvas.drawText("Margaritaville · production HDR runtime", margin, baseline, textPaint)
         baseline += 26f * density
         canvas.drawText(
-            "HDR=${diagnostics.displayReportsHdr}  WCG=${diagnostics.wideColorGamut}  " +
-                "ratio=${"%.3f".format(liveRatio)}",
+            "HDR=${diagnostics.displayReportsHdr} WCG=${diagnostics.wideColorGamut} " +
+                "ratio=${"%.3f".format(diagnostics.hdrSdrRatio)}",
             margin,
             baseline,
             smallTextPaint,
@@ -123,52 +226,26 @@ private class HdrProbeView(
         baseline += 21f * density
         canvas.drawText(
             "refresh=${"%.1f".format(diagnostics.currentRefreshRateHz)} / " +
-                "${diagnostics.maximumRefreshRateHz?.let { "%.1f".format(it) }} Hz  " +
+                "${diagnostics.maximumRefreshRateHz?.let { "%.1f".format(it) }} Hz " +
                 "powerSave=${diagnostics.powerSaveMode} thermal=${diagnostics.thermalStatus}",
             margin,
             baseline,
             smallTextPaint,
         )
+        canvas.drawText(
+            "windowRequest=$windowHeadroomRequest signal=$signalHeadroom",
+            margin,
+            baseline + 21f * density,
+            smallTextPaint,
+        )
 
-        val gap = 12f * density
-        val top = baseline + 30f * density
-        val patchWidth = (width - margin * 2f - gap) / 2f
-        val patchHeight = minOf(patchWidth * 1.25f, height - top - 100f * density)
-        val leftRect = RectF(margin, top, margin + patchWidth, top + patchHeight)
-        val rightRect = RectF(leftRect.right + gap, top, width - margin, top + patchHeight)
-
-        canvas.drawBitmap(sdrBitmap, null, leftRect, paint)
-        canvas.drawBitmap(hdrBitmap, null, rightRect, paint)
-
-        val labelBaseline = top + patchHeight + 28f * density
-        canvas.drawText("SDR reference", leftRect.left, labelBaseline, smallTextPaint)
-        canvas.drawText("Gainmap HDR ×2", rightRect.left, labelBaseline, smallTextPaint)
-        val proofLines =
-            if (liveRatio > 1.02f) {
-                listOf("PROVEN: compositor granted", "HDR headroom above SDR white")
-            } else {
-                listOf("WAITING: compositor headroom", "is still at the SDR baseline")
-            }
-        proofLines.forEachIndexed { index, line ->
-            canvas.drawText(line, margin, labelBaseline + (28f + index * 25f) * density, textPaint)
+        geometry?.let { current ->
+            canvas.drawRect(current.sdrRect, sdrPaint)
+            val labelY = current.sdrRect.bottom + 28f * density
+            canvas.drawText("SDR reference", current.sdrRect.left, labelY, smallTextPaint)
+            canvas.drawText("VIP HDR surface ×2", current.hdrRect.left, labelY, smallTextPaint)
+            canvas.drawText("One surface · one shared vsync clock", margin, labelY + 34f * density, textPaint)
+            canvas.drawText("Lifecycle/offscreen pause is runtime-owned", margin, labelY + 60f * density, smallTextPaint)
         }
-    }
-
-    private fun createReferenceBitmap(withGainmap: Boolean): Bitmap {
-        val base = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)
-        base.eraseColor(Color.rgb(180, 180, 180))
-        if (withGainmap && Build.VERSION.SDK_INT >= 34) {
-            val enhancement = Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8)
-            enhancement.eraseColor(Color.WHITE)
-            val gainmap = Gainmap(enhancement).apply {
-                setRatioMin(1f, 1f, 1f)
-                setRatioMax(2f, 2f, 2f)
-                setGamma(1f, 1f, 1f)
-                setMinDisplayRatioForHdrTransition(1f)
-                setDisplayRatioForFullHdr(2f)
-            }
-            base.gainmap = gainmap
-        }
-        return base
     }
 }

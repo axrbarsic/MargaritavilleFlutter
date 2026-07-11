@@ -43,6 +43,11 @@ object HdrWindowPolicy {
             shouldRequestHdrWindow = sdkInt >= 34 && displayReportsHdr,
             shouldRequestHeadroom = sdkInt >= 35 && displayReportsHdr,
         )
+
+    fun shouldObserveHdrSdrRatio(
+        sdkInt: Int,
+        ratioAvailable: Boolean,
+    ): Boolean = sdkInt >= 34 && ratioAvailable
 }
 
 data class HdrDisplayDiagnostics(
@@ -89,8 +94,19 @@ data class AppliedHdrWindowContract(
     val preferredRefreshRateHz: Float?,
 )
 
+data class HdrWindowRequest(
+    val desiredHeadroom: Float = HdrDisplayFoundation.DEFAULT_REQUESTED_HEADROOM,
+    val preferMaximumRefreshRate: Boolean = true,
+) {
+    init {
+        require(desiredHeadroom == 0f || desiredHeadroom in 1f..10_000f) {
+            "desiredHeadroom must be 0 or within [1, 10000]"
+        }
+    }
+}
+
 object HdrDisplayFoundation {
-    const val DEFAULT_PROBE_HEADROOM = 2f
+    const val DEFAULT_REQUESTED_HEADROOM = 2f
 
     fun inspect(activity: Activity): HdrDisplayDiagnostics {
         val display = requireNotNull(activity.display) { "Activity is not attached to a display" }
@@ -149,14 +165,10 @@ object HdrDisplayFoundation {
         )
     }
 
-    fun applyProbeContract(
+    fun applyWindowContract(
         activity: Activity,
-        desiredHeadroom: Float = DEFAULT_PROBE_HEADROOM,
+        request: HdrWindowRequest = HdrWindowRequest(),
     ): AppliedHdrWindowContract {
-        require(desiredHeadroom == 0f || desiredHeadroom in 1f..10_000f) {
-            "desiredHeadroom must be 0 or within [1, 10000]"
-        }
-
         val diagnostics = inspect(activity)
         val decision = HdrWindowPolicy.decide(Build.VERSION.SDK_INT, diagnostics.displayReportsHdr)
         val window = activity.window
@@ -165,25 +177,36 @@ object HdrDisplayFoundation {
             window.colorMode = ActivityInfo.COLOR_MODE_HDR
         }
         if (decision.shouldRequestHeadroom) {
-            window.setDesiredHdrHeadroom(desiredHeadroom)
+            window.setDesiredHdrHeadroom(request.desiredHeadroom)
         }
 
         // preferredRefreshRate is a scheduler hint, not a forced mode. Android can still
         // override it for Battery Saver, thermal state, another surface, or user policy.
-        diagnostics.maximumRefreshRateHz?.let { requestedRate ->
-            val attributes = window.attributes
-            if (abs(attributes.preferredRefreshRate - requestedRate) > 0.01f) {
-                attributes.preferredRefreshRate = requestedRate
-                window.attributes = attributes
+        if (request.preferMaximumRefreshRate) {
+            diagnostics.maximumRefreshRateHz?.let { requestedRate ->
+                val attributes = window.attributes
+                if (abs(attributes.preferredRefreshRate - requestedRate) > 0.01f) {
+                    attributes.preferredRefreshRate = requestedRate
+                    window.attributes = attributes
+                }
             }
         }
 
         return AppliedHdrWindowContract(
             hdrWindowRequested = decision.shouldRequestHdrWindow,
-            desiredHeadroom = if (decision.shouldRequestHeadroom) desiredHeadroom else null,
-            preferredRefreshRateHz = diagnostics.maximumRefreshRateHz,
+            desiredHeadroom =
+                if (decision.shouldRequestHeadroom) request.desiredHeadroom else null,
+            preferredRefreshRateHz =
+                if (request.preferMaximumRefreshRate) diagnostics.maximumRefreshRateHz else null,
         )
     }
+
+    @Deprecated("Use applyWindowContract with a typed HdrWindowRequest")
+    fun applyProbeContract(
+        activity: Activity,
+        desiredHeadroom: Float = DEFAULT_REQUESTED_HEADROOM,
+    ): AppliedHdrWindowContract =
+        applyWindowContract(activity, HdrWindowRequest(desiredHeadroom = desiredHeadroom))
 
     private fun hdrTypeName(type: Int): String =
         when (type) {

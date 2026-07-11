@@ -53,7 +53,10 @@ void main() {
           theme: MargaritavilleTheme.dark.copyWith(
             platform: TargetPlatform.iOS,
           ),
-          home: SummaryScreen(session: donorSession()),
+          home: SummaryScreen(
+            session: donorSession(),
+            visualPolicy: const SummaryVisualPolicy(vipJellyEnabled: false),
+          ),
         ),
       ),
     );

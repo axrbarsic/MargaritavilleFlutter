@@ -13,7 +13,9 @@ final class EdrWindowSurface extends StatefulWidget {
   final EdrOverlayController controller;
 
   static bool get supported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android);
 
   @override
   State<EdrWindowSurface> createState() => _EdrWindowSurfaceState();

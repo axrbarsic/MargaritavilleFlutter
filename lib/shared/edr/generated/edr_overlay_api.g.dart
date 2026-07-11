@@ -291,11 +291,17 @@ class EdrOverlayHostApi {
   final String pigeonVar_messageChannelSuffix;
 
   Future<void> configureWindow(
-    int revision,
+    int surfaceSessionId,
+    int activationId,
+    int layoutGeneration,
+    int contentRevision,
+    int geometryRevision,
     double viewportLeft,
     double viewportTop,
     double viewportWidth,
     double viewportHeight,
+    double scrollOffsetX,
+    double scrollOffsetY,
     List<EdrTileSnapshot> tiles,
   ) async {
     final pigeonVar_channelName =
@@ -305,16 +311,21 @@ class EdrOverlayHostApi {
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[
-        revision,
-        viewportLeft,
-        viewportTop,
-        viewportWidth,
-        viewportHeight,
-        tiles,
-      ],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel
+        .send(<Object?>[
+          surfaceSessionId,
+          activationId,
+          layoutGeneration,
+          contentRevision,
+          geometryRevision,
+          viewportLeft,
+          viewportTop,
+          viewportWidth,
+          viewportHeight,
+          scrollOffsetX,
+          scrollOffsetY,
+          tiles,
+        ]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
@@ -324,7 +335,52 @@ class EdrOverlayHostApi {
     );
   }
 
-  Future<void> clearWindow(int revision) async {
+  Future<void> updateWindowGeometry(
+    int surfaceSessionId,
+    int activationId,
+    int layoutGeneration,
+    int geometryRevision,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
+    double scrollOffsetX,
+    double scrollOffsetY,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.updateWindowGeometry$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel
+        .send(<Object?>[
+          surfaceSessionId,
+          activationId,
+          layoutGeneration,
+          geometryRevision,
+          viewportLeft,
+          viewportTop,
+          viewportWidth,
+          viewportHeight,
+          scrollOffsetX,
+          scrollOffsetY,
+        ]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  Future<void> clearWindow(
+    int surfaceSessionId,
+    int activationId,
+    int contentRevision,
+  ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearWindow$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -333,7 +389,7 @@ class EdrOverlayHostApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[revision],
+      <Object?>[surfaceSessionId, activationId, contentRevision],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
@@ -348,7 +404,7 @@ class EdrOverlayHostApi {
 abstract class EdrOverlayFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  void windowReady(int revision);
+  void windowReady(int surfaceSessionId, int activationId, int contentRevision);
 
   static void setUp(
     EdrOverlayFlutterApi? api, {
@@ -369,9 +425,15 @@ abstract class EdrOverlayFlutterApi {
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
-          final int arg_revision = args[0]! as int;
+          final int arg_surfaceSessionId = args[0]! as int;
+          final int arg_activationId = args[1]! as int;
+          final int arg_contentRevision = args[2]! as int;
           try {
-            api.windowReady(arg_revision);
+            api.windowReady(
+              arg_surfaceSessionId,
+              arg_activationId,
+              arg_contentRevision,
+            );
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

@@ -29,6 +29,26 @@
 - Настоящий iOS HDR/EDR, audio session, файловый Speech и точные haptics можно и
   нужно реализовывать узкими Swift-плагинами с типизированным Pigeon-контрактом.
 
+## Неприкосновенный HDR/EDR Фундамент
+
+- Перед любым изменением HDR/EDR, VIP jelly, status pulse, scroll geometry или
+  native ownership полностью читать `Docs/NATIVE_VISUAL_RUNTIME_CONTRACT.md`.
+- Flutter владеет доменным состоянием, layout и typed scene description, но не
+  имитирует HDR. Реальный high-range paint остаётся платформенным: iOS —
+  SharedAppFoundation/Metal/CoreGraphics EDR, Android API 34+ — Gainmap и
+  системный HDR headroom. Яркость всего окна не менять.
+- Pigeon lease `(surfaceSessionId, activationId, contentRevision)` и независимый
+  geometry stream являются публичным внутренним ABI. Stale configure, geometry,
+  clear и ready обязаны быть no-op на обеих платформах.
+- Flutter fallback скрывается только после frame commit точной activation и
+  revision. Удалённая из native membership ячейка немедленно возвращает fallback.
+- Один window overlay и один OS-vsync clock на платформу. Запрещены per-cell
+  ticker/animator/timer, PlatformView на ячейку и передача анимации по channel
+  каждый кадр.
+- Любая правка этого контура обязана пройти Pigeon-generation check, Flutter EDR
+  tests, Android JVM tests, architecture guard и физический smoke на iPhone 17
+  Pro Max и Pixel 8. PNG/screenshot не доказывает HDR-яркость.
+
 ## Максимальная Частота Кадров
 
 - Никаких app-side ограничений 30/60 FPS: все анимации и эффекты должны
@@ -85,3 +105,9 @@
 - Новую migration-сессию начинать с `MIGRATION_START.md`.
 - Не останавливаться на плане: после ориентации реализовать первый проверяемый
   checkpoint и продолжать critical path до реального блокера.
+- Для каждого крупного checkpoint держать отдельного read-only sub-agent
+  `Architecture Overview/Challenger`: до реализации он проверяет выбранную
+  границу, а перед commit снова смотрит на проект сверху, ищет зацикливание на
+  симптомах, локальный optimum и более правильную замену подхода. Этот агент не
+  пишет тот же код и не дублирует обычный review; его обязанность — иметь право
+  предложить refactor или полную смену архитектуры ради общей миграционной цели.

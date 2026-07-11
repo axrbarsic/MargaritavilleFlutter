@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import 'generated/edr_overlay_api.g.dart';
 
 /// Routes first-GPU-frame acknowledgements from stable native EDR surfaces.
@@ -8,7 +6,8 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
 
   static final instance = EdrReadyRouter._();
 
-  ValueChanged<int>? _callback;
+  final Map<int, void Function(int activationId, int contentRevision)>
+  _callbacks = {};
   bool _isSetUp = false;
 
   void ensureSetUp() {
@@ -17,16 +16,23 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
     _isSetUp = true;
   }
 
-  void register(ValueChanged<int> callback) {
-    _callback = callback;
+  void register(
+    int surfaceSessionId,
+    void Function(int activationId, int contentRevision) callback,
+  ) {
+    _callbacks[surfaceSessionId] = callback;
   }
 
-  void unregister() {
-    _callback = null;
+  void unregister(int surfaceSessionId) {
+    _callbacks.remove(surfaceSessionId);
   }
 
   @override
-  void windowReady(int revision) {
-    _callback?.call(revision);
+  void windowReady(
+    int surfaceSessionId,
+    int activationId,
+    int contentRevision,
+  ) {
+    _callbacks[surfaceSessionId]?.call(activationId, contentRevision);
   }
 }

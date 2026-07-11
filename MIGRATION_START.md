@@ -130,6 +130,11 @@ Flutter features
 
 ## Нативная iOS Граница Внутри Flutter
 
+Неприкосновенный cross-platform ABI, ownership/readiness protocol и
+платформенные различия зафиксированы в
+`Docs/NATIVE_VISUAL_RUNTIME_CONTRACT.md`. Перед изменением этого контура документ
+считать обязательным продолжением данного handoff.
+
 Flutter-приложение имеет право и должно использовать узкие Swift-плагины там,
 где это сохраняет Apple-quality:
 

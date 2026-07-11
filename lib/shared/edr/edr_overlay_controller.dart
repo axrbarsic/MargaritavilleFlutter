@@ -6,29 +6,47 @@ import 'edr_ready_router.dart';
 import 'generated/edr_overlay_api.g.dart';
 
 part 'edr_overlay_measurement.dart';
+part 'edr_overlay_geometry_cache.dart';
+part 'edr_overlay_lifecycle.dart';
+part 'edr_overlay_synchronization.dart';
 
 final class EdrOverlayController extends ChangeNotifier {
   EdrOverlayController({EdrOverlayBridge? bridge, bool? supported})
     : _bridge = bridge ?? PigeonEdrOverlayBridge(),
       supported =
-          supported ?? (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS);
+          supported ??
+          (!kIsWeb &&
+              (defaultTargetPlatform == TargetPlatform.iOS ||
+                  defaultTargetPlatform == TargetPlatform.android));
 
   final EdrOverlayBridge _bridge;
   final bool supported;
   final GlobalKey surfaceKey = GlobalKey(debugLabel: 'summary-edr-window');
+  final int surfaceSessionId = ++_nextSurfaceSessionId;
   final Map<String, _EdrTileEntry> _entries = {};
+  final _geometryCache = _EdrOverlayGeometryCache();
   Map<String, GlobalKey> _renderedTiles = const {};
+  Map<String, GlobalKey> _sentTiles = const {};
   bool _attached = false;
   bool _windowVisible = true;
   bool _syncScheduled = false;
   bool _syncInProgress = false;
   bool _syncAgain = false;
   bool _disposed = false;
-  int _layoutRevision = 0;
   int _contentRevision = 0;
-  int _configuredContentRevision = -1;
+  int _contentConfigurationRevision = 0;
+  int _geometryRevision = 0;
+  int _sentContentRevision = -1;
+  int _sentLayoutGeneration = -1;
+  int _activationId = 0;
+  Offset _scrollOffset = Offset.zero;
+  Rect? _lastViewportBounds;
+  Size? _lastSurfaceSize;
+  Offset? _lastGeometryOffset;
   final Map<int, _PendingEdrConfiguration> _pendingConfigurations = {};
 
+  static int _nextSurfaceSessionId = 0;
+  static int _nextActivationId = 0;
   static const double effectBleed = 24;
   static const double verticalPreload = 240;
 
@@ -39,33 +57,30 @@ final class EdrOverlayController extends ChangeNotifier {
   void attachWindow() {
     if (!supported || _disposed) return;
     _attached = true;
+    _beginActivation();
     EdrReadyRouter.instance
       ..ensureSetUp()
-      ..register(_markNativeReady);
+      ..register(surfaceSessionId, _markNativeReady);
     _scheduleSync();
   }
 
   void detachWindow() {
     if (!_attached) return;
-    EdrReadyRouter.instance.unregister();
+    EdrReadyRouter.instance.unregister(surfaceSessionId);
     _attached = false;
-    _configuredContentRevision = -1;
-    _pendingConfigurations.clear();
     _replaceRenderedTiles(const {});
-    _bridge.clearWindow(++_layoutRevision).ignore();
+    _clearNative();
   }
 
   void setWindowVisible(bool visible) {
     if (!supported || _disposed || _windowVisible == visible) return;
     _windowVisible = visible;
-    _contentRevision++;
-    _configuredContentRevision = -1;
-    _pendingConfigurations.clear();
     if (!visible) {
       _replaceRenderedTiles(const {});
-      if (_attached) _bridge.clearWindow(++_layoutRevision).ignore();
+      if (_attached) _clearNative();
       return;
     }
+    _beginActivation();
     _scheduleSync();
   }
 
@@ -108,6 +123,9 @@ final class EdrOverlayController extends ChangeNotifier {
     }
     _entries[roomId] = next;
     _contentRevision++;
+    if (previous == null || !identical(previous.renderKey, renderKey)) {
+      _geometryCache.invalidate();
+    }
     if (previous != null &&
         !identical(previous.renderKey, renderKey) &&
         identical(_renderedTiles[roomId], previous.renderKey)) {
@@ -121,6 +139,9 @@ final class EdrOverlayController extends ChangeNotifier {
     if (current == null || !identical(current.renderKey, renderKey)) return;
     current.renderState.value = false;
     _entries.remove(roomId);
+    _geometryCache
+      ..remove(roomId)
+      ..invalidate();
     _contentRevision++;
     if (identical(_renderedTiles[roomId], renderKey)) {
       _replaceRenderedTiles({..._renderedTiles}..remove(roomId));
@@ -129,12 +150,14 @@ final class EdrOverlayController extends ChangeNotifier {
   }
 
   void requestGeometrySync() {
-    _contentRevision++;
+    _geometryCache.invalidate();
     _scheduleSync();
   }
 
-  void requestVisibilitySync() {
-    _contentRevision++;
+  void updateScrollOffset(Offset offset) {
+    if (_scrollOffset == offset) return;
+    _scrollOffset = offset;
+    _sendGeometryFast(offset);
     _scheduleSync();
   }
 
@@ -142,12 +165,12 @@ final class EdrOverlayController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     if (_attached) {
-      EdrReadyRouter.instance.unregister();
-      _bridge.clearWindow(++_layoutRevision).ignore();
+      EdrReadyRouter.instance.unregister(surfaceSessionId);
+      _clearNative();
     }
     _entries.clear();
+    _geometryCache.clear();
     _pendingConfigurations.clear();
-    _configuredContentRevision = -1;
     _renderedTiles = const {};
     super.dispose();
   }
@@ -175,106 +198,53 @@ final class EdrOverlayController extends ChangeNotifier {
     _syncInProgress = false;
   }
 
-  Future<void> _sendCurrentSnapshot() async {
-    if (_disposed) return;
-    final surface = surfaceKey.currentContext?.findRenderObject();
+  void _sendGeometryFast(Offset offset) {
+    final viewport = _lastViewportBounds;
+    final layoutGeneration = _sentLayoutGeneration;
     if (!_attached ||
         !_windowVisible ||
-        surface is! RenderBox ||
-        !surface.hasSize) {
+        viewport == null ||
+        layoutGeneration < 0 ||
+        _activationId <= 0) {
       return;
     }
-    final surfaceOrigin = surface.localToGlobal(Offset.zero);
-    final viewport = (surfaceOrigin & surface.size).inflate(verticalPreload);
-    final measuredTiles = _measureTiles()
-        .where((tile) => tile.bounds.overlaps(viewport))
-        .toList(growable: false);
-    final tiles = <EdrTileSnapshot>[
-      for (final measured in measuredTiles)
-        measured.snapshot(relativeTo: surfaceOrigin),
-    ];
-    final contentRevision = _contentRevision;
-    final nextRenderedTiles = {
-      for (final measured in measuredTiles)
-        if (identical(
-          _entries[measured.roomId]?.renderKey,
-          measured.entry.renderKey,
-        ))
-          measured.roomId: measured.entry.renderKey,
-    };
-    if (_configuredContentRevision == contentRevision &&
-        mapEquals(_renderedTiles, nextRenderedTiles)) {
-      return;
-    }
-    final revision = ++_layoutRevision;
-    _pendingConfigurations[revision] = _PendingEdrConfiguration(
-      contentRevision: contentRevision,
-      renderedTiles: nextRenderedTiles,
-    );
-    try {
-      await _bridge.configureWindow(
-        revision,
-        surfaceOrigin.dx,
-        surfaceOrigin.dy,
-        surface.size.width,
-        surface.size.height,
-        tiles,
-      );
-    } catch (error) {
-      _pendingConfigurations.remove(revision);
-      debugPrint('Нативный EDR-overlay недоступен: $error');
-      _replaceRenderedTiles(const {});
-      return;
-    }
-    if (_disposed || !_attached) return;
-    if (_contentRevision != contentRevision) {
-      _syncAgain = true;
-    }
+    final geometryRevision = ++_geometryRevision;
+    _lastGeometryOffset = offset;
+    _bridge
+        .updateWindowGeometry(
+          surfaceSessionId,
+          _activationId,
+          layoutGeneration,
+          geometryRevision,
+          viewport.left,
+          viewport.top,
+          viewport.width,
+          viewport.height,
+          offset.dx,
+          offset.dy,
+        )
+        .catchError((Object error) {
+          debugPrint('Быстрый нативный EDR-scroll недоступен: $error');
+          _lastGeometryOffset = null;
+          _scheduleSync();
+        });
   }
 
-  void _markNativeReady(int revision) {
-    final configuration = _pendingConfigurations.remove(revision);
-    if (_disposed || configuration == null || revision != _layoutRevision) {
+  void _markNativeReady(int activationId, int revision) {
+    final configuration = _pendingConfigurations[revision];
+    if (_disposed ||
+        activationId != _activationId ||
+        configuration == null ||
+        revision != _contentConfigurationRevision) {
       return;
     }
-    if (configuration.contentRevision != _contentRevision) {
+    _pendingConfigurations.remove(revision);
+    if (configuration.contentRevision != _contentRevision ||
+        configuration.layoutGeneration != _geometryCache.layoutGeneration) {
       _scheduleSync();
       return;
     }
     _pendingConfigurations.removeWhere((key, _) => key < revision);
-    _configuredContentRevision = configuration.contentRevision;
     _replaceRenderedTiles(configuration.renderedTiles);
-  }
-
-  List<_MeasuredEdrTile> _measureTiles() {
-    final tiles = <_MeasuredEdrTile>[];
-    for (final MapEntry(key: roomId, value: entry) in _entries.entries) {
-      final renderObject = entry.renderKey.currentContext?.findRenderObject();
-      if (renderObject is! RenderBox || !renderObject.hasSize) continue;
-      final globalOrigin = renderObject.localToGlobal(Offset.zero);
-      tiles.add(
-        _MeasuredEdrTile(
-          roomId: roomId,
-          globalOrigin: globalOrigin,
-          bounds: globalOrigin & renderObject.size,
-          entry: entry,
-        ),
-      );
-    }
-    return tiles;
-  }
-
-  void _replaceRenderedTiles(Map<String, GlobalKey> next) {
-    if (mapEquals(_renderedTiles, next)) return;
-    final affectedRoomIds = {..._renderedTiles.keys, ...next.keys};
-    _renderedTiles = Map.unmodifiable(next);
-    for (final roomId in affectedRoomIds) {
-      final entry = _entries[roomId];
-      if (entry == null) continue;
-      final rendered = identical(next[roomId], entry.renderKey);
-      if (entry.renderState.value != rendered) {
-        entry.renderState.value = rendered;
-      }
-    }
   }
 }

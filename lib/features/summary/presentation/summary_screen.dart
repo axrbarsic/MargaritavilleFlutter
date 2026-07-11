@@ -48,12 +48,14 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
   late final EdrOverlayController _edrWindow;
   late final ScrollController _scrollController;
   late final bool _ownsScrollController;
+  (double, double, double, AxisDirection)? _lastEdrLayoutMetrics;
 
   @override
   void initState() {
     super.initState();
     _ownsScrollController = widget.scrollController == null;
     _scrollController = widget.scrollController ?? ScrollController();
+    _scrollController.addListener(_synchronizeEdrScrollOffset);
     _visualPulses = SummaryVisualPulseCoordinator()
       ..addListener(_onVisualEventsChanged);
     _edrWindow = EdrOverlayController();
@@ -75,6 +77,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
       ..removeListener(_onVisualEventsChanged)
       ..dispose();
     _edrWindow.dispose();
+    _scrollController.removeListener(_synchronizeEdrScrollOffset);
     if (_ownsScrollController) _scrollController.dispose();
     super.dispose();
   }
@@ -130,36 +133,33 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
                         EdrWindowSurface(controller: _edrWindow),
                       NotificationListener<ScrollMetricsNotification>(
                         onNotification: _synchronizeEdrViewport,
-                        child: NotificationListener<ScrollNotification>(
-                          onNotification: _synchronizeEdrVisibility,
-                          child: ListView(
-                            controller: _scrollController,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(
-                              SummaryLayoutTokens.contentHorizontalPadding,
-                              0,
-                              SummaryLayoutTokens.contentHorizontalPadding,
-                              SummaryLayoutTokens.contentBottomPadding,
-                            ),
-                            children: [
-                              Column(
-                                children: [
-                                  for (
-                                    var index = 0;
-                                    index < sections.length;
-                                    index++
-                                  ) ...[
-                                    if (index > 0)
-                                      const SizedBox(
-                                        height:
-                                            SummaryLayoutTokens.sectionSpacing,
-                                      ),
-                                    _edrSection(sections[index]),
-                                  ],
-                                ],
-                              ),
-                            ],
+                        child: ListView(
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(
+                            SummaryLayoutTokens.contentHorizontalPadding,
+                            0,
+                            SummaryLayoutTokens.contentHorizontalPadding,
+                            SummaryLayoutTokens.contentBottomPadding,
                           ),
+                          children: [
+                            Column(
+                              children: [
+                                for (
+                                  var index = 0;
+                                  index < sections.length;
+                                  index++
+                                ) ...[
+                                  if (index > 0)
+                                    const SizedBox(
+                                      height:
+                                          SummaryLayoutTokens.sectionSpacing,
+                                    ),
+                                  _edrSection(sections[index]),
+                                ],
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -178,13 +178,23 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
   }
 
   bool _synchronizeEdrViewport(ScrollMetricsNotification notification) {
+    final metrics = notification.metrics;
+    final layoutMetrics = (
+      metrics.viewportDimension,
+      metrics.minScrollExtent,
+      metrics.maxScrollExtent,
+      metrics.axisDirection,
+    );
+    if (_lastEdrLayoutMetrics == layoutMetrics) return false;
+    _lastEdrLayoutMetrics = layoutMetrics;
     _edrWindow.requestGeometrySync();
     return false;
   }
 
-  bool _synchronizeEdrVisibility(ScrollNotification notification) {
-    _edrWindow.requestVisibilitySync();
-    return false;
+  void _synchronizeEdrScrollOffset() {
+    if (_scrollController.hasClients) {
+      _edrWindow.updateScrollOffset(Offset(0, _scrollController.offset));
+    }
   }
 
   Widget _edrSection(

@@ -7,6 +7,11 @@ import 'package:pigeon/pigeon.dart';
     dartPackageName: 'margaritaville_flutter',
     swiftOut: 'ios/Runner/EdrOverlayApi.g.swift',
     swiftOptions: SwiftOptions(),
+    kotlinOut:
+        'android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/EdrOverlayApi.g.kt',
+    kotlinOptions: KotlinOptions(
+      package: 'com.alex.margaritaville.flutter.beta.edr',
+    ),
   ),
 )
 class EdrTileSnapshot {
@@ -31,18 +36,37 @@ class EdrTileSnapshot {
 @HostApi()
 abstract class EdrOverlayHostApi {
   void configureWindow(
-    int revision,
+    int surfaceSessionId,
+    int activationId,
+    int layoutGeneration,
+    int contentRevision,
+    int geometryRevision,
     double viewportLeft,
     double viewportTop,
     double viewportWidth,
     double viewportHeight,
+    double scrollOffsetX,
+    double scrollOffsetY,
     List<EdrTileSnapshot> tiles,
   );
 
-  void clearWindow(int revision);
+  void updateWindowGeometry(
+    int surfaceSessionId,
+    int activationId,
+    int layoutGeneration,
+    int geometryRevision,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
+    double scrollOffsetX,
+    double scrollOffsetY,
+  );
+
+  void clearWindow(int surfaceSessionId, int activationId, int contentRevision);
 }
 
 @FlutterApi()
 abstract class EdrOverlayFlutterApi {
-  void windowReady(int revision);
+  void windowReady(int surfaceSessionId, int activationId, int contentRevision);
 }

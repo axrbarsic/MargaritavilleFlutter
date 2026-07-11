@@ -66,4 +66,11 @@ class HdrDisplayFoundationTest {
         assertFalse(decision.shouldRequestHdrWindow)
         assertFalse(decision.shouldRequestHeadroom)
     }
+
+    @Test
+    fun `ratio listener requires both API and per-display availability`() {
+        assertFalse(HdrWindowPolicy.shouldObserveHdrSdrRatio(33, ratioAvailable = true))
+        assertFalse(HdrWindowPolicy.shouldObserveHdrSdrRatio(34, ratioAvailable = false))
+        assertTrue(HdrWindowPolicy.shouldObserveHdrSdrRatio(34, ratioAvailable = true))
+    }
 }
