@@ -50,17 +50,12 @@ extension WorkSessionRoomAssignmentReplacement on WorkSession {
 
     final nextAssignments = <WorkAssignment>[
       for (var index = 0; index < activeHousekeepers.length; index++)
-        WorkAssignment(
-          id: 'test-work-item-${index + 1}-${changedAt.microsecondsSinceEpoch}',
+        _replacementAssignment(
+          existing: assignments,
           cartNumber: index + 1,
           housekeeper: activeHousekeepers[index],
-          territoryId: _territoryForAssignedRooms(
-            roomsByAssignment[index],
-            cartNumber: index + 1,
-          ),
-          assignedAt: changedAt,
-          updatedAt: changedAt,
           rooms: roomsByAssignment[index],
+          changedAt: changedAt,
         ),
     ];
     return WorkSessionMutation(
@@ -68,6 +63,38 @@ extension WorkSessionRoomAssignmentReplacement on WorkSession {
       status: WorkSessionMutationStatus.changed,
     );
   }
+}
+
+WorkAssignment _replacementAssignment({
+  required List<WorkAssignment> existing,
+  required int cartNumber,
+  required Housekeeper housekeeper,
+  required List<RoomState> rooms,
+  required DateTime changedAt,
+}) {
+  final previous = existing.cast<WorkAssignment?>().firstWhere(
+    (value) => value?.cartNumber == cartNumber,
+    orElse: () => null,
+  );
+  final territoryId = _territoryForAssignedRooms(rooms, cartNumber: cartNumber);
+  if (previous != null) {
+    return previous.copyWith(
+      housekeeper: housekeeper,
+      territoryId: territoryId,
+      updatedAt: changedAt,
+      rooms: rooms,
+      deletedAt: null,
+    );
+  }
+  return WorkAssignment(
+    id: 'test-work-item-$cartNumber',
+    cartNumber: cartNumber,
+    housekeeper: housekeeper,
+    territoryId: territoryId,
+    assignedAt: changedAt,
+    updatedAt: changedAt,
+    rooms: rooms,
+  );
 }
 
 String _territoryForAssignedRooms(

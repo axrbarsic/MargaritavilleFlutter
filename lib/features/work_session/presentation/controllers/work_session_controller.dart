@@ -48,6 +48,7 @@ final workSessionControllerProvider =
 
 final class WorkSessionController extends AsyncNotifier<WorkSession> {
   var _commandSequence = 0;
+  var _commandIdSequence = 0;
   Future<void> _commandTail = Future<void>.value();
 
   @override
@@ -255,7 +256,7 @@ final class WorkSessionController extends AsyncNotifier<WorkSession> {
     );
     try {
       final result = await handler.execute(current, command);
-      if (result.status == WorkSessionMutationStatus.changed) {
+      if (result.session != current) {
         state = AsyncData(result.session);
       }
       return result.status;
@@ -274,7 +275,8 @@ final class WorkSessionController extends AsyncNotifier<WorkSession> {
   }
 
   String _commandId() {
+    _commandIdSequence++;
     return 'local-${ref.read(clockProvider).now().microsecondsSinceEpoch}-'
-        '$_commandSequence';
+        '$_commandIdSequence';
   }
 }

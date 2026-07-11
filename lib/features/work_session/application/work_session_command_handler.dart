@@ -1,6 +1,7 @@
 import '../domain/models/work_session.dart';
 import '../domain/repositories/work_session_repository.dart';
 import 'commands/work_session_command.dart';
+import 'commands/work_session_command_descriptor.dart';
 
 final class WorkSessionCommandHandler {
   const WorkSessionCommandHandler(this._repository);
@@ -10,8 +11,16 @@ final class WorkSessionCommandHandler {
   Future<WorkSessionMutation> execute(
     WorkSession session,
     WorkSessionCommand command,
-  ) async {
-    final result = switch (command) {
+  ) {
+    return _repository.commitCommand(
+      fallbackSession: session,
+      descriptor: command.toDescriptor(),
+      mutate: (authoritative) => _apply(authoritative, command),
+    );
+  }
+
+  WorkSessionMutation _apply(WorkSession session, WorkSessionCommand command) {
+    return switch (command) {
       final ToggleHousekeeperWorkItemCommand command =>
         session.toggleHousekeeperWorkItem(
           housekeeperId: command.housekeeperId,
@@ -75,10 +84,6 @@ final class WorkSessionCommandHandler {
       final AdvanceScheduledRoomsCommand command =>
         session.advanceScheduledRooms(now: command.issuedAt),
     };
-    if (result.status == WorkSessionMutationStatus.changed) {
-      await _repository.replaceSession(result.session);
-    }
-    return result;
   }
 
   WorkSessionMutation _asMutation(WorkSession previous, WorkSession next) {

@@ -20,11 +20,20 @@ extension WorkSessionSetupActions on WorkSession {
     if (normalizedId.isEmpty || normalizedName.isEmpty) return _ignored();
     final existing = assignmentForHousekeeper(normalizedId);
     if (existing != null) {
+      final tombstoned = existing.copyWith(
+        updatedAt: changedAt,
+        deletedAt: changedAt,
+        rooms: [
+          for (final room in existing.rooms)
+            if (room.isDeleted) room else room.tombstone(changedAt: changedAt),
+        ],
+      );
       return WorkSessionMutation(
         session: _copy(
-          assignments: assignments
-              .where((value) => value.id != existing.id)
-              .toList(),
+          assignments: [
+            for (final value in assignments)
+              if (value.id == existing.id) tombstoned else value,
+          ],
           updatedAt: changedAt,
         ),
         status: WorkSessionMutationStatus.changed,
@@ -45,23 +54,39 @@ extension WorkSessionSetupActions on WorkSession {
       nextCartNumber,
       boundTerritoryIds: activeAssignments.map((value) => value.territoryId),
     );
-    final assignment = WorkAssignment.create(
-      id: _uniqueAssignmentId(
-        'work-item-$nextCartNumber-${changedAt.microsecondsSinceEpoch}',
-      ),
-      cartNumber: nextCartNumber,
-      housekeeper: Housekeeper(
-        id: normalizedId,
-        displayName: normalizedName,
-        paletteKey: paletteKey,
-        updatedAt: changedAt,
-      ),
-      assignedAt: changedAt,
-      territoryId: territoryId,
+    final housekeeper = Housekeeper(
+      id: normalizedId,
+      displayName: normalizedName,
+      paletteKey: paletteKey,
+      updatedAt: changedAt,
     );
+    final reusable = assignments.cast<WorkAssignment?>().firstWhere(
+      (value) =>
+          value?.cartNumber == nextCartNumber && value?.deletedAt != null,
+      orElse: () => null,
+    );
+    final assignment = reusable == null
+        ? WorkAssignment.create(
+            id: _uniqueAssignmentId('work-item-$nextCartNumber'),
+            cartNumber: nextCartNumber,
+            housekeeper: housekeeper,
+            assignedAt: changedAt,
+            territoryId: territoryId,
+          )
+        : reusable.copyWith(
+            housekeeper: housekeeper,
+            territoryId: territoryId,
+            updatedAt: changedAt,
+            deletedAt: null,
+          );
     return WorkSessionMutation(
       session: _copy(
-        assignments: [...assignments, assignment],
+        assignments: reusable == null
+            ? [...assignments, assignment]
+            : [
+                for (final value in assignments)
+                  if (value.id == reusable.id) assignment else value,
+              ],
         updatedAt: changedAt,
       ),
       status: WorkSessionMutationStatus.changed,

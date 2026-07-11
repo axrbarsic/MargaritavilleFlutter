@@ -22,6 +22,22 @@ if rg -n "features/.+/(data|presentation)/" \
   failed=1
 fi
 
+replace_session_files=$(rg -l 'replaceSession\(' \
+  lib/features/work_session --glob '*.dart' | sort || true)
+expected_replace_session_files=$(printf '%s\n' \
+  'lib/features/work_session/data/repositories/drift_work_session_repository.dart' \
+  'lib/features/work_session/domain/repositories/work_session_repository.dart' \
+  'lib/features/work_session/presentation/controllers/work_session_controller.dart')
+replace_session_call_count=$(rg -o 'replaceSession\(' \
+  lib/features/work_session --glob '*.dart' | wc -l | tr -d ' ')
+if [[ "$replace_session_files" != "$expected_replace_session_files" ]] || \
+   [[ "$replace_session_call_count" != "3" ]] || \
+   ! rg -q 'repository\.commitCommand\(' \
+     lib/features/work_session/application/work_session_command_handler.dart; then
+  echo "ERROR: WorkSession commands must mutate only through the durable ledger"
+  failed=1
+fi
+
 if rg -n "package:(flutter|flutter_riverpod|shared_preferences)" \
   lib/features/settings/domain --glob '*.dart'; then
   echo "ERROR: settings domain imports a framework package"

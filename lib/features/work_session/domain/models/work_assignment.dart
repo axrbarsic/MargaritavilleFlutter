@@ -2,6 +2,8 @@ import '../catalogs/margaritaville_room_catalog.dart';
 import 'housekeeper.dart';
 import 'room_state.dart';
 
+const _unchangedAssignmentDeletedAt = Object();
+
 final class WorkAssignment {
   WorkAssignment({
     required this.id,
@@ -81,6 +83,7 @@ final class WorkAssignment {
     DateTime? updatedAt,
     String? territoryId,
     List<RoomState>? rooms,
+    Object? deletedAt = _unchangedAssignmentDeletedAt,
   }) {
     return WorkAssignment(
       id: id,
@@ -89,7 +92,9 @@ final class WorkAssignment {
       assignedAt: assignedAt,
       updatedAt: updatedAt ?? this.updatedAt,
       territoryId: territoryId ?? this.territoryId,
-      deletedAt: deletedAt,
+      deletedAt: deletedAt == _unchangedAssignmentDeletedAt
+          ? this.deletedAt
+          : deletedAt as DateTime?,
       rooms: rooms ?? this.rooms,
     );
   }

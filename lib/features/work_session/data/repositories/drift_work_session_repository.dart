@@ -1,11 +1,13 @@
 import 'package:drift/drift.dart';
 
 import '../../../../shared/persistence/app_database.dart';
+import '../../../../shared/persistence/drift_command_ledger.dart';
 import '../../domain/models/housekeeper.dart';
 import '../../domain/models/room_state.dart';
 import '../../domain/models/room_timestamps.dart';
 import '../../domain/models/work_assignment.dart';
 import '../../domain/models/work_session.dart';
+import '../../domain/models/work_session_command_descriptor.dart';
 import '../../domain/repositories/work_session_repository.dart';
 import '../local/work_session_graph_writer.dart';
 
@@ -44,6 +46,62 @@ final class DriftWorkSessionRepository implements WorkSessionRepository {
   @override
   Future<void> replaceSession(WorkSession session) {
     return WorkSessionGraphWriter(_database).replace(session);
+  }
+
+  @override
+  Future<WorkSessionMutation> commitCommand({
+    required WorkSession fallbackSession,
+    required WorkSessionCommandDescriptor descriptor,
+    required WorkSessionMutation Function(WorkSession session) mutate,
+  }) async {
+    WorkSessionMutation? evaluated;
+    final status = await DriftCommandLedger(_database).commit(
+      envelope: CommandLedgerEnvelope(
+        sessionId: fallbackSession.id,
+        commandId: descriptor.commandId,
+        commandVersion: descriptor.version,
+        commandType: descriptor.commandType,
+        commandFingerprint: CommandLedgerEnvelope.fingerprint(
+          descriptor.canonicalPayload,
+        ),
+        issuedAt: descriptor.issuedAt,
+        eventId: 'work-session:${fallbackSession.id}:${descriptor.commandId}',
+        eventType: descriptor.eventType,
+        eventPayload: descriptor.eventPayload,
+      ),
+      mutate: () async {
+        final authoritative = await loadSession(fallbackSession.id);
+        if (authoritative == null) {
+          throw StateError('Missing work session ${fallbackSession.id}.');
+        }
+        final result = mutate(authoritative);
+        evaluated = result;
+        if (result.status != WorkSessionMutationStatus.changed) return false;
+        await WorkSessionGraphWriter(
+          _database,
+        ).reconcileInCurrentTransaction(result.session);
+        return true;
+      },
+    );
+    final authoritative = await loadSession(fallbackSession.id);
+    if (authoritative == null) {
+      throw StateError('Missing work session ${fallbackSession.id}.');
+    }
+    if (status == CommandLedgerStatus.duplicate) {
+      return WorkSessionMutation(
+        session: authoritative,
+        status: WorkSessionMutationStatus.ignored,
+      );
+    }
+    final result = evaluated;
+    if (result == null) {
+      throw StateError('Command ${descriptor.commandId} was not evaluated.');
+    }
+    return WorkSessionMutation(
+      session: authoritative,
+      status: result.status,
+      conflict: result.conflict,
+    );
   }
 
   Future<WorkSession> _hydrate(WorkSessionRow session) async {

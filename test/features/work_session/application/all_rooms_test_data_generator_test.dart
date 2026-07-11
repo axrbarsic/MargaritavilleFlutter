@@ -10,6 +10,7 @@ import 'package:margaritaville_flutter/features/work_session/domain/models/hotel
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/models/work_session_command_descriptor.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/repositories/work_session_repository.dart';
 
 void main() {
@@ -190,6 +191,20 @@ WorkSession _session(DateTime now) {
 final class _RecordingRepository implements WorkSessionRepository {
   WorkSession? session;
   int writeCount = 0;
+
+  @override
+  Future<WorkSessionMutation> commitCommand({
+    required WorkSession fallbackSession,
+    required WorkSessionCommandDescriptor descriptor,
+    required WorkSessionMutation Function(WorkSession session) mutate,
+  }) async {
+    final result = mutate(session ?? fallbackSession);
+    if (result.status == WorkSessionMutationStatus.changed) {
+      session = result.session;
+      writeCount++;
+    }
+    return result;
+  }
 
   @override
   Future<WorkSession?> loadLatestSession() async => session;

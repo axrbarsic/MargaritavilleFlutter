@@ -1248,3 +1248,52 @@ haptics. Физический Pixel сейчас заблокирован, по�
   20 активных catalog rows и одна сохранённая смена. Физический screenshot
   подтверждает главную матрицу вместо error/retry gate; видимы `Ana` и
   `Kerlange`.
+
+## 2026-07-11 — Checkpoint 15B: durable mutation foundation смены
+
+- Три независимых read-only агента подтвердили единый архитектурный дефект:
+  `WorkSessionCommandHandler` обходил существующий `DriftCommandLedger`, а
+  `WorkSessionGraphWriter` удалял все mutable child rows и вставлял их заново.
+  Root перепроверил execution path, Swift build 37 cart identity и неизменность
+  target fingerprints до первой правки.
+- Work-session command boundary теперь атомарно claim-ит durable receipt,
+  загружает authoritative session из Drift внутри той же transaction, применяет
+  pure-domain command, reconciles projection и только затем пишет ровно один
+  history event/outbox. Exact duplicate не вызывает domain callback, другой
+  fingerprint того же ID отклоняется, ignored/blocked сохраняет receipt без
+  history/outbox.
+- Полное delete/reinsert заменено session-scoped upsert и tombstone reconcile.
+  Неизменённые session/housekeeper/assignment/room rowid сохраняются; notes,
+  consumables, media/audit/sync projections и unrelated sessions не затрагиваются.
+  Drift schema остаётся v9, generated/schema-файлы не менялись.
+- Cart identity отвязана от timestamp. Снятая тележка и её комнаты становятся
+  tombstones; повторное использование того же cart number реактивирует тот же
+  assignment ID с пустым активным room selection, но не уничтожает Cart Details
+  content. Массовый test-data replace также переиспользует существующую cart
+  identity по номеру.
+- Красные интеграционные тесты сначала воспроизвели отсутствие ledger rows,
+  неотклоняемый collision, ignored без receipt и lost update двух stale clients.
+  Дополнительные tests закрепляют child rowid, note/consumable preservation,
+  remove/re-add и полную изоляцию второй смены.
+- Первый полный gate выявил скрытую коллизию локальных command ID: методы,
+  вычислявшие timestamp раньше ID, могли повторить ID следующей команды.
+  Идентификатор получил независимую монотонную последовательность; shell и
+  controller tests подтвердили исправление без ослабления fingerprint guard.
+- Финальный `tool/quality_gate.sh` зелёный: Pigeon, voice/media contracts, Drift
+  reproducibility, format, analyze, `244` Flutter tests, Android JVM tests,
+  file-size `300` и architecture guard. UI/HDR/EDR/media runtime в checkpoint
+  не изменялись.
+- Свежий correctness-review дал `PASS` без P0/P1. Единственное P2 о сохранённой
+  bootstrap-точке `replaceSession` закрыто принуждением: architecture guard
+  разрешает её только в repository declaration/implementation и при создании
+  первой смены в controller, а application handler обязан вызывать
+  `commitCommand`. Любой новый production caller теперь ломает gate вместо
+  незаметного обхода durable ledger.
+- Подписанная physical profile-сборка прошла deep codesign и bundle guard
+  восьми IOS frameworks, установлена на iPhone 17 Pro Max и запущена после
+  завершения двух stale Runner-процессов. После реального startup приложение
+  имело ровно один Runner. Остановленная для консистентного снимка база прошла
+  `integrity_check=ok`, осталась на schema v9, содержит одну смену и шесть
+  durable command receipts; после аудита приложение перезапущено, снова ровно
+  одним Runner. Это подтверждает не только install/launch, но и первое живое
+  открытие Drift на физическом устройстве.
