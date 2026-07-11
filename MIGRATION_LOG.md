@@ -1338,3 +1338,20 @@ haptics. Физический Pixel сейчас заблокирован, по�
   direct v9→v10 test теперь также сверяет `next_attempt_at` и
   `acknowledged_at`; отдельный тест подтверждает независимость одинакового
   command ID в двух aggregate scopes.
+
+## 2026-07-11 — Начало Checkpoint 15D: Catalog Editor build 37
+
+- После v10 начат следующий безопасный vertical slice: pure-Dart правила
+  каталога. Зафиксированы точные десять palette keys в donor-порядке, trim,
+  diacritic/case folding стабильного ID, схлопывание разделителей, fallback
+  `housekeeper`, суффиксы `-2/-3`, append-палитра по `existing.length % 10` и
+  известные printed-sheet alias groups build 37.
+- Donor-дефект не скопирован: добавление printed-sheet duplicate в Swift может
+  вернуть объект, который немедленно исчезает после canonicalization. Flutter
+  pure domain честно отклоняет blank/duplicate до persistence. Красный тест
+  сначала подтвердил отсутствие правил, затем четыре contract tests стали
+  зелёными; analyze и file-size guard также зелёные.
+- Следующий срез 15D: durable add/rename/palette commands через aggregate scope
+  `housekeeper-catalog:margaritaville`, reactive provider и Settings editor с
+  измеренными build-37 bounds. Delete/restore и судьба active assignment всё
+  ещё явно deferred до продуктового решения.
