@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/core/time/clock.dart';
 import 'package:margaritaville_flutter/features/work_session/application/ports/room_schedule_notification_client.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
@@ -80,6 +83,37 @@ void main() {
       );
     },
   );
+
+  test('all-room test action uses the serialized persistence path', () async {
+    final now = DateTime.utc(2027, 2, 10, 12);
+    final repository = _MemoryRepository(_session(now));
+    final container = ProviderContainer(
+      overrides: [
+        clockProvider.overrideWithValue(FixedClock(now)),
+        workSessionRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(workSessionControllerProvider.future);
+
+    await container
+        .read(workSessionControllerProvider.notifier)
+        .activateAllRoomsForTesting(random: Random(42));
+
+    final roomNumbers = repository.session.activeRooms
+        .map((room) => room.roomNumber)
+        .toList(growable: false);
+    expect(repository.writeCount, 1);
+    expect(
+      roomNumbers,
+      hasLength(MargaritavilleRoomCatalog.roomNumbers.length),
+    );
+    expect(roomNumbers.toSet(), MargaritavilleRoomCatalog.roomNumbers);
+    expect(
+      container.read(workSessionControllerProvider).requireValue,
+      repository.session,
+    );
+  });
 }
 
 WorkSession _session(DateTime now) {
@@ -110,6 +144,7 @@ final class _MemoryRepository implements WorkSessionRepository {
 
   WorkSession session;
   final Duration writeDelay;
+  int writeCount = 0;
 
   @override
   Future<WorkSession?> loadLatestSession() async => session;
@@ -121,6 +156,7 @@ final class _MemoryRepository implements WorkSessionRepository {
   Future<void> replaceSession(WorkSession session) async {
     if (writeDelay > Duration.zero) await Future<void>.delayed(writeDelay);
     this.session = session;
+    writeCount++;
   }
 
   @override

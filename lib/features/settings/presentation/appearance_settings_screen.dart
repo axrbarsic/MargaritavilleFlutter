@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../work_session/presentation/controllers/work_session_controller.dart';
 import '../domain/models/appearance_settings.dart';
 import 'controllers/appearance_settings_controller.dart';
 import 'widgets/appearance_settings_controls.dart';
 import 'widgets/appearance_settings_panel.dart';
 import 'widgets/background_settings_panel.dart';
 import 'widgets/interaction_sound_settings_panel.dart';
+import 'widgets/test_data_settings_panel.dart';
 
 final class AppearanceSettingsScreen extends ConsumerWidget {
   const AppearanceSettingsScreen({super.key});
@@ -39,6 +41,14 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 18),
                         const InteractionSoundSettingsPanel(),
+                        const SizedBox(height: 18),
+                        TestDataSettingsPanel(
+                          onActivateAllRooms: () async {
+                            await ref
+                                .read(workSessionControllerProvider.notifier)
+                                .activateAllRoomsForTesting();
+                          },
+                        ),
                       ],
                     ),
                     error: (error, _) => _error(ref, error),

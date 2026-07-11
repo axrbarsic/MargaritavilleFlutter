@@ -8,6 +8,7 @@ export 'work_session_mutation.dart';
 
 part 'work_session_serialization.dart';
 part 'work_session_room_actions.dart';
+part 'work_session_room_assignment_replacement.dart';
 
 final class WorkSession {
   WorkSession._({

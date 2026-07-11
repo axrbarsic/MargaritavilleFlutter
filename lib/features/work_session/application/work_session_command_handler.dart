@@ -22,6 +22,11 @@ final class WorkSessionCommandHandler {
         roomNumber: command.roomNumber,
         changedAt: command.issuedAt,
       ),
+      final ReplaceAllRoomAssignmentsCommand command =>
+        session.replaceAllRoomAssignments(
+          roomNumbers: command.roomNumbers,
+          changedAt: command.issuedAt,
+        ),
       final LockWorkdayCommand command => _asMutation(
         session,
         session.lockWorkday(changedAt: command.issuedAt),

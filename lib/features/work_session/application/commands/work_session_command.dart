@@ -34,6 +34,16 @@ final class UnassignRoomCommand extends WorkSessionCommand {
   final String roomNumber;
 }
 
+final class ReplaceAllRoomAssignmentsCommand extends WorkSessionCommand {
+  const ReplaceAllRoomAssignmentsCommand({
+    required super.commandId,
+    required super.issuedAt,
+    required this.roomNumbers,
+  });
+
+  final List<String> roomNumbers;
+}
+
 final class LockWorkdayCommand extends WorkSessionCommand {
   const LockWorkdayCommand({required super.commandId, required super.issuedAt});
 }

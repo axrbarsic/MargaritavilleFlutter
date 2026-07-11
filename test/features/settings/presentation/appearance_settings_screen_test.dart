@@ -35,6 +35,11 @@ void main() {
     expect(find.text('Все остальные действия'), findsOneWidget);
     expect(find.text('Ячейка'), findsOneWidget);
     expect(find.text('Зелёная ячейка'), findsOneWidget);
+    expect(find.text('Тестирование'), findsOneWidget);
+    expect(
+      find.text('Задействовать все номера отеля для теста'),
+      findsOneWidget,
+    );
 
     final statusPulse = find.byKey(const Key('setting-status-hdr-pulse'));
     await tester.ensureVisible(statusPulse);
@@ -80,6 +85,12 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byKey(const Key('appearance-settings-header')), findsOneWidget);
     expect(find.byKey(const Key('setting-vip-jelly')), findsOneWidget);
+    final allRoomsAction = find.byKey(
+      const Key('settings-use-all-hotel-rooms'),
+    );
+    await tester.ensureVisible(allRoomsAction);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }
 

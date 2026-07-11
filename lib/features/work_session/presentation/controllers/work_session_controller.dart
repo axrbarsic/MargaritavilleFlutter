@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/time/clock.dart';
+import '../../application/all_rooms_test_data_generator.dart';
 import '../../application/commands/work_session_command.dart';
 import '../../application/ports/room_schedule_notification_client.dart';
 import '../../application/work_session_command_handler.dart';
@@ -84,6 +86,21 @@ final class WorkSessionController extends AsyncNotifier<WorkSession> {
   Future<WorkSessionMutationStatus> unlockWorkday() {
     return _execute(
       UnlockWorkdayCommand(commandId: _commandId(), issuedAt: _nextTimestamp()),
+    );
+  }
+
+  Future<WorkSessionMutationStatus> activateAllRoomsForTesting({
+    Random? random,
+  }) {
+    final roomNumbers = const AllRoomsTestDataGenerator().shuffledRoomNumbers(
+      random ?? Random(),
+    );
+    return _execute(
+      ReplaceAllRoomAssignmentsCommand(
+        commandId: _commandId(),
+        issuedAt: _nextTimestamp(),
+        roomNumbers: roomNumbers,
+      ),
     );
   }
 

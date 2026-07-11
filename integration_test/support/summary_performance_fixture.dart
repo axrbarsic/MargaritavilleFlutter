@@ -1,3 +1,4 @@
+import 'package:margaritaville_flutter/features/work_session/application/all_rooms_test_data_generator.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
@@ -6,8 +7,8 @@ import 'package:margaritaville_flutter/features/work_session/domain/models/room_
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
 
-final int summaryPerformanceRoomCount = MargaritavilleRoomCatalog.territories
-    .fold(0, (total, territory) => total + territory.rooms.length);
+final int summaryPerformanceRoomCount =
+    AllRoomsTestDataGenerator.orderedRoomNumbers.length;
 
 WorkSession summaryPerformanceSession({
   required int vipRoomCount,
@@ -30,9 +31,11 @@ WorkSession summaryPerformanceSession({
         remainingRooms > 0;
     assignmentIndex++
   ) {
-    final territoryRooms = MargaritavilleRoomCatalog
-        .territories[assignmentIndex]
-        .rooms
+    final territoryRooms = AllRoomsTestDataGenerator.orderedRoomNumbers
+        .skip(globalRoomIndex)
+        .take(
+          MargaritavilleRoomCatalog.territories[assignmentIndex].rooms.length,
+        )
         .take(remainingRooms)
         .toList(growable: false);
     remainingRooms -= territoryRooms.length;

@@ -868,3 +868,95 @@ haptics. Физический Pixel сейчас заблокирован, по�
   membership/content change и отдельный geometry call с одним `scrollOffset`.
   Swift должен двигать общий tile-container одним transform без измерения и
   сериализации всех видимых tile descriptors на каждом vsync.
+
+## 2026-07-10 — Checkpoint 8: независимые content/layout/geometry streams
+
+- Build 36 разделяет пять идентификаторов: `surfaceSessionId` конкретного
+  Summary, монотонный `activationId` каждого появления route,
+  `layoutGeneration` стабильных content bounds, `contentRevision`
+  цветов/labels/effects/membership и `geometryRevision` viewport/scroll.
+  Повторно открытый Summary получает новую lease; поздняя команда скрытого
+  экрана больше не может перехватить process-wide overlay.
+- Tile bounds измеряются через `localToGlobal` только при перестройке layout
+  cache. ScrollController listener немедленно отправляет дробный offset,
+  включая отрицательный bounce, до следующего Flutter paint; post-frame проход
+  только проверяет membership. При стабильном наборе Pigeon не создаёт
+  measured/snapshot/map для каждой из 184 комнат и отправляет лишь geometry.
+- SharedAppFoundation revision
+  `375e63aed9a8c14d09e692b936d278c83afeca37` держит tiles в content
+  coordinates и двигает один `tileContainer` одним Core Animation transform.
+  Geometry update не вызывает `tile.apply`, Metal encode, jelly restart или
+  first-frame ownership. Readiness теперь атомарно запрещён внутри reconciliation
+  и требует точного полного ID-набора: уже готовая старая tile больше не может
+  скрыть Flutter fallback до создания и первого Metal-кадра новой VIP tile.
+- Детерминированные tests закрепляют stable membership, immediate geometry,
+  negative bounce, немедленный возврат Flutter fallback для вышедшей native
+  tile, ожидание readiness для новой tile, recycled render key и раздельные
+  callbacks двух sessions. Architecture guard запрещает снова смешивать full
+  content snapshot со scroll geometry и разрешает tile-level `localToGlobal`
+  только внутри rebuild cache.
+- Android получил production UI-toolkit HDR runtime: один window overlay,
+  один Vsync clock, lifecycle/offscreen pause, power/thermal degradation,
+  typed Pigeon adapter, activation lease, first-draw readiness и native Nunito
+  labels. На физическом Pixel 8 `shiba`, Android 17/API 37 подтверждены
+  HDR10/HLG/HDR10+, WCG, thermal `0`, Battery Saver off и `120.00001 Hz`.
+  При неизменной auto-brightness запросы `2x` и `4x` дали соответственно
+  `1.9999417` и `3.99981`, а automatic window headroom с signal `5x/8x` получил
+  `4.999748`. Production использует automatic window request и signal `5x`:
+  это локальный настоящий Gainmap HDR, а не изменение яркости всего окна.
+- Физический Android scroll выявил, что `ScrollMetricsNotification` зря
+  инвалидировал layout cache на каждом pixels change: при неизменном exact
+  room-ID наборе уходили десятки full configure/readiness. После фикса повтор
+  `0 -> 199.24` дал только geometry revisions `3...87`, `0` configure и `0`
+  readiness на стабильном membership; пустых контрольных кадров нет.
+- Свежий physical all-184 build 36 с Matrix + EDR + jelly на iPhone 17 Pro Max
+  при `120 Hz` дал `116.39 FPS`, p95 build/raster `2.40/3.34 ms`, p99
+  `3.36/4.16 ms`, max `4.44/6.17 ms`, `0` over-budget и `67` gaps. Против
+  build 35 это `+1.23 FPS` и `-45` gaps; timestamp probe проверен как свежий.
+  После замера stress harness заменён обычной подписанной profile build 36,
+  которая установлена и запущена на физическом iPhone.
+
+## 2026-07-10 — Checkpoint 9: закреплённый cross-platform HDR ABI
+
+- Рабочий контур вынесен в обязательный
+  `Docs/NATIVE_VISUAL_RUNTIME_CONTRACT.md` и короткие неприкосновенные правила
+  `AGENTS.md`. Зафиксированы platform split, lease/revision ordering,
+  двухфазный ownership, frame-commit readiness, один OS-vsync clock, запрет
+  whole-window brightness и обязательные physical gates. Та же выжимка записана
+  в глобальную Codex memory для новых сессий.
+- Обратный Pigeon callback теперь несёт полную тройку
+  `(surfaceSessionId, activationId, contentRevision)`. Stale readiness старой
+  activation той же Summary surface не удаляет pending актуальной activation и
+  не может скрыть Flutter fallback. Тест сначала воспроизвёл именно такую потерю
+  pending ownership, затем прошёл после исправления.
+- iOS adapter получил monotonic layout/content rejection и защищённый stale
+  clear; Android readiness перенесён с простого `onDraw + post` на hardware
+  `registerFrameCommitCallback`. Generated Dart/Swift/Kotlin Pigeon outputs
+  теперь проверяются воспроизводимым guard-скриптом.
+- Android VIP jelly и status-change pulse перенесены на точные donor formulas:
+  stable FNV seed, segment/radius/transform contract, rise `0.42 s`, peak
+  `0.58 s`, cooling `2.0 s`, rubber multiplier `1.7` и один общий Vsync clock.
+  Нативный label renderer выделен отдельно; каждый Kotlin runtime file снова
+  меньше 300 строк.
+- Видео `IMG_0573.MOV` покадрово выявило отдельный Android defect: fullscreen
+  HDR View cull'ил по viewport intersection, но не clip'ил Canvas, поэтому
+  частично видимая VIP-ячейка целиком вылетала поверх header. Добавлен точный
+  `canvas.clipRect(scene.viewportPx)` без коэффициентов. Повторная физическая
+  4.96-секундная запись Pixel 8 шла `118.96 FPS`; во всех 10 контрольных кадрах
+  native paint остаётся ниже границы header.
+- Pixel 8 подключён штатной Android Wireless Debugging парой `alex@Mac`;
+  контрольный APK успешно установлен через network serial
+  `192.168.2.29:35089`, а не USB. Pairing сохраняется, хотя порт может меняться
+  после reboot/Wi-Fi toggle.
+- Android interaction feedback переведён на поддерживаемые Pixel 8 composition
+  primitives с scale `1.0`; commit/long-press теперь использует заметную связку
+  `CLICK + THUD`, start — `CLICK + QUICK_RISE`, warning —
+  `QUICK_FALL + CLICK`. System settings уже стоят High; это максимум API,
+  дальнейшее усиление может сделать только пользовательская настройка ОС/железо.
+  Финальная связка установлена, но perceptual ручной gate Alex после жалобы о
+  пропавшей отдаче остаётся обязательным перед объявлением parity.
+- В Settings добавлен явный раздел `Тестирование` с подтверждаемой командой
+  `Задействовать все номера отеля для теста`. Все 184 номера перемешиваются и
+  распределяются ровно один раз между активными уборщицами через один
+  application command и одну repository transaction; UI напрямую БД не меняет,
+  cancel оставляет смену нетронутой.
