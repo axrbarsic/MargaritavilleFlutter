@@ -1123,7 +1123,7 @@ haptics. Физический Pixel сейчас заблокирован, по�
   более одного вызова in-flight и отправляют конечный offset. Future/unknown
   geometry на iOS и Android отбрасывается, прежний `pendingGeometry` удалён.
 - Полный gate зелёный: Pigeon/Drift/media/voice reproducibility guards,
-  format/analyze, `197` Flutter tests, Android JVM, file-size и architecture
+  format/analyze, `199` Flutter tests, Android JVM, file-size и architecture
   guards. Android 17/API 37 emulator прошёл install/launch, settings, VIP action
   sheet, Room Details, permission, camera preview, capture и отображение
   локальной миниатюры. Profile iOS build прошла deep codesign и bundle guard
@@ -1142,3 +1142,17 @@ haptics. Физический Pixel сейчас заблокирован, по�
   установленного bundle до обновления, устанавливает app и запускает с
   `--terminate-existing`. Architecture guard не позволяет убрать этот порядок;
   startup recovery пишет фактическую длительность и результат в device log.
+  CoreDevice не связывает orphan-процесс со свежим bundle ID, поэтому скрипт
+  явно завершает все старые `/Runner.app/Runner` на выделенном test device и
+  после запуска требует ровно один такой процесс.
+- После устранения двойного процесса physical database audit нашёл настоящий
+  второй дефект: ранее установленная промежуточная v5-таблица journal не имела
+  `transient_file_path/quarantined_at/failure_reason`, хотя `user_version` уже
+  был равен `5`. Schema v6 ремонтирует только этот неполный вариант через
+  canonical table migration, сохраняет journal row и verified final photo;
+  полноценная v5 проходит как no-op. Тест воспроизводит снятую с iPhone форму
+  таблицы и запрещает возвращение этой регрессии.
+  Дополнительный recovery-test удаляет transient, подставляет точный v6 sentinel
+  и доказывает публикацию уже verified final photo без quarantine. Profile v6
+  прошла guard восьми IOS frameworks и установлена с сохранением data container;
+  физический запуск ожидает только разблокировки iPhone.

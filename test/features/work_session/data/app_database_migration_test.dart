@@ -11,13 +11,13 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  test('v2 to v5 preserves data and adds durable media promotion', () async {
+  test('v2 to v6 preserves data and adds durable media promotion', () async {
     final schema = await verifier.schemaAt(2);
     addTearDown(schema.close);
     _seedV2(schema);
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 5);
+    await verifier.migrateAndValidate(database, 6);
 
     final sessions = await database.select(database.workSessionRecords).get();
     final history = await database.select(database.historyEventRecords).get();
@@ -87,7 +87,7 @@ void main() {
   });
 
   test(
-    'v3 to v5 preserves notes and media while adding media journal',
+    'v3 to v6 preserves notes and media while adding media journal',
     () async {
       final schema = await verifier.schemaAt(3);
       addTearDown(schema.close);
@@ -121,7 +121,7 @@ void main() {
     ''');
 
       final database = AppDatabase.forTesting(schema.newConnection());
-      await verifier.migrateAndValidate(database, 5);
+      await verifier.migrateAndValidate(database, 6);
 
       final notes = await database.select(database.roomNoteRecords).get();
       final media = await database.select(database.mediaManifestRecords).get();
@@ -138,7 +138,7 @@ void main() {
     },
   );
 
-  test('v4 to v5 preserves manifest and creates an empty journal', () async {
+  test('v4 to v6 preserves manifest and creates an empty journal', () async {
     final schema = await verifier.schemaAt(4);
     addTearDown(schema.close);
     final raw = schema.rawDatabase;
@@ -163,7 +163,7 @@ void main() {
     ''');
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 5);
+    await verifier.migrateAndValidate(database, 6);
 
     final media = await database.select(database.mediaManifestRecords).get();
     expect(media.single.id, 'media-v4');

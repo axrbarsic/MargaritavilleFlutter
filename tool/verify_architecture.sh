@@ -331,6 +331,7 @@ fi
 
 if [[ ! -x tool/install_ios_profile.sh ]] || \
    ! rg -q 'device process terminate' tool/install_ios_profile.sh || \
+   ! rg -q 'endswith\(\"/Runner\.app/Runner\"\)' tool/install_ios_profile.sh || \
    ! rg -q -- '--terminate-existing' tool/install_ios_profile.sh; then
   echo "ERROR: iOS profile installer must terminate the old app before update"
   failed=1

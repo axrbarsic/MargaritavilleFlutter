@@ -83,7 +83,7 @@ void main() {
   );
 
   test(
-    'failure after promotion leaves a recoverable journal and final',
+    'verified final recovers after v6 sentinel replaces missing transient',
     () async {
       final source = await _source(sourceDirectory, [2, 4, 6, 8]);
       final failing = _FailOncePromotionRepository(promotionRepository);
@@ -111,6 +111,12 @@ void main() {
         File('${supportDirectory.path}/Media/photo-recover.jpg').existsSync(),
         isTrue,
       );
+      await source.delete();
+      await database.customStatement(
+        'UPDATE media_promotion_records '
+        'SET transient_file_path = ? WHERE operation_id = ?',
+        ['/tmp/margaritaville-recovery-missing-source', 'operation-recover'],
+      );
 
       await RoomMediaPromotionRecovery(
         artifactStore: artifactStore,
@@ -118,6 +124,12 @@ void main() {
       ).recoverAll();
 
       expect(await promotionRepository.pendingMediaPromotions(), isEmpty);
+      expect(
+        await File(
+          '${supportDirectory.path}/Media/photo-recover.jpg',
+        ).readAsBytes(),
+        [2, 4, 6, 8],
+      );
       expect(
         (await detailsRepository.load(
           sessionId: _sessionId,

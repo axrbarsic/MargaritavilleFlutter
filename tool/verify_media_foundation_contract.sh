@@ -48,6 +48,11 @@ require 'quarantineMediaPromotion' \
   'terminal recovery quarantine'
 require 'RoomMediaRecoveryGate' lib/app/margaritaville_app.dart \
   'startup recovery gate before work session UI'
+require 'schemaVersion => 6' lib/shared/persistence/local_database.dart \
+  'physical intermediate-v5 repair version'
+require '_repairPreReleaseMediaJournalV6' \
+  lib/shared/persistence/local_database.dart \
+  'non-destructive intermediate-v5 journal repair'
 
 reject 'image_picker|photo_manager' pubspec.yaml \
   'secondary camera or gallery dependency'

@@ -12,42 +12,30 @@ fi
 
 tool/verify_ios_app_bundle.sh "$app_path"
 
-apps_json="$(mktemp)"
 processes_json="$(mktemp)"
-trap 'rm -f "$apps_json" "$processes_json"' EXIT
+trap 'rm -f "$processes_json"' EXIT
 
-xcrun devicectl device info apps \
+xcrun devicectl device info processes \
   --device "$device_id" \
-  --json-output "$apps_json" >/dev/null
+  --json-output "$processes_json" >/dev/null
 
-installed_url="$({
-  jq -r \
-    --arg bundle_id "$bundle_id" \
-    '.result.apps[] | select(.bundleIdentifier == $bundle_id) | .url' \
-    "$apps_json"
-} | head -n 1)"
-
-if [[ -n "$installed_url" ]]; then
-  xcrun devicectl device info processes \
+# CoreDevice can leave a process from an older dev bundle alive after the app
+# registry already points at a newer installation URL. Those orphaned processes
+# are no longer discoverable by bundle id, but keep Runner's SQLite connection.
+while IFS= read -r pid; do
+  [[ -z "$pid" ]] && continue
+  echo "Terminating stale Flutter Runner process $pid before update..."
+  xcrun devicectl device process terminate \
     --device "$device_id" \
-    --json-output "$processes_json" >/dev/null
-
-  while IFS= read -r pid; do
-    [[ -z "$pid" ]] && continue
-    echo "Terminating installed Margaritaville process $pid before update..."
-    xcrun devicectl device process terminate \
-      --device "$device_id" \
-      --pid "$pid" \
-      --kill
-  done < <(
-    jq -r \
-      --arg installed_url "$installed_url" \
-      '.result.runningProcesses[] |
-       select(.executable | startswith($installed_url)) |
-       .processIdentifier' \
-      "$processes_json"
-  )
-fi
+    --pid "$pid" \
+    --kill
+done < <(
+  jq -r \
+    '.result.runningProcesses[] |
+     select((.executable // "") | endswith("/Runner.app/Runner")) |
+     .processIdentifier' \
+    "$processes_json"
+)
 
 xcrun devicectl device install app \
   --device "$device_id" \
@@ -57,3 +45,17 @@ xcrun devicectl device process launch \
   --device "$device_id" \
   --terminate-existing \
   "$bundle_id"
+
+xcrun devicectl device info processes \
+  --device "$device_id" \
+  --json-output "$processes_json" >/dev/null
+
+runner_count="$({
+  jq '[.result.runningProcesses[] |
+       select((.executable // "") | endswith("/Runner.app/Runner"))] |
+      length' "$processes_json"
+})"
+if [[ "$runner_count" != "1" ]]; then
+  echo "Expected one Flutter Runner after install, found $runner_count" >&2
+  exit 1
+fi

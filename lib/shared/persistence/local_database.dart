@@ -37,7 +37,7 @@ final class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -114,6 +114,12 @@ final class AppDatabase extends _$AppDatabase {
         });
         return;
       }
+      if (from == 5 && to >= 6) {
+        await transaction(() async {
+          await _repairPreReleaseMediaJournalV6(migrator);
+        });
+        return;
+      }
       throw UnsupportedError('Unsupported database upgrade $from -> $to');
     },
     beforeOpen: (details) async {
@@ -148,5 +154,38 @@ final class AppDatabase extends _$AppDatabase {
       mediaManifestRecords.colorSpace,
     );
     await migrator.addColumn(mediaManifestRecords, mediaManifestRecords.isHdr);
+  }
+
+  Future<void> _repairPreReleaseMediaJournalV6(Migrator migrator) async {
+    final columns = await customSelect(
+      "PRAGMA table_info('media_promotion_records')",
+    ).map((row) => row.read<String>('name')).get();
+    const requiredColumns = {
+      'transient_file_path',
+      'quarantined_at',
+      'failure_reason',
+    };
+    if (columns.toSet().containsAll(requiredColumns)) return;
+
+    // Some physical development installs saw an intermediate v5 table before
+    // its recovery metadata was finalized. Rebuild it into the canonical shape
+    // without deleting the journal. The sentinel is only consulted when neither
+    // verified staged nor final bytes exist, in which case recovery quarantines
+    // the row as a missing source instead of publishing unverified media.
+    await migrator.alterTable(
+      TableMigration(
+        mediaPromotionRecords,
+        columnTransformer: {
+          if (!columns.contains('transient_file_path'))
+            mediaPromotionRecords.transientFilePath: const Constant(
+              '/tmp/margaritaville-recovery-missing-source',
+            ),
+          if (!columns.contains('quarantined_at'))
+            mediaPromotionRecords.quarantinedAt: const Constant(null),
+          if (!columns.contains('failure_reason'))
+            mediaPromotionRecords.failureReason: const Constant(null),
+        },
+      ),
+    );
   }
 }
