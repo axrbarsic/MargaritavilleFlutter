@@ -2,18 +2,29 @@ import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
 import '../../domain/models/room_media_item.dart';
+import 'room_media_thumbnail.dart';
 
 final class RoomDetailsMediaSection extends StatelessWidget {
   const RoomDetailsMediaSection({
     required this.media,
     required this.onPhoto,
     required this.onVideo,
+    required this.onOpen,
+    required this.onDelete,
+    required this.resolvePath,
+    this.statusText,
+    this.statusIsError = false,
     super.key,
   });
 
   final List<RoomMediaItem> media;
   final VoidCallback onPhoto;
   final VoidCallback onVideo;
+  final ValueChanged<RoomMediaItem> onOpen;
+  final ValueChanged<RoomMediaItem> onDelete;
+  final ResolveRoomMediaPath resolvePath;
+  final String? statusText;
+  final bool statusIsError;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +59,20 @@ final class RoomDetailsMediaSection extends StatelessWidget {
             ),
           ],
         ),
+        if (statusText case final status?) ...[
+          const SizedBox(height: 10),
+          Text(
+            status,
+            key: const Key('room-details-photo-status'),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: statusIsError
+                  ? MargaritavilleColors.pending
+                  : MargaritavilleColors.secondaryText,
+            ),
+          ),
+        ],
         const SizedBox(height: 14),
         if (visual.isEmpty)
           const Text(
@@ -64,23 +89,56 @@ final class RoomDetailsMediaSection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: RoomMediaThumbnail.height,
             ),
             itemCount: visual.length,
-            itemBuilder: (context, index) => DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.28),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                visual[index].kind == RoomMediaKind.photo
-                    ? Icons.photo_rounded
-                    : Icons.play_circle_fill_rounded,
-                size: 36,
-                color: MargaritavilleColors.secondaryText,
-              ),
-            ),
+            itemBuilder: (context, index) {
+              final item = visual[index];
+              return Center(
+                child: SizedBox(
+                  width: RoomMediaThumbnail.width,
+                  height: RoomMediaThumbnail.height,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: InkWell(
+                          key: ValueKey('room-media-open-${item.id}'),
+                          onTap: () => onOpen(item),
+                          borderRadius: BorderRadius.circular(14),
+                          child: RoomMediaThumbnail(
+                            media: item,
+                            resolvePath: resolvePath,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 7,
+                        top: 7,
+                        child: IconButton(
+                          key: ValueKey('room-media-delete-${item.id}'),
+                          tooltip: 'Удалить медиа',
+                          onPressed: () => onDelete(item),
+                          icon: const Icon(Icons.delete_rounded),
+                          iconSize: 12,
+                          color: Colors.white,
+                          style: IconButton.styleFrom(
+                            fixedSize: const Size(30, 30),
+                            minimumSize: const Size(30, 30),
+                            padding: EdgeInsets.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: MargaritavilleColors.pending
+                                .withValues(alpha: 0.94),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
       ],
     );

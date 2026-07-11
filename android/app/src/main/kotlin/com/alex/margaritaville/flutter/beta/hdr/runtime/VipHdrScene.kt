@@ -123,6 +123,7 @@ data class VipHdrScene(
     val viewportPx: VipHdrRectPx,
     val cells: List<VipHdrCellVisual>,
     val contentRevision: Long? = null,
+    val presentationRevision: Long? = null,
 ) {
     init {
         require(cells.map(VipHdrCellVisual::id).distinct().size == cells.size) {

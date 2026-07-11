@@ -76,6 +76,7 @@ typedef _ConfigurationCall = ({
   int activationId,
   int layoutGeneration,
   int contentRevision,
+  int presentationRevision,
   int geometryRevision,
   Rect viewport,
   Offset scrollOffset,
@@ -86,6 +87,7 @@ typedef _GeometryCall = ({
   int surfaceSessionId,
   int activationId,
   int layoutGeneration,
+  int presentationRevision,
   int geometryRevision,
   Rect viewport,
   Offset scrollOffset,
@@ -94,6 +96,7 @@ typedef _GeometryCall = ({
 class _RecordingEdrBridge implements EdrOverlayBridge {
   final configurations = <_ConfigurationCall>[];
   final geometries = <_GeometryCall>[];
+  final suspensions = <(int, int, int)>[];
   final clears = <(int, int, int)>[];
 
   List<EdrTileSnapshot> get lastTiles =>
@@ -114,6 +117,7 @@ class _RecordingEdrBridge implements EdrOverlayBridge {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -128,6 +132,7 @@ class _RecordingEdrBridge implements EdrOverlayBridge {
       activationId: activationId,
       layoutGeneration: layoutGeneration,
       contentRevision: contentRevision,
+      presentationRevision: presentationRevision,
       geometryRevision: geometryRevision,
       viewport: Rect.fromLTWH(
         viewportLeft,
@@ -145,6 +150,7 @@ class _RecordingEdrBridge implements EdrOverlayBridge {
     int surfaceSessionId,
     int activationId,
     int layoutGeneration,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -157,6 +163,7 @@ class _RecordingEdrBridge implements EdrOverlayBridge {
       surfaceSessionId: surfaceSessionId,
       activationId: activationId,
       layoutGeneration: layoutGeneration,
+      presentationRevision: presentationRevision,
       geometryRevision: geometryRevision,
       viewport: Rect.fromLTWH(
         viewportLeft,
@@ -166,6 +173,15 @@ class _RecordingEdrBridge implements EdrOverlayBridge {
       ),
       scrollOffset: Offset(scrollOffsetX, scrollOffsetY),
     ));
+  }
+
+  @override
+  Future<void> suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
+  ) async {
+    suspensions.add((surfaceSessionId, activationId, presentationRevision));
   }
 }
 
@@ -184,6 +200,7 @@ final class _DeferredEdrBridge extends _RecordingEdrBridge {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -198,6 +215,7 @@ final class _DeferredEdrBridge extends _RecordingEdrBridge {
       activationId,
       layoutGeneration,
       contentRevision,
+      presentationRevision,
       geometryRevision,
       viewportLeft,
       viewportTop,
@@ -210,5 +228,55 @@ final class _DeferredEdrBridge extends _RecordingEdrBridge {
     final completer = Completer<void>();
     _pending[contentRevision] = completer;
     await completer.future;
+  }
+}
+
+final class _DeferredGeometryEdrBridge extends _RecordingEdrBridge {
+  final _pendingGeometry = <Completer<void>>[];
+  var activeGeometryCalls = 0;
+  var maximumActiveGeometryCalls = 0;
+
+  int get pendingGeometryCount => _pendingGeometry.length;
+
+  void completeNextGeometry() {
+    _pendingGeometry.removeAt(0).complete();
+  }
+
+  @override
+  Future<void> updateWindowGeometry(
+    int surfaceSessionId,
+    int activationId,
+    int layoutGeneration,
+    int presentationRevision,
+    int geometryRevision,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
+    double scrollOffsetX,
+    double scrollOffsetY,
+  ) async {
+    await super.updateWindowGeometry(
+      surfaceSessionId,
+      activationId,
+      layoutGeneration,
+      presentationRevision,
+      geometryRevision,
+      viewportLeft,
+      viewportTop,
+      viewportWidth,
+      viewportHeight,
+      scrollOffsetX,
+      scrollOffsetY,
+    );
+    activeGeometryCalls += 1;
+    maximumActiveGeometryCalls = max(
+      maximumActiveGeometryCalls,
+      activeGeometryCalls,
+    );
+    final completer = Completer<void>();
+    _pendingGeometry.add(completer);
+    await completer.future;
+    activeGeometryCalls -= 1;
   }
 }

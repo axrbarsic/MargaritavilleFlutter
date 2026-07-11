@@ -3,18 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/background/presentation/app_background_surface.dart';
 import '../features/interaction/presentation/margaritaville_feedback_scope.dart';
+import '../features/room_details/presentation/controllers/room_photo_capture_controller.dart';
 import '../features/settings/domain/models/appearance_settings.dart';
 import '../features/settings/presentation/controllers/appearance_settings_controller.dart';
 import '../features/work_session/presentation/work_session_shell.dart';
 import '../shared/visual_runtime/visual_frame_clock.dart';
 import '../shared/visual_runtime/visual_runtime_scope.dart';
 import 'margaritaville_theme.dart';
+import 'room_media_recovery_gate.dart';
 
 final class MargaritavilleApp extends ConsumerWidget {
   const MargaritavilleApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mediaRecovery = ref.watch(roomMediaRecoveryProvider);
     final settings = ref.watch(appearanceSettingsControllerProvider).value;
     final backgroundSettings = settings ?? AppearanceSettings.defaults;
     return MaterialApp(
@@ -37,7 +40,11 @@ final class MargaritavilleApp extends ConsumerWidget {
           ),
         ),
       ),
-      home: const WorkSessionShell(),
+      home: RoomMediaRecoveryGate(
+        recovery: mediaRecovery,
+        onRetry: () => ref.invalidate(roomMediaRecoveryProvider),
+        child: const WorkSessionShell(),
+      ),
     );
   }
 }

@@ -1085,3 +1085,60 @@ haptics. Физический Pixel сейчас заблокирован, по�
   семи IOS frameworks и установлена на физический iPhone 17 Pro Max. Runtime
   smoke (реальная фраза, denied Speech, звонок/background) остаётся открытым:
   автоматический запуск отклонён iOS только из-за заблокированного телефона.
+
+## 2026-07-11 — Checkpoint 14: crash-safe фото и presentation fence для HDR-overlay
+
+- Room Details получил настоящую photo-вертикаль на общем camera lifecycle:
+  официальный CameraX/AVFoundation adapter работает с `ResolutionPreset.max`,
+  без аудио, сериализует open/close/resume и не допускает повторного открытия до
+  завершения dispose предыдущей сессии. Ориентация и `BoxFit.cover` считаются
+  из реального raw aspect ratio; portrait `4:3` корректно становится `3:4` без
+  подгоночных коэффициентов.
+- Media storage теперь crash-safe by construction. До первого app-owned байта
+  создаётся durable journal; копирование идёт в недоверенный `*.copying`, после
+  flush и проверки SHA-256/length атомарно становится immutable `*.partial`, а
+  затем final-файлом. Повтор идентичных байтов идемпотентен, конфликт checksum
+  не перезаписывает verified artifact, tombstone коммитится до удаления файла.
+- Drift schema v5 хранит byte length, dimensions, extension, orientation,
+  color-space/HDR metadata и durable promotion records. Startup recovery
+  изолирует каждый journal: retriable ошибка временно блокирует shell и даёт
+  русскую кнопку повтора; terminal missing/conflict переводится в quarantine,
+  не блокирует последующие записи и остаётся доступным для диагностики.
+  Garbage collection выполняется даже после частичной ошибки восстановления.
+- Скринкаст `ScreenRecording_07-11-2026 06-14-17_1.MP4` доказал отдельную
+  системную причину артефакта: один native window overlay оставался физически
+  выше Flutter route/modal barrier, а переходная `localToGlobal`-геометрия
+  принималась за стабильную. ABI расширен `presentationRevision`; typed
+  `suspendWindow` является stale-safe no-op по полной lease, а native paint
+  прозрачен до frame commit точных content/presentation revisions.
+- `EdrWindowSurface` наблюдает primary и secondary route animation, lifecycle и
+  TickerMode, а после возврата требует два одинаковых consecutive geometry
+  frames. Контролируемые settings, Room Details и bottom sheets сначала ставят
+  presentation fence. Он учитывает и committed ownership, и configure между
+  accept/frame-commit; fallback возвращается немедленно, а аварийный дедлайн
+  `250 ms` не даёт умершему host навсегда заблокировать навигацию. Поздний ready
+  скрытого presentation игнорируется.
+- Все native-команды проходят через одну сериализованную lane. Geometry имеет
+  только один latest-only pending slot: 100 быстрых scroll updates сохраняют не
+  более одного вызова in-flight и отправляют конечный offset. Future/unknown
+  geometry на iOS и Android отбрасывается, прежний `pendingGeometry` удалён.
+- Полный gate зелёный: Pigeon/Drift/media/voice reproducibility guards,
+  format/analyze, `197` Flutter tests, Android JVM, file-size и architecture
+  guards. Android 17/API 37 emulator прошёл install/launch, settings, VIP action
+  sheet, Room Details, permission, camera preview, capture и отображение
+  локальной миниатюры. Profile iOS build прошла deep codesign и bundle guard
+  восьми IOS frameworks, установлена и запущена на физическом iPhone 17 Pro
+  Max; открытие Drift подтверждено существующим контейнерным
+  `Documents/margaritaville-canonical-v2.sqlite` (`136 KB`). Диагностический
+  rebuild после software gate повторно прошёл тот же guard и установлен; его
+  автоматический запуск ожидает разблокировки iPhone. Финальный perceptual
+  HDR/120 Hz и фото/voice smoke на физическом экране остаётся
+  обязательным device gate и не подменяется screenshot/emulator.
+- Первый повторный devicectl-install оставил одновременно живыми старый и новый
+  процессы `Runner`; старый bundle удерживал SQLite, а новый оставался на
+  «Проверяю локальные медиа...». После принудительного завершения обоих остался
+  ровно один процесс из свежего bundle. Добавлен единый
+  `tool/install_ios_profile.sh`: он проходит bundle guard, завершает процесс
+  установленного bundle до обновления, устанавливает app и запускает с
+  `--terminate-existing`. Architecture guard не позволяет убрать этот порядок;
+  startup recovery пишет фактическую длительность и результат в device log.

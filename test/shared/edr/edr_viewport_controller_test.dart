@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/design/margaritaville_colors.dart';
@@ -10,11 +12,15 @@ import 'package:margaritaville_flutter/shared/edr/edr_overlay_bridge.dart';
 import 'package:margaritaville_flutter/shared/edr/edr_overlay_controller.dart';
 import 'package:margaritaville_flutter/shared/edr/edr_ready_router.dart';
 import 'package:margaritaville_flutter/shared/edr/edr_tile_snapshot_factory.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_window_surface.dart';
 import 'package:margaritaville_flutter/shared/edr/generated/edr_overlay_api.g.dart';
 
 part 'edr_bridge_test_support.dart';
+part 'edr_presentation_controller_tests.dart';
+part 'edr_presentation_test_support.dart';
 
 void main() {
+  _registerEdrPresentationTests();
   test('row snapshot keeps donor EDR and additive colors separate', () {
     final startedAt = DateTime(2027, 2, 10, 20, 47);
     final room = RoomState.pending(roomNumber: '209', selectedAt: startedAt);
@@ -78,6 +84,7 @@ void main() {
       controller.surfaceSessionId,
       firstConfiguration.activationId,
       firstRevision,
+      firstConfiguration.presentationRevision,
     );
     await tester.pump();
     expect(controller.isTileRendered('101', secondRenderKey), isFalse);
@@ -92,6 +99,7 @@ void main() {
       controller.surfaceSessionId,
       secondConfiguration.activationId,
       secondRevision,
+      secondConfiguration.presentationRevision,
     );
     await tester.pump();
     expect(controller.isTileRendered('101', secondRenderKey), isTrue);
@@ -110,11 +118,19 @@ void main() {
       controller.attachWindow();
       await tester.pump();
       final firstConfiguration = bridge.configurations.single;
+      EdrReadyRouter.instance.windowReady(
+        controller.surfaceSessionId,
+        firstConfiguration.activationId,
+        firstConfiguration.contentRevision,
+        firstConfiguration.presentationRevision,
+      );
+      await tester.pump();
       final firstRevision = firstConfiguration.contentRevision;
       EdrReadyRouter.instance.windowReady(
         controller.surfaceSessionId,
         firstConfiguration.activationId,
         firstRevision,
+        firstConfiguration.presentationRevision,
       );
       await tester.pump();
       expect(controller.isTileRendered('101', renderKey), isTrue);
@@ -122,8 +138,8 @@ void main() {
       controller.setWindowVisible(false);
       await tester.pump();
       expect(controller.isTileRendered('101', renderKey), isFalse);
-      expect(bridge.clears, isNotEmpty);
-      expect(bridge.clears.last.$2, firstConfiguration.activationId);
+      expect(bridge.suspensions, isNotEmpty);
+      expect(bridge.suspensions.last.$2, firstConfiguration.activationId);
 
       controller.setWindowVisible(true);
       await tester.pump();
@@ -138,6 +154,7 @@ void main() {
         controller.surfaceSessionId,
         firstConfiguration.activationId,
         restoredRevision,
+        restoredConfiguration.presentationRevision,
       );
       await tester.pump();
       expect(controller.isTileRendered('101', renderKey), isFalse);
@@ -146,6 +163,7 @@ void main() {
         controller.surfaceSessionId,
         restoredConfiguration.activationId,
         restoredRevision,
+        restoredConfiguration.presentationRevision,
       );
       await tester.pump();
       expect(controller.isTileRendered('101', renderKey), isTrue);
@@ -171,6 +189,7 @@ void main() {
         controller.surfaceSessionId,
         configuration.activationId,
         configuration.contentRevision,
+        configuration.presentationRevision,
       );
       await tester.pump();
       expect(renderState.value, isTrue);
@@ -233,6 +252,7 @@ void main() {
         controller.surfaceSessionId,
         firstConfiguration.activationId,
         firstRevision,
+        firstConfiguration.presentationRevision,
       );
       await tester.pump();
       expect(firstState.value, isTrue);
@@ -254,35 +274,11 @@ void main() {
         controller.surfaceSessionId,
         secondConfiguration.activationId,
         secondRevision,
+        secondConfiguration.presentationRevision,
       );
       await tester.pump();
       expect(firstState.value, isFalse);
       expect(secondState.value, isTrue);
     },
   );
-
-  testWidgets('readiness from another Summary session is ignored', (
-    tester,
-  ) async {
-    final bridge = _RecordingEdrBridge();
-    final controller = EdrOverlayController(bridge: bridge, supported: true);
-    final renderKey = GlobalKey();
-    addTearDown(controller.dispose);
-
-    await tester.pumpWidget(_controllerHost(controller, renderKey));
-    _registerTile(controller, renderKey);
-    controller.attachWindow();
-    await tester.pump();
-    final configuration = bridge.configurations.single;
-    final revision = configuration.contentRevision;
-
-    EdrReadyRouter.instance.windowReady(
-      controller.surfaceSessionId + 1,
-      configuration.activationId,
-      revision,
-    );
-    await tester.pump();
-
-    expect(controller.isTileRendered('101', renderKey), isFalse);
-  });
 }

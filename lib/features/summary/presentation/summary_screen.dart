@@ -35,7 +35,7 @@ final class SummaryScreen extends ConsumerStatefulWidget {
   final WorkSession session;
   final bool enableSchedulePolling;
   final SummaryVisualPolicy visualPolicy;
-  final VoidCallback? onOpenSettings;
+  final Future<void> Function()? onOpenSettings;
   final ScrollController? scrollController;
   final EdrOverlayController? edrController;
 
@@ -134,8 +134,9 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
                 onFilterChanged: (status) {
                   setState(() => _activeFilter = status);
                 },
-                onOpenSettings:
-                    widget.onOpenSettings ?? () => _showSettingsNotice(context),
+                onOpenSettings: widget.onOpenSettings == null
+                    ? () => _showSettingsNotice(context)
+                    : () => unawaited(_withEdrOccluded(widget.onOpenSettings!)),
                 onOpenSelection: _unlockWorkday,
               ),
               const SizedBox(height: SummaryLayoutTokens.headerContentGap),

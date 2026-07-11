@@ -315,8 +315,9 @@ private open class EdrOverlayApiPigeonCodec : StandardMessageCodec() {
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface EdrOverlayHostApi {
-  fun configureWindow(surfaceSessionId: Long, activationId: Long, layoutGeneration: Long, contentRevision: Long, geometryRevision: Long, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double, tiles: List<EdrTileSnapshot>)
-  fun updateWindowGeometry(surfaceSessionId: Long, activationId: Long, layoutGeneration: Long, geometryRevision: Long, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double)
+  fun configureWindow(surfaceSessionId: Long, activationId: Long, layoutGeneration: Long, contentRevision: Long, presentationRevision: Long, geometryRevision: Long, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double, tiles: List<EdrTileSnapshot>)
+  fun updateWindowGeometry(surfaceSessionId: Long, activationId: Long, layoutGeneration: Long, presentationRevision: Long, geometryRevision: Long, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double)
+  fun suspendWindow(surfaceSessionId: Long, activationId: Long, presentationRevision: Long)
   fun clearWindow(surfaceSessionId: Long, activationId: Long, contentRevision: Long)
 
   companion object {
@@ -337,16 +338,17 @@ interface EdrOverlayHostApi {
             val activationIdArg = args[1] as Long
             val layoutGenerationArg = args[2] as Long
             val contentRevisionArg = args[3] as Long
-            val geometryRevisionArg = args[4] as Long
-            val viewportLeftArg = args[5] as Double
-            val viewportTopArg = args[6] as Double
-            val viewportWidthArg = args[7] as Double
-            val viewportHeightArg = args[8] as Double
-            val scrollOffsetXArg = args[9] as Double
-            val scrollOffsetYArg = args[10] as Double
-            val tilesArg = args[11] as List<EdrTileSnapshot>
+            val presentationRevisionArg = args[4] as Long
+            val geometryRevisionArg = args[5] as Long
+            val viewportLeftArg = args[6] as Double
+            val viewportTopArg = args[7] as Double
+            val viewportWidthArg = args[8] as Double
+            val viewportHeightArg = args[9] as Double
+            val scrollOffsetXArg = args[10] as Double
+            val scrollOffsetYArg = args[11] as Double
+            val tilesArg = args[12] as List<EdrTileSnapshot>
             val wrapped: List<Any?> = try {
-              api.configureWindow(surfaceSessionIdArg, activationIdArg, layoutGenerationArg, contentRevisionArg, geometryRevisionArg, viewportLeftArg, viewportTopArg, viewportWidthArg, viewportHeightArg, scrollOffsetXArg, scrollOffsetYArg, tilesArg)
+              api.configureWindow(surfaceSessionIdArg, activationIdArg, layoutGenerationArg, contentRevisionArg, presentationRevisionArg, geometryRevisionArg, viewportLeftArg, viewportTopArg, viewportWidthArg, viewportHeightArg, scrollOffsetXArg, scrollOffsetYArg, tilesArg)
               listOf(null)
             } catch (exception: Throwable) {
               EdrOverlayApiPigeonUtils.wrapError(exception)
@@ -365,15 +367,36 @@ interface EdrOverlayHostApi {
             val surfaceSessionIdArg = args[0] as Long
             val activationIdArg = args[1] as Long
             val layoutGenerationArg = args[2] as Long
-            val geometryRevisionArg = args[3] as Long
-            val viewportLeftArg = args[4] as Double
-            val viewportTopArg = args[5] as Double
-            val viewportWidthArg = args[6] as Double
-            val viewportHeightArg = args[7] as Double
-            val scrollOffsetXArg = args[8] as Double
-            val scrollOffsetYArg = args[9] as Double
+            val presentationRevisionArg = args[3] as Long
+            val geometryRevisionArg = args[4] as Long
+            val viewportLeftArg = args[5] as Double
+            val viewportTopArg = args[6] as Double
+            val viewportWidthArg = args[7] as Double
+            val viewportHeightArg = args[8] as Double
+            val scrollOffsetXArg = args[9] as Double
+            val scrollOffsetYArg = args[10] as Double
             val wrapped: List<Any?> = try {
-              api.updateWindowGeometry(surfaceSessionIdArg, activationIdArg, layoutGenerationArg, geometryRevisionArg, viewportLeftArg, viewportTopArg, viewportWidthArg, viewportHeightArg, scrollOffsetXArg, scrollOffsetYArg)
+              api.updateWindowGeometry(surfaceSessionIdArg, activationIdArg, layoutGenerationArg, presentationRevisionArg, geometryRevisionArg, viewportLeftArg, viewportTopArg, viewportWidthArg, viewportHeightArg, scrollOffsetXArg, scrollOffsetYArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              EdrOverlayApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.suspendWindow$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val surfaceSessionIdArg = args[0] as Long
+            val activationIdArg = args[1] as Long
+            val presentationRevisionArg = args[2] as Long
+            val wrapped: List<Any?> = try {
+              api.suspendWindow(surfaceSessionIdArg, activationIdArg, presentationRevisionArg)
               listOf(null)
             } catch (exception: Throwable) {
               EdrOverlayApiPigeonUtils.wrapError(exception)
@@ -415,12 +438,12 @@ class EdrOverlayFlutterApi(private val binaryMessenger: BinaryMessenger, private
       EdrOverlayApiPigeonCodec()
     }
   }
-  fun windowReady(surfaceSessionIdArg: Long, activationIdArg: Long, contentRevisionArg: Long, callback: (Result<Unit>) -> Unit)
+  fun windowReady(surfaceSessionIdArg: Long, activationIdArg: Long, contentRevisionArg: Long, presentationRevisionArg: Long, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     val channelName = "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayFlutterApi.windowReady$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(surfaceSessionIdArg, activationIdArg, contentRevisionArg)) {
+    channel.send(listOf(surfaceSessionIdArg, activationIdArg, contentRevisionArg, presentationRevisionArg)) {
       if (it is List<*>) {
         if (it.size > 1) {
           callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))

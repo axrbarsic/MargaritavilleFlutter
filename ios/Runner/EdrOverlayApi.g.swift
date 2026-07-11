@@ -336,8 +336,9 @@ class EdrOverlayApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable
 
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol EdrOverlayHostApi {
-  func configureWindow(surfaceSessionId: Int64, activationId: Int64, layoutGeneration: Int64, contentRevision: Int64, geometryRevision: Int64, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double, tiles: [EdrTileSnapshot]) throws
-  func updateWindowGeometry(surfaceSessionId: Int64, activationId: Int64, layoutGeneration: Int64, geometryRevision: Int64, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double) throws
+  func configureWindow(surfaceSessionId: Int64, activationId: Int64, layoutGeneration: Int64, contentRevision: Int64, presentationRevision: Int64, geometryRevision: Int64, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double, tiles: [EdrTileSnapshot]) throws
+  func updateWindowGeometry(surfaceSessionId: Int64, activationId: Int64, layoutGeneration: Int64, presentationRevision: Int64, geometryRevision: Int64, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double) throws
+  func suspendWindow(surfaceSessionId: Int64, activationId: Int64, presentationRevision: Int64) throws
   func clearWindow(surfaceSessionId: Int64, activationId: Int64, contentRevision: Int64) throws
 }
 
@@ -355,16 +356,17 @@ class EdrOverlayHostApiSetup {
         let activationIdArg = args[1] as! Int64
         let layoutGenerationArg = args[2] as! Int64
         let contentRevisionArg = args[3] as! Int64
-        let geometryRevisionArg = args[4] as! Int64
-        let viewportLeftArg = args[5] as! Double
-        let viewportTopArg = args[6] as! Double
-        let viewportWidthArg = args[7] as! Double
-        let viewportHeightArg = args[8] as! Double
-        let scrollOffsetXArg = args[9] as! Double
-        let scrollOffsetYArg = args[10] as! Double
-        let tilesArg = args[11] as! [EdrTileSnapshot]
+        let presentationRevisionArg = args[4] as! Int64
+        let geometryRevisionArg = args[5] as! Int64
+        let viewportLeftArg = args[6] as! Double
+        let viewportTopArg = args[7] as! Double
+        let viewportWidthArg = args[8] as! Double
+        let viewportHeightArg = args[9] as! Double
+        let scrollOffsetXArg = args[10] as! Double
+        let scrollOffsetYArg = args[11] as! Double
+        let tilesArg = args[12] as! [EdrTileSnapshot]
         do {
-          try api.configureWindow(surfaceSessionId: surfaceSessionIdArg, activationId: activationIdArg, layoutGeneration: layoutGenerationArg, contentRevision: contentRevisionArg, geometryRevision: geometryRevisionArg, viewportLeft: viewportLeftArg, viewportTop: viewportTopArg, viewportWidth: viewportWidthArg, viewportHeight: viewportHeightArg, scrollOffsetX: scrollOffsetXArg, scrollOffsetY: scrollOffsetYArg, tiles: tilesArg)
+          try api.configureWindow(surfaceSessionId: surfaceSessionIdArg, activationId: activationIdArg, layoutGeneration: layoutGenerationArg, contentRevision: contentRevisionArg, presentationRevision: presentationRevisionArg, geometryRevision: geometryRevisionArg, viewportLeft: viewportLeftArg, viewportTop: viewportTopArg, viewportWidth: viewportWidthArg, viewportHeight: viewportHeightArg, scrollOffsetX: scrollOffsetXArg, scrollOffsetY: scrollOffsetYArg, tiles: tilesArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
@@ -380,15 +382,16 @@ class EdrOverlayHostApiSetup {
         let surfaceSessionIdArg = args[0] as! Int64
         let activationIdArg = args[1] as! Int64
         let layoutGenerationArg = args[2] as! Int64
-        let geometryRevisionArg = args[3] as! Int64
-        let viewportLeftArg = args[4] as! Double
-        let viewportTopArg = args[5] as! Double
-        let viewportWidthArg = args[6] as! Double
-        let viewportHeightArg = args[7] as! Double
-        let scrollOffsetXArg = args[8] as! Double
-        let scrollOffsetYArg = args[9] as! Double
+        let presentationRevisionArg = args[3] as! Int64
+        let geometryRevisionArg = args[4] as! Int64
+        let viewportLeftArg = args[5] as! Double
+        let viewportTopArg = args[6] as! Double
+        let viewportWidthArg = args[7] as! Double
+        let viewportHeightArg = args[8] as! Double
+        let scrollOffsetXArg = args[9] as! Double
+        let scrollOffsetYArg = args[10] as! Double
         do {
-          try api.updateWindowGeometry(surfaceSessionId: surfaceSessionIdArg, activationId: activationIdArg, layoutGeneration: layoutGenerationArg, geometryRevision: geometryRevisionArg, viewportLeft: viewportLeftArg, viewportTop: viewportTopArg, viewportWidth: viewportWidthArg, viewportHeight: viewportHeightArg, scrollOffsetX: scrollOffsetXArg, scrollOffsetY: scrollOffsetYArg)
+          try api.updateWindowGeometry(surfaceSessionId: surfaceSessionIdArg, activationId: activationIdArg, layoutGeneration: layoutGenerationArg, presentationRevision: presentationRevisionArg, geometryRevision: geometryRevisionArg, viewportLeft: viewportLeftArg, viewportTop: viewportTopArg, viewportWidth: viewportWidthArg, viewportHeight: viewportHeightArg, scrollOffsetX: scrollOffsetXArg, scrollOffsetY: scrollOffsetYArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
@@ -396,6 +399,23 @@ class EdrOverlayHostApiSetup {
       }
     } else {
       updateWindowGeometryChannel.setMessageHandler(nil)
+    }
+    let suspendWindowChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.suspendWindow\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      suspendWindowChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let surfaceSessionIdArg = args[0] as! Int64
+        let activationIdArg = args[1] as! Int64
+        let presentationRevisionArg = args[2] as! Int64
+        do {
+          try api.suspendWindow(surfaceSessionId: surfaceSessionIdArg, activationId: activationIdArg, presentationRevision: presentationRevisionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      suspendWindowChannel.setMessageHandler(nil)
     }
     let clearWindowChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.clearWindow\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
@@ -419,7 +439,7 @@ class EdrOverlayHostApiSetup {
 
 /// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
 protocol EdrOverlayFlutterApiProtocol {
-  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, presentationRevision presentationRevisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 class EdrOverlayFlutterApi: EdrOverlayFlutterApiProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -431,10 +451,10 @@ class EdrOverlayFlutterApi: EdrOverlayFlutterApiProtocol {
   var codec: EdrOverlayApiPigeonCodec {
     return EdrOverlayApiPigeonCodec.shared
   }
-  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, presentationRevision presentationRevisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayFlutterApi.windowReady\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
-    channel.sendMessage([surfaceSessionIdArg, activationIdArg, contentRevisionArg] as [Any?]) { response in
+    channel.sendMessage([surfaceSessionIdArg, activationIdArg, contentRevisionArg, presentationRevisionArg] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {
         completion(.failure(createConnectionError(withChannelName: channelName)))
         return

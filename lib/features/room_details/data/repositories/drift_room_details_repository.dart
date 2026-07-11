@@ -4,11 +4,16 @@ import 'package:drift/drift.dart';
 
 import '../../../../shared/persistence/app_database.dart';
 import '../../application/commands/room_details_command.dart';
+import '../../domain/models/pending_room_media_promotion.dart';
 import '../../domain/models/room_details_snapshot.dart';
 import '../../domain/models/room_media_item.dart';
 import '../../domain/repositories/room_details_repository.dart';
+import '../../domain/repositories/room_media_garbage_repository.dart';
+import '../../domain/repositories/room_media_promotion_repository.dart';
 
 part 'drift_room_details_repository_helpers.dart';
+part 'drift_room_media_garbage_repository.dart';
+part 'drift_room_media_promotion_repository.dart';
 
 final class DriftRoomDetailsRepository implements RoomDetailsRepository {
   const DriftRoomDetailsRepository(this._database);
@@ -50,44 +55,45 @@ final class DriftRoomDetailsRepository implements RoomDetailsRepository {
   }
 
   @override
-  Future<RoomDetailsCommitStatus> commit(RoomDetailsCommand command) {
-    return _database.transaction(() async {
-      if (!await _claim(command)) {
-        return RoomDetailsCommitStatus.duplicate;
-      }
-      final changed = switch (command) {
-        final SaveRoomNoteCommand value => await _saveNote(value),
-        final AddRoomMediaCommand value => await _addMedia(value),
-        final DeleteRoomMediaCommand value => await _deleteMedia(value),
-      };
-      if (!changed) {
-        await _finishReceipt(command, RoomDetailsCommitStatus.ignored);
-        return RoomDetailsCommitStatus.ignored;
-      }
-      final eventId = _eventId(command);
-      await _database
-          .into(_database.historyEventRecords)
-          .insert(
-            HistoryEventRecordsCompanion.insert(
-              id: eventId,
-              sessionId: command.sessionId,
-              commandId: command.commandId,
-              eventType: _eventType(command),
-              payloadJson: jsonEncode(_eventPayload(command)),
-              happenedAt: command.issuedAt,
-            ),
-          );
-      await _database
-          .into(_database.syncOutboxRecords)
-          .insert(
-            SyncOutboxRecordsCompanion.insert(
-              eventId: eventId,
-              sessionId: command.sessionId,
-            ),
-          );
-      await _finishReceipt(command, RoomDetailsCommitStatus.applied);
-      return RoomDetailsCommitStatus.applied;
-    });
+  Future<RoomDetailsCommitStatus> commit(RoomDetailsCommand command) =>
+      _database.transaction(() => _commit(command));
+
+  Future<RoomDetailsCommitStatus> _commit(RoomDetailsCommand command) async {
+    if (!await _claim(command)) {
+      return RoomDetailsCommitStatus.duplicate;
+    }
+    final changed = switch (command) {
+      final SaveRoomNoteCommand value => await _saveNote(value),
+      final AddRoomMediaCommand value => await _addMedia(value),
+      final DeleteRoomMediaCommand value => await _deleteMedia(value),
+    };
+    if (!changed) {
+      await _finishReceipt(command, RoomDetailsCommitStatus.ignored);
+      return RoomDetailsCommitStatus.ignored;
+    }
+    final eventId = _eventId(command);
+    await _database
+        .into(_database.historyEventRecords)
+        .insert(
+          HistoryEventRecordsCompanion.insert(
+            id: eventId,
+            sessionId: command.sessionId,
+            commandId: command.commandId,
+            eventType: _eventType(command),
+            payloadJson: jsonEncode(_eventPayload(command)),
+            happenedAt: command.issuedAt,
+          ),
+        );
+    await _database
+        .into(_database.syncOutboxRecords)
+        .insert(
+          SyncOutboxRecordsCompanion.insert(
+            eventId: eventId,
+            sessionId: command.sessionId,
+          ),
+        );
+    await _finishReceipt(command, RoomDetailsCommitStatus.applied);
+    return RoomDetailsCommitStatus.applied;
   }
 
   Future<bool> _claim(RoomDetailsCommand command) async {
@@ -210,6 +216,13 @@ final class DriftRoomDetailsRepository implements RoomDetailsRepository {
             mimeType: Value(media.mimeType),
             durationMs: Value(media.duration?.inMilliseconds),
             transcript: Value(media.transcript),
+            byteLength: Value(media.byteLength),
+            widthPixels: Value(media.widthPixels),
+            heightPixels: Value(media.heightPixels),
+            originalExtension: Value(media.originalExtension),
+            orientation: Value(media.orientation),
+            colorSpace: Value(media.colorSpace),
+            isHdr: Value(media.isHdr),
             lastCommandId: Value(command.commandId),
             deletedAt: Value(media.deletedAt),
           ),

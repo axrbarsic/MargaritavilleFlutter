@@ -52,6 +52,7 @@ class AndroidEdrSceneGeometryTest {
             surfaceSessionId = 1,
             activationId = 1,
             layoutGeneration = 1,
+            presentationRevision = 1,
             revision = 1,
             viewportLeft = 10.0,
             viewportTop = 20.0,

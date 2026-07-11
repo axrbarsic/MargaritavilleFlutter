@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Margaritaville записывает локальные голосовые заметки для комнат.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Камера нужна, чтобы прикреплять локальные фото и видео к комнатам и тележкам.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Margaritaville расшифровывает локальные голосовые заметки в русский текст.</string>
 	<key>UIApplicationSceneManifest</key>

@@ -29,6 +29,8 @@ extension _EdrOverlaySynchronization on EdrOverlayController {
     final contentRevision = _contentRevision;
     final layoutGeneration = _geometryCache.layoutGeneration;
     final scrollOffset = _scrollOffset;
+    final activationId = _activationId;
+    final presentationRevision = _presentationRevision;
     final membershipMatches =
         visibleRoomIds.length == _sentTiles.length &&
         visibleRoomIds.every(
@@ -37,6 +39,7 @@ extension _EdrOverlaySynchronization on EdrOverlayController {
         );
     final configureContent =
         _sentContentRevision != contentRevision ||
+        _sentPresentationRevision != presentationRevision ||
         _sentLayoutGeneration != layoutGeneration ||
         !membershipMatches;
     try {
@@ -71,40 +74,49 @@ extension _EdrOverlaySynchronization on EdrOverlayController {
         final revision = ++_contentConfigurationRevision;
         _pendingConfigurations[revision] = _PendingEdrConfiguration(
           contentRevision: contentRevision,
+          presentationRevision: presentationRevision,
           layoutGeneration: layoutGeneration,
           renderedTiles: nextRenderedTiles,
         );
-        await _bridge.configureWindow(
-          surfaceSessionId,
-          _activationId,
-          layoutGeneration,
-          revision,
-          geometryRevision,
-          surfaceOrigin.dx,
-          surfaceOrigin.dy,
-          surface.size.width,
-          surface.size.height,
-          scrollOffset.dx,
-          scrollOffset.dy,
-          tiles,
+        await _nativeCommandLane.submitBarrier(
+          () => _bridge.configureWindow(
+            surfaceSessionId,
+            activationId,
+            layoutGeneration,
+            revision,
+            presentationRevision,
+            geometryRevision,
+            surfaceOrigin.dx,
+            surfaceOrigin.dy,
+            surface.size.width,
+            surface.size.height,
+            scrollOffset.dx,
+            scrollOffset.dy,
+            tiles,
+          ),
+          dropGeometry: true,
         );
         _sentContentRevision = contentRevision;
+        _sentPresentationRevision = presentationRevision;
         _sentLayoutGeneration = layoutGeneration;
         _sentTiles = Map.unmodifiable(nextRenderedTiles);
         _lastGeometryOffset = scrollOffset;
       } else if (_lastGeometryOffset != scrollOffset) {
         final geometryRevision = ++_geometryRevision;
-        await _bridge.updateWindowGeometry(
-          surfaceSessionId,
-          _activationId,
-          layoutGeneration,
-          geometryRevision,
-          surfaceOrigin.dx,
-          surfaceOrigin.dy,
-          surface.size.width,
-          surface.size.height,
-          scrollOffset.dx,
-          scrollOffset.dy,
+        _nativeCommandLane.submitGeometry(
+          () => _bridge.updateWindowGeometry(
+            surfaceSessionId,
+            activationId,
+            layoutGeneration,
+            presentationRevision,
+            geometryRevision,
+            surfaceOrigin.dx,
+            surfaceOrigin.dy,
+            surface.size.width,
+            surface.size.height,
+            scrollOffset.dx,
+            scrollOffset.dy,
+          ),
         );
         _lastGeometryOffset = scrollOffset;
       }

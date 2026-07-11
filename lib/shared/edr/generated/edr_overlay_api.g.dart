@@ -295,6 +295,7 @@ class EdrOverlayHostApi {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -317,6 +318,7 @@ class EdrOverlayHostApi {
           activationId,
           layoutGeneration,
           contentRevision,
+          presentationRevision,
           geometryRevision,
           viewportLeft,
           viewportTop,
@@ -339,6 +341,7 @@ class EdrOverlayHostApi {
     int surfaceSessionId,
     int activationId,
     int layoutGeneration,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -359,6 +362,7 @@ class EdrOverlayHostApi {
           surfaceSessionId,
           activationId,
           layoutGeneration,
+          presentationRevision,
           geometryRevision,
           viewportLeft,
           viewportTop,
@@ -367,6 +371,30 @@ class EdrOverlayHostApi {
           scrollOffsetX,
           scrollOffsetY,
         ]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  Future<void> suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.margaritaville_flutter.EdrOverlayHostApi.suspendWindow$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[surfaceSessionId, activationId, presentationRevision],
+    );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
@@ -404,7 +432,12 @@ class EdrOverlayHostApi {
 abstract class EdrOverlayFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  void windowReady(int surfaceSessionId, int activationId, int contentRevision);
+  void windowReady(
+    int surfaceSessionId,
+    int activationId,
+    int contentRevision,
+    int presentationRevision,
+  );
 
   static void setUp(
     EdrOverlayFlutterApi? api, {
@@ -428,11 +461,13 @@ abstract class EdrOverlayFlutterApi {
           final int arg_surfaceSessionId = args[0]! as int;
           final int arg_activationId = args[1]! as int;
           final int arg_contentRevision = args[2]! as int;
+          final int arg_presentationRevision = args[3]! as int;
           try {
             api.windowReady(
               arg_surfaceSessionId,
               arg_activationId,
               arg_contentRevision,
+              arg_presentationRevision,
             );
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {

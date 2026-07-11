@@ -3,11 +3,13 @@ part of 'edr_overlay_controller.dart';
 final class _PendingEdrConfiguration {
   const _PendingEdrConfiguration({
     required this.contentRevision,
+    required this.presentationRevision,
     required this.layoutGeneration,
     required this.renderedTiles,
   });
 
   final int contentRevision;
+  final int presentationRevision;
   final int layoutGeneration;
   final Map<String, GlobalKey> renderedTiles;
 }

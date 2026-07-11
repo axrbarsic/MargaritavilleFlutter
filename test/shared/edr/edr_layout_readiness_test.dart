@@ -105,6 +105,8 @@ void main() {
     controller.requestGeometrySync();
     await tester.pump();
     await tester.pump();
+    await tester.pump();
+    await tester.pump();
     final first = bridge.configurations.last;
 
     width.value = 320;
@@ -129,6 +131,7 @@ void _ack(EdrOverlayController controller, _Configuration configuration) {
     controller.surfaceSessionId,
     configuration.activationId,
     configuration.contentRevision,
+    configuration.presentationRevision,
   );
 }
 
@@ -183,12 +186,14 @@ final class _Configuration {
     required this.activationId,
     required this.layoutGeneration,
     required this.contentRevision,
+    required this.presentationRevision,
     required this.tiles,
   });
 
   final int activationId;
   final int layoutGeneration;
   final int contentRevision;
+  final int presentationRevision;
   final List<EdrTileSnapshot> tiles;
 }
 
@@ -201,6 +206,7 @@ final class _RecordingBridge implements EdrOverlayBridge {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -215,6 +221,7 @@ final class _RecordingBridge implements EdrOverlayBridge {
         activationId: activationId,
         layoutGeneration: layoutGeneration,
         contentRevision: contentRevision,
+        presentationRevision: presentationRevision,
         tiles: List.unmodifiable(tiles),
       ),
     );
@@ -225,6 +232,7 @@ final class _RecordingBridge implements EdrOverlayBridge {
     int surfaceSessionId,
     int activationId,
     int layoutGeneration,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -232,6 +240,13 @@ final class _RecordingBridge implements EdrOverlayBridge {
     double viewportHeight,
     double scrollOffsetX,
     double scrollOffsetY,
+  ) async {}
+
+  @override
+  Future<void> suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
   ) async {}
 
   @override

@@ -20,6 +20,7 @@ part 'local_database.g.dart';
     SyncOutboxRecords,
     SyncInboxRecords,
     MediaManifestRecords,
+    MediaPromotionRecords,
   ],
 )
 final class AppDatabase extends _$AppDatabase {
@@ -36,7 +37,7 @@ final class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -69,13 +70,25 @@ final class AppDatabase extends _$AppDatabase {
                 mediaManifestRecords.mimeType,
                 mediaManifestRecords.durationMs,
                 mediaManifestRecords.transcript,
-                mediaManifestRecords.lastCommandId,
+                if (to >= 4) mediaManifestRecords.lastCommandId,
+                if (to >= 5) ...[
+                  mediaManifestRecords.byteLength,
+                  mediaManifestRecords.widthPixels,
+                  mediaManifestRecords.heightPixels,
+                  mediaManifestRecords.originalExtension,
+                  mediaManifestRecords.orientation,
+                  mediaManifestRecords.colorSpace,
+                  mediaManifestRecords.isHdr,
+                ],
               ],
               columnTransformer: {
                 mediaManifestRecords.createdAt: mediaManifestRecords.updatedAt,
               },
             ),
           );
+          if (to >= 5) {
+            await migrator.createTable(mediaPromotionRecords);
+          }
         });
         return;
       }
@@ -89,6 +102,15 @@ final class AppDatabase extends _$AppDatabase {
             mediaManifestRecords,
             mediaManifestRecords.lastCommandId,
           );
+          if (to >= 5) {
+            await _upgradeMediaFoundationV5(migrator);
+          }
+        });
+        return;
+      }
+      if (from == 4 && to >= 5) {
+        await transaction(() async {
+          await _upgradeMediaFoundationV5(migrator);
         });
         return;
       }
@@ -98,4 +120,33 @@ final class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> _upgradeMediaFoundationV5(Migrator migrator) async {
+    await migrator.createTable(mediaPromotionRecords);
+    await migrator.addColumn(
+      mediaManifestRecords,
+      mediaManifestRecords.byteLength,
+    );
+    await migrator.addColumn(
+      mediaManifestRecords,
+      mediaManifestRecords.widthPixels,
+    );
+    await migrator.addColumn(
+      mediaManifestRecords,
+      mediaManifestRecords.heightPixels,
+    );
+    await migrator.addColumn(
+      mediaManifestRecords,
+      mediaManifestRecords.originalExtension,
+    );
+    await migrator.addColumn(
+      mediaManifestRecords,
+      mediaManifestRecords.orientation,
+    );
+    await migrator.addColumn(
+      mediaManifestRecords,
+      mediaManifestRecords.colorSpace,
+    );
+    await migrator.addColumn(mediaManifestRecords, mediaManifestRecords.isHdr);
+  }
 }

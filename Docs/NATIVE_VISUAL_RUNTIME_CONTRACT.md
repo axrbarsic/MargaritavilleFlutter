@@ -47,22 +47,64 @@ platform-channel сообщения на каждый animation frame.
 - `contentRevision` относится к атомарному набору native-owned tiles.
 - `layoutGeneration` меняется только при перестройке измеренной геометрии.
 - `geometryRevision` — независимый монотонный поток viewport/scroll offset.
+- `presentationRevision` — монотонная ревизия видимости route/modal внутри
+  точной activation; она входит в frame-ready fence, но не меняет membership.
 
 Stale configure, geometry, clear и ready не меняют состояние. Scroll при
 неизменном membership отправляет только geometry; он не создаёт новые tiles,
 Gainmap/Metal resources, content readiness или краткий сброс ownership.
+Future/unknown geometry всегда отбрасывается и никогда не сохраняется как
+`pendingGeometry`: полный configure обязан нести собственную точную геометрию.
+
+`suspendWindow(session, activation, presentation)` немедленно подавляет native
+paint при открытии route/modal. Stale suspension другой activation либо меньшей
+presentation revision является no-op и не может скрыть более новый экран.
 
 ## Двухфазное владение
 
 1. Flutter остаётся полностью видимым.
 2. Native adapter принимает точную activation/content revision и создаёт кадр.
 3. Платформа подтверждает frame commit этого кадра.
-4. `windowReady(session, activation, content)` возвращается через Pigeon.
-5. Только после точного совпадения тройки Flutter скрывает fallback.
+4. `windowReady(session, activation, content, presentation)` возвращается через
+   Pigeon.
+5. Native paint и Flutter fallback меняют видимость только после точного
+   совпадения lease плюс presentation revision.
 
 При выходе ID из native membership Flutter fallback возвращается немедленно.
 Готовность другого экрана, старой activation или старой content revision
 игнорируется.
+
+## Presentation и окклюзия Flutter
+
+Window-level native overlay физически находится выше всей Flutter-сцены.
+Поэтому PageRoute, PopupRoute, modal barrier, bottom sheet и route transition не
+могут сами перекрыть его и обязаны проходить через единый presentation contract.
+
+- `presentationRevision` является частью lease каждого configure, geometry,
+  suspend и ready. Stale presentation ничего не показывает и не скрывает.
+- Перед любым управляемым приложением route/modal Flutter сначала возвращает
+  fallback ownership и дожидается `suspendWindow` exact activation/revision;
+  только затем начинает навигацию или показывает barrier.
+- Ожидание обязательно и для уже ready ownership, и для принятого configure,
+  который ещё ждёт frame commit. Аварийный дедлайн `250 ms` не даёт умершему
+  platform host навсегда заблокировать навигацию: fallback возвращается до
+  ожидания, поздний ready старой presentation остаётся no-op.
+- Safety-net наблюдает primary и secondary route animations. Native resume
+  разрешён только когда owning route верхний, primary завершён, secondary
+  полностью dismissed и два последовательных Flutter frame подтверждают одну
+  viewport/origin/layout geometry.
+- Начало activation/configure всегда держит native overlay скрытым. Он
+  раскрывается атомарно только после frame commit exact
+  `(session, activation, content, presentation)`; до этого виден Flutter
+  fallback.
+- При pop/cancel/interactive transition нельзя измерять и сохранять временный
+  `localToGlobal` как постоянную геометрию.
+
+Configure, geometry, suspend и clear идут по одной сериализованной command lane.
+Одновременно выполняется не более одного platform call. Для scroll geometry
+хранится только последнее ещё не отправленное значение; при смене activation,
+layout или presentation оно удаляется. Native полностью отбрасывает geometry
+неизвестной/будущей lease и не держит `pendingGeometry`.
 
 ## iOS
 
@@ -71,6 +113,7 @@ Gainmap/Metal resources, content readiness или краткий сброс owne
 - Metal/CoreGraphics high-range path: FP16/extended-linear color и EDR-capable
   layer/window contract.
 - Viewport маска всегда обрезает native paint границей Flutter scroll viewport.
+- Overlay скрыт во время Flutter route/modal transition и до exact frame commit.
 - Максимальная частота следует диапазону, который реально выдаёт iOS; app-side
   cap 30/60 FPS запрещён.
 
@@ -85,6 +128,8 @@ Gainmap/Metal resources, content readiness или краткий сброс owne
   intersect-culling не заменяет clip и иначе ячейки пролетают поверх header.
 - Readiness отправляется после `registerFrameCommitCallback`, а не после одного
   выполнения `onDraw`.
+- View остаётся presentation-suppressed до exact frame commit новой lease,
+  продолжая рисовать прозрачный precommit-кадр для compositor callback.
 - API ниже 34 и дисплей без HDR получают честный Flutter fallback, не SDR glow,
   названный HDR.
 

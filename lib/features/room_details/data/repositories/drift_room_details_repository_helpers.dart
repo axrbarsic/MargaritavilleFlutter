@@ -16,8 +16,97 @@ RoomMediaItem _mapMedia(MediaManifestRow row) => RoomMediaItem(
       ? null
       : Duration(milliseconds: row.durationMs!),
   transcript: row.transcript,
+  byteLength: row.byteLength,
+  widthPixels: row.widthPixels,
+  heightPixels: row.heightPixels,
+  originalExtension: row.originalExtension,
+  orientation: row.orientation,
+  colorSpace: row.colorSpace,
+  isHdr: row.isHdr,
   deletedAt: row.deletedAt,
 );
+
+PendingRoomMediaPromotion _mapPromotion(MediaPromotionRow row) =>
+    PendingRoomMediaPromotion(
+      operationId: row.operationId,
+      commandId: row.commandId,
+      stagedRelativePath: row.stagedRelativePath,
+      transientFilePath: row.transientFilePath,
+      byteLength: row.byteLength,
+      media: RoomMediaItem(
+        id: row.mediaId,
+        sessionId: row.sessionId,
+        roomNumber: row.roomNumber,
+        assignmentId: row.assignmentId,
+        kind: RoomMediaKind.values.byName(row.kind),
+        relativePath: row.finalRelativePath,
+        checksumSha256: row.checksumSha256,
+        originDeviceId: row.originDeviceId,
+        createdAt: row.createdAt,
+        updatedAt: row.issuedAt,
+        mimeType: row.mimeType,
+        duration: row.durationMs == null
+            ? null
+            : Duration(milliseconds: row.durationMs!),
+        transcript: row.transcript,
+        byteLength: row.byteLength,
+        widthPixels: row.widthPixels,
+        heightPixels: row.heightPixels,
+        originalExtension: row.originalExtension,
+        orientation: row.orientation,
+        colorSpace: row.colorSpace,
+        isHdr: row.isHdr,
+      ),
+    );
+
+MediaPromotionRecordsCompanion _promotionCompanion(
+  PendingRoomMediaPromotion promotion,
+) {
+  final media = promotion.media;
+  return MediaPromotionRecordsCompanion.insert(
+    operationId: promotion.operationId,
+    commandId: promotion.commandId,
+    mediaId: media.id,
+    sessionId: media.sessionId,
+    roomNumber: media.roomNumber,
+    assignmentId: Value(media.assignmentId),
+    kind: media.kind.name,
+    stagedRelativePath: promotion.stagedRelativePath,
+    transientFilePath: promotion.transientFilePath,
+    finalRelativePath: media.relativePath,
+    checksumSha256: media.checksumSha256,
+    byteLength: promotion.byteLength,
+    originDeviceId: media.originDeviceId,
+    createdAt: media.createdAt,
+    issuedAt: media.updatedAt,
+    mimeType: Value(media.mimeType),
+    durationMs: Value(media.duration?.inMilliseconds),
+    transcript: Value(media.transcript),
+    widthPixels: Value(media.widthPixels),
+    heightPixels: Value(media.heightPixels),
+    originalExtension: Value(media.originalExtension),
+    orientation: Value(media.orientation),
+    colorSpace: Value(media.colorSpace),
+    isHdr: Value(media.isHdr),
+  );
+}
+
+void _validatePromotion(PendingRoomMediaPromotion promotion) {
+  final media = promotion.media;
+  if (media.kind == RoomMediaKind.voice ||
+      promotion.operationId.isEmpty ||
+      promotion.commandId.isEmpty ||
+      promotion.byteLength <= 0 ||
+      promotion.byteLength != media.byteLength ||
+      !promotion.stagedRelativePath.startsWith('Media/.staging/') ||
+      !promotion.transientFilePath.startsWith('/') ||
+      media.relativePath.startsWith('Media/.staging/') ||
+      promotion.stagedRelativePath.contains('..') ||
+      promotion.transientFilePath.contains('\u0000') ||
+      media.relativePath.contains('..')) {
+    throw ArgumentError('Invalid room media promotion');
+  }
+}
 
 String _eventId(RoomDetailsCommand command) =>
     'room:${command.sessionId}:${command.commandId}';
@@ -67,7 +156,14 @@ void _verifyImmutableMediaIdentity(
       existing.relativePath == incoming.relativePath &&
       existing.checksumSha256 == incoming.checksumSha256 &&
       existing.originDeviceId == incoming.originDeviceId &&
-      existing.createdAt == incoming.createdAt;
+      existing.createdAt == incoming.createdAt &&
+      existing.byteLength == incoming.byteLength &&
+      existing.widthPixels == incoming.widthPixels &&
+      existing.heightPixels == incoming.heightPixels &&
+      existing.originalExtension == incoming.originalExtension &&
+      existing.orientation == incoming.orientation &&
+      existing.colorSpace == incoming.colorSpace &&
+      existing.isHdr == incoming.isHdr;
   if (!matches) {
     throw StateError('Media ${incoming.id} has immutable identity conflict');
   }

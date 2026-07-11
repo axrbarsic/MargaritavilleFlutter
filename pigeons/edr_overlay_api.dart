@@ -40,6 +40,7 @@ abstract class EdrOverlayHostApi {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -54,6 +55,7 @@ abstract class EdrOverlayHostApi {
     int surfaceSessionId,
     int activationId,
     int layoutGeneration,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -63,10 +65,21 @@ abstract class EdrOverlayHostApi {
     double scrollOffsetY,
   );
 
+  void suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
+  );
+
   void clearWindow(int surfaceSessionId, int activationId, int contentRevision);
 }
 
 @FlutterApi()
 abstract class EdrOverlayFlutterApi {
-  void windowReady(int surfaceSessionId, int activationId, int contentRevision);
+  void windowReady(
+    int surfaceSessionId,
+    int activationId,
+    int contentRevision,
+    int presentationRevision,
+  );
 }

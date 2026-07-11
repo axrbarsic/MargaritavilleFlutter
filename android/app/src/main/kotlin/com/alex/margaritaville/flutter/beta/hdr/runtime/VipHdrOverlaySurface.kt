@@ -20,6 +20,7 @@ class VipHdrOverlaySurface(
     var framePresentedListener: ((VipHdrRenderPacket) -> Unit)? = null
 
     private var packet: VipHdrRenderPacket? = null
+    private var presentationSuppressed = true
     private var aggregatedVisible = false
     private var cachedSceneRevision: Long? = null
     private var reportedSceneRevision: Long? = null
@@ -59,6 +60,8 @@ class VipHdrOverlaySurface(
         super.onDraw(canvas)
         val currentPacket = packet ?: return
         if (Build.VERSION.SDK_INT < 34) return
+        val presentationSaveCount =
+            if (presentationSuppressed) canvas.saveLayerAlpha(null, 0) else null
         val frameTimeNanos =
             currentPacket.frameTimeNanos.takeIf { it > 0L } ?: System.nanoTime()
         val timeSeconds = frameTimeNanos / 1_000_000_000.0
@@ -77,7 +80,15 @@ class VipHdrOverlaySurface(
             canvas.restoreToCount(saveCount)
         }
         canvas.restoreToCount(viewportSaveCount)
+        presentationSaveCount?.let(canvas::restoreToCount)
         reportFramePresented(currentPacket)
+    }
+
+    fun setPresentationSuppressed(suppressed: Boolean) {
+        checkMainThread()
+        if (presentationSuppressed == suppressed) return
+        presentationSuppressed = suppressed
+        postInvalidateOnAnimation()
     }
 
     override fun onAttachedToWindow() {

@@ -6,7 +6,14 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
 
   static final instance = EdrReadyRouter._();
 
-  final Map<int, void Function(int activationId, int contentRevision)>
+  final Map<
+    int,
+    void Function(
+      int activationId,
+      int contentRevision,
+      int presentationRevision,
+    )
+  >
   _callbacks = {};
   bool _isSetUp = false;
 
@@ -18,7 +25,12 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
 
   void register(
     int surfaceSessionId,
-    void Function(int activationId, int contentRevision) callback,
+    void Function(
+      int activationId,
+      int contentRevision,
+      int presentationRevision,
+    )
+    callback,
   ) {
     _callbacks[surfaceSessionId] = callback;
   }
@@ -32,7 +44,12 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
     int surfaceSessionId,
     int activationId,
     int contentRevision,
+    int presentationRevision,
   ) {
-    _callbacks[surfaceSessionId]?.call(activationId, contentRevision);
+    _callbacks[surfaceSessionId]?.call(
+      activationId,
+      contentRevision,
+      presentationRevision,
+    );
   }
 }

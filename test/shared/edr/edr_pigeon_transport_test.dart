@@ -29,12 +29,13 @@ void main() {
       await EdrOverlayHostApi(
         binaryMessenger: messenger,
         messageChannelSuffix: suffix,
-      ).updateWindowGeometry(7, 19, 3, 11, 8.25, 122.5, 424, 780, 0, -18.5);
+      ).updateWindowGeometry(7, 19, 3, 5, 11, 8.25, 122.5, 424, 780, 0, -18.5);
 
       expect(received, <Object?>[
         7,
         19,
         3,
+        5,
         11,
         8.25,
         122.5,
@@ -78,28 +79,63 @@ void main() {
           7,
           19,
           31,
+          5,
         ]),
         null,
       );
 
-      expect(receiver.lastReady, (session: 7, activation: 19, content: 31));
+      expect(receiver.lastReady, (
+        session: 7,
+        activation: 19,
+        content: 31,
+        presentation: 5,
+      ));
     },
   );
+
+  test('typed suspend transport preserves presentation lease', () async {
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    const suffix = 'suspend-contract';
+    final channel = BasicMessageChannel<Object?>(
+      'dev.flutter.pigeon.margaritaville_flutter.'
+      'EdrOverlayHostApi.suspendWindow.$suffix',
+      EdrOverlayHostApi.pigeonChannelCodec,
+      binaryMessenger: messenger,
+    );
+    Object? received;
+    messenger.setMockDecodedMessageHandler<Object?>(channel, (message) async {
+      received = message;
+      return <Object?>[null];
+    });
+    addTearDown(() {
+      messenger.setMockDecodedMessageHandler<Object?>(channel, null);
+    });
+
+    await EdrOverlayHostApi(
+      binaryMessenger: messenger,
+      messageChannelSuffix: suffix,
+    ).suspendWindow(7, 19, 5);
+
+    expect(received, <Object?>[7, 19, 5]);
+  });
 }
 
 final class _RecordingFlutterApi implements EdrOverlayFlutterApi {
-  ({int session, int activation, int content})? lastReady;
+  ({int session, int activation, int content, int presentation})? lastReady;
 
   @override
   void windowReady(
     int surfaceSessionId,
     int activationId,
     int contentRevision,
+    int presentationRevision,
   ) {
     lastReady = (
       session: surfaceSessionId,
       activation: activationId,
       content: contentRevision,
+      presentation: presentationRevision,
     );
   }
 }

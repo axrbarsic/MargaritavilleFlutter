@@ -65,8 +65,8 @@ final class WorkSessionShell extends ConsumerWidget {
     );
   }
 
-  void _openSettings(BuildContext context) {
-    Navigator.of(context).push(
+  Future<void> _openSettings(BuildContext context) {
+    return Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const AppearanceSettingsScreen()),
     );
   }

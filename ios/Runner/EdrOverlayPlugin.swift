@@ -24,14 +24,16 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
     flutterApi = EdrOverlayFlutterApi(binaryMessenger: binaryMessenger)
     overlay.onFirstFrameReady = { [weak self] readiness in
       guard let self,
-        let sessionID = self.activeSessionID,
-        let activationID = self.activeActivationID,
-        self.activeContentRevision == Int64(readiness.revision)
+        let committed = self.presentationFence.commitFrame(
+          contentRevision: Int64(readiness.revision)
+        )
       else { return }
+      self.setOverlaySuppressed(false)
       self.flutterApi.windowReady(
-        surfaceSessionId: Int64(sessionID),
-        activationId: Int64(activationID),
-        contentRevision: Int64(readiness.revision)
+        surfaceSessionId: Int64(committed.surfaceSessionID),
+        activationId: Int64(committed.activationID),
+        contentRevision: committed.contentRevision,
+        presentationRevision: committed.presentationRevision
       ) { _ in }
     }
   }
@@ -39,18 +41,15 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
   private let flutterApi: EdrOverlayFlutterApi
   private let overlay = VisualRuntimeWindowOverlayView(frame: .zero)
   private let viewportMask = CAShapeLayer()
-  private var activeSessionID: UInt64?
-  private var activeActivationID: UInt64?
-  private var highestActivationID: UInt64 = 0
+  private var presentationFence = EdrPresentationFence()
   private var activeLayoutGeneration: Int64 = -1
-  private var activeContentRevision: Int64 = -1
-  private var pendingGeometry: WindowGeometry?
 
   func configureWindow(
     surfaceSessionId: Int64,
     activationId: Int64,
     layoutGeneration: Int64,
     contentRevision: Int64,
+    presentationRevision: Int64,
     geometryRevision: Int64,
     viewportLeft: Double,
     viewportTop: Double,
@@ -64,23 +63,33 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
       activationId > 0,
       layoutGeneration >= 0,
       contentRevision >= 0,
+      presentationRevision >= 0,
       geometryRevision >= 0
     else { return }
-    try installOverlayIfNeeded()
     let sessionID = UInt64(surfaceSessionId)
     let activationID = UInt64(activationId)
-    guard activateSession(sessionID, activationID: activationID) else {
+    let isNewActivation = activationID > presentationFence.highestActivationID
+    guard isNewActivation || layoutGeneration >= activeLayoutGeneration else {
       return
     }
-    guard layoutGeneration >= activeLayoutGeneration,
-      contentRevision >= activeContentRevision
-    else { return }
+    guard presentationFence.acceptConfiguration(
+      surfaceSessionID: sessionID,
+      activationID: activationID,
+      contentRevision: contentRevision,
+      presentationRevision: presentationRevision
+    ) else { return }
+    setOverlaySuppressed(true)
+    try installOverlayIfNeeded()
+    if isNewActivation {
+      activeLayoutGeneration = -1
+      overlay.beginSession(activationID)
+    }
     activeLayoutGeneration = layoutGeneration
-    activeContentRevision = contentRevision
-    let suppliedGeometry = WindowGeometry(
+    let geometry = WindowGeometry(
       sessionID: sessionID,
       activationID: activationID,
       layoutGeneration: layoutGeneration,
+      presentationRevision: presentationRevision,
       revision: UInt64(geometryRevision),
       viewport: CGRect(
         x: viewportLeft, y: viewportTop,
@@ -88,19 +97,6 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
       ),
       scrollOffset: CGPoint(x: scrollOffsetX, y: scrollOffsetY)
     )
-    let matchingPendingGeometry = pendingGeometry.flatMap {
-        $0.sessionID == sessionID
-          && $0.activationID == activationID
-          && $0.layoutGeneration == layoutGeneration
-          && $0.revision > suppliedGeometry.revision ? $0 : nil
-      }
-    let geometry = matchingPendingGeometry ?? suppliedGeometry
-    if pendingGeometry?.sessionID == sessionID,
-      pendingGeometry?.activationID == activationID,
-      pendingGeometry?.layoutGeneration == layoutGeneration
-    {
-      pendingGeometry = nil
-    }
     applyGeometry(geometry)
     let descriptors = tiles.compactMap {
       descriptor(snapshot: $0)
@@ -115,6 +111,7 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
     surfaceSessionId: Int64,
     activationId: Int64,
     layoutGeneration: Int64,
+    presentationRevision: Int64,
     geometryRevision: Int64,
     viewportLeft: Double,
     viewportTop: Double,
@@ -126,12 +123,14 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
     guard surfaceSessionId >= 0,
       activationId > 0,
       layoutGeneration >= 0,
+      presentationRevision >= 0,
       geometryRevision >= 0
     else { return }
     let geometry = WindowGeometry(
       sessionID: UInt64(surfaceSessionId),
       activationID: UInt64(activationId),
       layoutGeneration: layoutGeneration,
+      presentationRevision: presentationRevision,
       revision: UInt64(geometryRevision),
       viewport: CGRect(
         x: viewportLeft, y: viewportTop,
@@ -139,15 +138,30 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
       ),
       scrollOffset: CGPoint(x: scrollOffsetX, y: scrollOffsetY)
     )
-    guard geometry.sessionID == activeSessionID,
-      geometry.activationID == activeActivationID,
-      geometry.layoutGeneration == activeLayoutGeneration
-    else {
-      storePendingGeometry(geometry)
-      return
-    }
+    guard presentationFence.acceptsGeometry(
+      surfaceSessionID: geometry.sessionID,
+      activationID: geometry.activationID,
+      presentationRevision: geometry.presentationRevision
+    ), geometry.layoutGeneration == activeLayoutGeneration else { return }
     try installOverlayIfNeeded()
     applyGeometry(geometry)
+  }
+
+  func suspendWindow(
+    surfaceSessionId: Int64,
+    activationId: Int64,
+    presentationRevision: Int64
+  ) throws {
+    guard surfaceSessionId >= 0,
+      activationId > 0,
+      presentationRevision >= 0,
+      presentationFence.suspend(
+        surfaceSessionID: UInt64(surfaceSessionId),
+        activationID: UInt64(activationId),
+        presentationRevision: presentationRevision
+      )
+    else { return }
+    setOverlaySuppressed(true)
   }
 
   func clearWindow(
@@ -158,19 +172,16 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
     guard surfaceSessionId >= 0,
       activationId > 0,
       contentRevision >= 0,
-      UInt64(surfaceSessionId) == activeSessionID,
-      UInt64(activationId) == activeActivationID,
-      contentRevision >= activeContentRevision
+      presentationFence.clear(
+        surfaceSessionID: UInt64(surfaceSessionId),
+        activationID: UInt64(activationId),
+        contentRevision: contentRevision
+      )
     else { return }
+    setOverlaySuppressed(true)
     overlay.clear(revision: UInt64(contentRevision))
     viewportMask.path = nil
-    if pendingGeometry?.activationID == activeActivationID {
-      pendingGeometry = nil
-    }
-    activeSessionID = nil
-    activeActivationID = nil
     activeLayoutGeneration = -1
-    activeContentRevision = -1
   }
 
   private func installOverlayIfNeeded() throws {
@@ -235,48 +246,6 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
     )
   }
 
-  private func activateSession(
-    _ sessionID: UInt64,
-    activationID: UInt64
-  ) -> Bool {
-    guard activationID >= highestActivationID else { return false }
-    if activationID == highestActivationID {
-      return activeSessionID == sessionID
-        && activeActivationID == activationID
-    }
-    highestActivationID = activationID
-    activeSessionID = sessionID
-    activeActivationID = activationID
-    activeLayoutGeneration = -1
-    activeContentRevision = -1
-    overlay.beginSession(activationID)
-    return true
-  }
-
-  private func storePendingGeometry(_ geometry: WindowGeometry) {
-    let belongsToActiveLease =
-      geometry.sessionID == activeSessionID
-      && geometry.activationID == activeActivationID
-      && geometry.layoutGeneration > activeLayoutGeneration
-    guard geometry.activationID > highestActivationID
-      || belongsToActiveLease
-    else { return }
-    if let pendingGeometry {
-      let existingOrder = (
-        pendingGeometry.activationID,
-        pendingGeometry.layoutGeneration,
-        pendingGeometry.revision
-      )
-      let nextOrder = (
-        geometry.activationID,
-        geometry.layoutGeneration,
-        geometry.revision
-      )
-      guard nextOrder > existingOrder else { return }
-    }
-    pendingGeometry = geometry
-  }
-
   private func applyGeometry(_ geometry: WindowGeometry) {
     updateViewportMask(geometry.viewport)
     overlay.updateGeometry(
@@ -286,6 +255,13 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
         y: geometry.viewport.minY - geometry.scrollOffset.y
       )
     )
+  }
+
+  private func setOverlaySuppressed(_ suppressed: Bool) {
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    overlay.layer.opacity = suppressed ? 0 : 1
+    CATransaction.commit()
   }
 
   private func pulse(_ snapshot: EdrTileSnapshot) -> VisualRuntimePulse? {
@@ -329,9 +305,130 @@ private struct WindowGeometry {
   let sessionID: UInt64
   let activationID: UInt64
   let layoutGeneration: Int64
+  let presentationRevision: Int64
   let revision: UInt64
   let viewport: CGRect
   let scrollOffset: CGPoint
+}
+
+struct EdrPresentationLease: Equatable {
+  let surfaceSessionID: UInt64
+  let activationID: UInt64
+  let contentRevision: Int64
+  let presentationRevision: Int64
+}
+
+struct EdrPresentationFence {
+  private(set) var activeSessionID: UInt64?
+  private(set) var activeActivationID: UInt64?
+  private(set) var activeContentRevision: Int64 = -1
+  private(set) var activePresentationRevision: Int64 = -1
+  private(set) var highestActivationID: UInt64 = 0
+  private(set) var suppressed = true
+  private var awaitingCommit: EdrPresentationLease?
+
+  mutating func acceptConfiguration(
+    surfaceSessionID: UInt64,
+    activationID: UInt64,
+    contentRevision: Int64,
+    presentationRevision: Int64
+  ) -> Bool {
+    guard activationID > 0,
+      contentRevision >= 0,
+      presentationRevision >= 0,
+      activationID >= highestActivationID
+    else { return false }
+    if activationID == highestActivationID {
+      guard activeSessionID == surfaceSessionID,
+        activeActivationID == activationID
+      else { return false }
+      if contentRevision == activeContentRevision,
+        presentationRevision == activePresentationRevision
+      {
+        return suppressed
+      }
+    } else {
+      highestActivationID = activationID
+      activeSessionID = surfaceSessionID
+      activeActivationID = activationID
+      activeContentRevision = -1
+      activePresentationRevision = -1
+      awaitingCommit = nil
+    }
+    guard contentRevision >= activeContentRevision,
+      presentationRevision >= activePresentationRevision
+    else { return false }
+    activeContentRevision = contentRevision
+    activePresentationRevision = presentationRevision
+    suppressed = true
+    awaitingCommit = currentLease
+    return true
+  }
+
+  mutating func suspend(
+    surfaceSessionID: UInt64,
+    activationID: UInt64,
+    presentationRevision: Int64
+  ) -> Bool {
+    guard activeSessionID == surfaceSessionID,
+      activeActivationID == activationID,
+      presentationRevision >= activePresentationRevision
+    else { return false }
+    activePresentationRevision = presentationRevision
+    awaitingCommit = nil
+    suppressed = true
+    return true
+  }
+
+  func acceptsGeometry(
+    surfaceSessionID: UInt64,
+    activationID: UInt64,
+    presentationRevision: Int64
+  ) -> Bool {
+    activeSessionID == surfaceSessionID
+      && activeActivationID == activationID
+      && activePresentationRevision == presentationRevision
+  }
+
+  mutating func commitFrame(
+    contentRevision: Int64
+  ) -> EdrPresentationLease? {
+    guard let awaitingCommit,
+      awaitingCommit == currentLease,
+      awaitingCommit.contentRevision == contentRevision
+    else { return nil }
+    self.awaitingCommit = nil
+    suppressed = false
+    return awaitingCommit
+  }
+
+  mutating func clear(
+    surfaceSessionID: UInt64,
+    activationID: UInt64,
+    contentRevision: Int64
+  ) -> Bool {
+    guard activeSessionID == surfaceSessionID,
+      activeActivationID == activationID,
+      contentRevision >= activeContentRevision
+    else { return false }
+    activeSessionID = nil
+    activeActivationID = nil
+    activeContentRevision = -1
+    activePresentationRevision = -1
+    awaitingCommit = nil
+    suppressed = true
+    return true
+  }
+
+  private var currentLease: EdrPresentationLease? {
+    guard let activeSessionID, let activeActivationID else { return nil }
+    return EdrPresentationLease(
+      surfaceSessionID: activeSessionID,
+      activationID: activeActivationID,
+      contentRevision: activeContentRevision,
+      presentationRevision: activePresentationRevision
+    )
+  }
 }
 
 private enum EdrWindowRuntimeError: LocalizedError {

@@ -172,9 +172,51 @@ if ! rg -q "updateWindowGeometry" pigeons/edr_overlay_api.dart \
     lib/shared/edr/edr_overlay_controller.dart || \
    ! rg -q "layoutGeneration" pigeons/edr_overlay_api.dart \
     lib/shared/edr/edr_overlay_controller.dart || \
-   ! rg -U -q 'windowReady\([[:space:]]*int surfaceSessionId,[[:space:]]*int activationId,[[:space:]]*int contentRevision' \
+   ! rg -q "suspendWindow" pigeons/edr_overlay_api.dart \
+    ios/Runner/EdrOverlayPlugin.swift \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/AndroidEdrOverlayAdapter.kt || \
+   ! rg -q "presentationRevision" pigeons/edr_overlay_api.dart \
+    ios/Runner/EdrOverlayPlugin.swift \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/AndroidEdrLease.kt || \
+   ! rg -U -q 'windowReady\([[:space:]]*int surfaceSessionId,[[:space:]]*int activationId,[[:space:]]*int contentRevision,[[:space:]]*int presentationRevision' \
     pigeons/edr_overlay_api.dart; then
   echo "ERROR: EDR content/session/layout и scroll geometry снова смешаны"
+  failed=1
+fi
+
+if rg -n "pendingGeometry|storePendingGeometry" \
+  ios/Runner/EdrOverlayPlugin.swift \
+  android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr; then
+  echo "ERROR: future/unknown EDR geometry должна отбрасываться, а не копиться"
+  failed=1
+fi
+
+if ! rg -q "commitFrame" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -F -q "setOverlaySuppressed(true)" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -F -q "setPresentationSuppressed(false)" \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/AndroidEdrOverlayAdapter.kt || \
+   ! rg -F -q "saveLayerAlpha(null, 0)" \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/hdr/runtime/VipHdrOverlaySurface.kt; then
+  echo "ERROR: native EDR обязан оставаться скрытым до exact frame commit"
+  failed=1
+fi
+
+if ! rg -q "acquirePresentationOcclusion" \
+    lib/features/summary/presentation/summary_screen_actions.dart \
+    lib/features/summary/presentation/widgets/room_status_tile.dart || \
+   ! rg -q "secondaryAnimation" \
+    lib/shared/edr/edr_window_surface.dart || \
+   ! rg -q "nextStableFrames >= 2" \
+    lib/shared/edr/edr_window_surface.dart || \
+   ! rg -q "class _EdrNativeCommandLane" \
+    lib/shared/edr/edr_overlay_command_lane.dart || \
+   ! rg -q "_latestGeometry" \
+    lib/shared/edr/edr_overlay_command_lane.dart || \
+   ! rg -q "pendingConfigurations\.isNotEmpty" \
+    lib/shared/edr/edr_presentation_occlusion.dart || \
+   ! rg -q "presentationSuspendDeadline" \
+    lib/shared/edr/edr_presentation_occlusion.dart; then
+  echo "ERROR: native overlay потерял route/modal occlusion или latest-only command lane"
   failed=1
 fi
 
@@ -284,6 +326,13 @@ if rg -n "Margaritaville|RoomDisplayStatus|com\.alex\.margaritaville" \
   packages/interaction_foundation/android/src/main \
   --glob '*.dart' --glob '*.swift' --glob '*.kt'; then
   echo "ERROR: shared interaction foundation contains app-specific policy or identity"
+  failed=1
+fi
+
+if [[ ! -x tool/install_ios_profile.sh ]] || \
+   ! rg -q 'device process terminate' tool/install_ios_profile.sh || \
+   ! rg -q -- '--terminate-existing' tool/install_ios_profile.sh; then
+  echo "ERROR: iOS profile installer must terminate the old app before update"
   failed=1
 fi
 

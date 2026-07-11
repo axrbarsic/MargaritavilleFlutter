@@ -34,6 +34,7 @@ class AndroidEdrOverlayAdapter(
         activationId: Long,
         layoutGeneration: Long,
         contentRevision: Long,
+        presentationRevision: Long,
         geometryRevision: Long,
         viewportLeft: Double,
         viewportTop: Double,
@@ -49,12 +50,14 @@ class AndroidEdrOverlayAdapter(
                 activationId = activationId,
                 layoutGeneration = layoutGeneration,
                 contentRevision = contentRevision,
+                presentationRevision = presentationRevision,
             )
         val suppliedGeometry =
             geometry(
                 surfaceSessionId,
                 activationId,
                 layoutGeneration,
+                presentationRevision,
                 geometryRevision,
                 viewportLeft,
                 viewportTop,
@@ -65,14 +68,17 @@ class AndroidEdrOverlayAdapter(
             )
         val accepted = lease.configure(configuration, suppliedGeometry) ?: return
         activeTiles = tiles.filter { it.valid }
-        readinessGate.await(
-            AndroidEdrReadinessLease(
-                surfaceSessionId = surfaceSessionId,
-                activationId = activationId,
-                contentRevision = contentRevision,
-            ),
-            beganActivation = accepted.beganActivation,
-        )
+        val awaitsCommit =
+            readinessGate.await(
+                AndroidEdrReadinessLease(
+                    surfaceSessionId = surfaceSessionId,
+                    activationId = activationId,
+                    contentRevision = contentRevision,
+                    presentationRevision = presentationRevision,
+                ),
+                beganActivation = accepted.beganActivation,
+            )
+        if (awaitsCommit) overlayHost?.setPresentationSuppressed(true)
         submitScene(accepted.geometry)
     }
 
@@ -80,6 +86,7 @@ class AndroidEdrOverlayAdapter(
         surfaceSessionId: Long,
         activationId: Long,
         layoutGeneration: Long,
+        presentationRevision: Long,
         geometryRevision: Long,
         viewportLeft: Double,
         viewportTop: Double,
@@ -94,6 +101,7 @@ class AndroidEdrOverlayAdapter(
                     surfaceSessionId,
                     activationId,
                     layoutGeneration,
+                    presentationRevision,
                     geometryRevision,
                     viewportLeft,
                     viewportTop,
@@ -106,6 +114,17 @@ class AndroidEdrOverlayAdapter(
         submitScene(accepted)
     }
 
+    override fun suspendWindow(
+        surfaceSessionId: Long,
+        activationId: Long,
+        presentationRevision: Long,
+    ) {
+        if (!lease.suspend(surfaceSessionId, activationId, presentationRevision)) return
+        readinessGate.clearPending()
+        overlayHost?.setPresentationSuppressed(true)
+        overlayHost?.setFeatureVisible(false)
+    }
+
     override fun clearWindow(
         surfaceSessionId: Long,
         activationId: Long,
@@ -114,6 +133,7 @@ class AndroidEdrOverlayAdapter(
         if (!lease.clear(surfaceSessionId, activationId, contentRevision)) return
         activeTiles = emptyList()
         readinessGate.clearPending()
+        overlayHost?.setPresentationSuppressed(true)
         overlayHost?.submit(null)
         overlayHost?.setFeatureVisible(false)
     }
@@ -143,6 +163,7 @@ class AndroidEdrOverlayAdapter(
                 viewportPx = transform.viewport(geometry),
                 cells = cells,
                 contentRevision = lease.activeContentRevision,
+                presentationRevision = lease.activePresentationRevision,
             ),
         )
     }
@@ -204,14 +225,22 @@ class AndroidEdrOverlayAdapter(
 
     private fun onFramePresented(packet: VipHdrRenderPacket) {
         val contentRevision = packet.scene.contentRevision ?: return
+        val presentationRevision = packet.scene.presentationRevision ?: return
         val readiness =
-            readinessGate.consumeFirstDraw(contentRevision) {
-                lease.isActive(it.surfaceSessionId, it.activationId, it.contentRevision)
+            readinessGate.consumeFirstDraw(contentRevision, presentationRevision) {
+                lease.isActive(
+                    it.surfaceSessionId,
+                    it.activationId,
+                    it.contentRevision,
+                    it.presentationRevision,
+                )
             } ?: return
+        overlayHost?.setPresentationSuppressed(false)
         flutterApi.windowReady(
             readiness.surfaceSessionId,
             readiness.activationId,
             readiness.contentRevision,
+            readiness.presentationRevision,
         ) { result ->
             result.exceptionOrNull()?.let { Log.w(TAG, "windowReady callback failed", it) }
         }
@@ -231,6 +260,7 @@ class AndroidEdrOverlayAdapter(
         surfaceSessionId: Long,
         activationId: Long,
         layoutGeneration: Long,
+        presentationRevision: Long,
         geometryRevision: Long,
         viewportLeft: Double,
         viewportTop: Double,
@@ -243,6 +273,7 @@ class AndroidEdrOverlayAdapter(
             surfaceSessionId,
             activationId,
             layoutGeneration,
+            presentationRevision,
             geometryRevision,
             viewportLeft,
             viewportTop,

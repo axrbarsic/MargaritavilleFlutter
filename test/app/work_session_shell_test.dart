@@ -10,7 +10,8 @@ import 'package:margaritaville_flutter/features/settings/presentation/controller
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
 import 'package:margaritaville_flutter/features/work_session/data/repositories/drift_work_session_repository.dart';
 import 'package:margaritaville_flutter/features/work_session/presentation/controllers/work_session_controller.dart';
-import 'package:margaritaville_flutter/shared/persistence/app_database.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_overlay_controller.dart';
+import 'package:margaritaville_flutter/shared/persistence/app_database_provider.dart';
 
 void main() {
   testWidgets('setup persists a room and opens the real summary shell', (
@@ -33,6 +34,7 @@ void main() {
             FixedClock(DateTime.utc(2027, 2, 10, 12)),
           ),
           workSessionRepositoryProvider.overrideWithValue(repository),
+          appDatabaseProvider.overrideWithValue(database),
           appearanceSettingsRepositoryProvider.overrideWithValue(
             appearanceRepository,
           ),
@@ -56,7 +58,9 @@ void main() {
     expect(find.byKey(const Key('summary-total-count')), findsOneWidget);
 
     await tester.longPress(find.byKey(const Key('summary-open-settings')));
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(
+      EdrOverlayController.presentationSuspendDeadline,
+    );
     expect(find.text('Экспериментальное'), findsOneWidget);
     final statusPulse = find.byKey(const Key('setting-status-hdr-pulse'));
     await tester.ensureVisible(statusPulse);

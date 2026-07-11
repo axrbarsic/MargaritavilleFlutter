@@ -245,11 +245,22 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
 
   Future<void> _showActionMenu(BuildContext context) async {
     final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
-    final action = await showRoomActionSheet(
-      context,
-      room: widget.room,
-      canReset: _canReset,
-    );
+    final controller = EdrViewportScope.maybeControllerOf(context);
+    final occlusion = await controller?.acquirePresentationOcclusion();
+    if (!context.mounted) {
+      occlusion?.release();
+      return;
+    }
+    RoomAction? action;
+    try {
+      action = await showRoomActionSheet(
+        context,
+        room: widget.room,
+        canReset: _canReset,
+      );
+    } finally {
+      occlusion?.release();
+    }
     switch (action) {
       case RoomAction.media:
         feedback?.tap();

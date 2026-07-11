@@ -41,8 +41,12 @@ extension _SummaryScreenActions on _SummaryScreenState {
   }
 
   void _openSchedule(RoomState room) {
-    unawaited(
-      showRoomScheduleSheet(
+    unawaited(_openScheduleOccluded(room));
+  }
+
+  Future<void> _openScheduleOccluded(RoomState room) async {
+    await _withEdrOccluded(
+      () => showRoomScheduleSheet(
         context: context,
         room: room,
         now: ref.read(clockProvider).now(),
@@ -154,8 +158,12 @@ extension _SummaryScreenActions on _SummaryScreenState {
   }
 
   void _openMedia(RoomState room) {
-    unawaited(
-      Navigator.of(context).push<void>(
+    unawaited(_openMediaOccluded(room));
+  }
+
+  Future<void> _openMediaOccluded(RoomState room) async {
+    await _withEdrOccluded(
+      () => Navigator.of(context).push<void>(
         MaterialPageRoute<void>(
           builder: (_) => RoomDetailsScreen(
             sessionId: widget.session.id,
@@ -164,5 +172,14 @@ extension _SummaryScreenActions on _SummaryScreenState {
         ),
       ),
     );
+  }
+
+  Future<T> _withEdrOccluded<T>(Future<T> Function() action) async {
+    final occlusion = await _edrWindow.acquirePresentationOcclusion();
+    try {
+      return await action();
+    } finally {
+      occlusion.release();
+    }
   }
 }

@@ -6,6 +6,7 @@ abstract interface class EdrOverlayBridge {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -20,6 +21,7 @@ abstract interface class EdrOverlayBridge {
     int surfaceSessionId,
     int activationId,
     int layoutGeneration,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -27,6 +29,12 @@ abstract interface class EdrOverlayBridge {
     double viewportHeight,
     double scrollOffsetX,
     double scrollOffsetY,
+  );
+
+  Future<void> suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
   );
 
   Future<void> clearWindow(
@@ -48,6 +56,7 @@ final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -62,6 +71,7 @@ final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
       activationId,
       layoutGeneration,
       contentRevision,
+      presentationRevision,
       geometryRevision,
       viewportLeft,
       viewportTop,
@@ -78,6 +88,7 @@ final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
     int surfaceSessionId,
     int activationId,
     int layoutGeneration,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -90,6 +101,7 @@ final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
       surfaceSessionId,
       activationId,
       layoutGeneration,
+      presentationRevision,
       geometryRevision,
       viewportLeft,
       viewportTop,
@@ -97,6 +109,19 @@ final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
       viewportHeight,
       scrollOffsetX,
       scrollOffsetY,
+    );
+  }
+
+  @override
+  Future<void> suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
+  ) {
+    return _api.suspendWindow(
+      surfaceSessionId,
+      activationId,
+      presentationRevision,
     );
   }
 

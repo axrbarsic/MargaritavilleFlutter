@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -6,8 +9,10 @@ import 'edr_ready_router.dart';
 import 'generated/edr_overlay_api.g.dart';
 
 part 'edr_overlay_measurement.dart';
+part 'edr_overlay_command_lane.dart';
 part 'edr_overlay_geometry_cache.dart';
 part 'edr_overlay_lifecycle.dart';
+part 'edr_presentation_occlusion.dart';
 part 'edr_overlay_synchronization.dart';
 
 final class EdrOverlayController extends ChangeNotifier {
@@ -20,6 +25,13 @@ final class EdrOverlayController extends ChangeNotifier {
                   defaultTargetPlatform == TargetPlatform.android));
 
   final EdrOverlayBridge _bridge;
+  late final _nativeCommandLane = _EdrNativeCommandLane(
+    onGeometryError: (error) {
+      debugPrint('Быстрый нативный EDR-scroll недоступен: $error');
+      _lastGeometryOffset = null;
+      _scheduleSync();
+    },
+  );
   final bool supported;
   final GlobalKey surfaceKey = GlobalKey(debugLabel: 'summary-edr-window');
   final int surfaceSessionId = ++_nextSurfaceSessionId;
@@ -28,15 +40,19 @@ final class EdrOverlayController extends ChangeNotifier {
   Map<String, GlobalKey> _renderedTiles = const {};
   Map<String, GlobalKey> _sentTiles = const {};
   bool _attached = false;
+  bool _routeVisible = true;
   bool _windowVisible = true;
+  int _presentationOcclusionCount = 0;
   bool _syncScheduled = false;
   bool _syncInProgress = false;
   bool _syncAgain = false;
   bool _disposed = false;
   int _contentRevision = 0;
   int _contentConfigurationRevision = 0;
+  int _presentationRevision = 0;
   int _geometryRevision = 0;
   int _sentContentRevision = -1;
+  int _sentPresentationRevision = -1;
   int _sentLayoutGeneration = -1;
   int _activationId = 0;
   Offset _scrollOffset = Offset.zero;
@@ -47,6 +63,7 @@ final class EdrOverlayController extends ChangeNotifier {
 
   static int _nextSurfaceSessionId = 0;
   static int _nextActivationId = 0;
+  static const presentationSuspendDeadline = Duration(milliseconds: 250);
   static const double effectBleed = 24;
   static const double verticalPreload = 240;
 
@@ -57,10 +74,11 @@ final class EdrOverlayController extends ChangeNotifier {
   void attachWindow() {
     if (!supported || _disposed) return;
     _attached = true;
-    _beginActivation();
     EdrReadyRouter.instance
       ..ensureSetUp()
       ..register(surfaceSessionId, _markNativeReady);
+    if (!_windowVisible) return;
+    _beginActivation();
     _scheduleSync();
   }
 
@@ -73,15 +91,9 @@ final class EdrOverlayController extends ChangeNotifier {
   }
 
   void setWindowVisible(bool visible) {
-    if (!supported || _disposed || _windowVisible == visible) return;
-    _windowVisible = visible;
-    if (!visible) {
-      _replaceRenderedTiles(const {});
-      if (_attached) _clearNative();
-      return;
-    }
-    _beginActivation();
-    _scheduleSync();
+    if (!supported || _disposed || _routeVisible == visible) return;
+    _routeVisible = visible;
+    _applyEffectiveVisibility().ignore();
   }
 
   void upsertTile({
@@ -209,37 +221,43 @@ final class EdrOverlayController extends ChangeNotifier {
       return;
     }
     final geometryRevision = ++_geometryRevision;
+    final activationId = _activationId;
+    final presentationRevision = _presentationRevision;
     _lastGeometryOffset = offset;
-    _bridge
-        .updateWindowGeometry(
-          surfaceSessionId,
-          _activationId,
-          layoutGeneration,
-          geometryRevision,
-          viewport.left,
-          viewport.top,
-          viewport.width,
-          viewport.height,
-          offset.dx,
-          offset.dy,
-        )
-        .catchError((Object error) {
-          debugPrint('Быстрый нативный EDR-scroll недоступен: $error');
-          _lastGeometryOffset = null;
-          _scheduleSync();
-        });
+    _nativeCommandLane.submitGeometry(
+      () => _bridge.updateWindowGeometry(
+        surfaceSessionId,
+        activationId,
+        layoutGeneration,
+        presentationRevision,
+        geometryRevision,
+        viewport.left,
+        viewport.top,
+        viewport.width,
+        viewport.height,
+        offset.dx,
+        offset.dy,
+      ),
+    );
   }
 
-  void _markNativeReady(int activationId, int revision) {
+  void _markNativeReady(
+    int activationId,
+    int revision,
+    int presentationRevision,
+  ) {
     final configuration = _pendingConfigurations[revision];
     if (_disposed ||
+        !_windowVisible ||
         activationId != _activationId ||
+        presentationRevision != _presentationRevision ||
         configuration == null ||
         revision != _contentConfigurationRevision) {
       return;
     }
     _pendingConfigurations.remove(revision);
     if (configuration.contentRevision != _contentRevision ||
+        configuration.presentationRevision != _presentationRevision ||
         configuration.layoutGeneration != _geometryCache.layoutGeneration) {
       _scheduleSync();
       return;

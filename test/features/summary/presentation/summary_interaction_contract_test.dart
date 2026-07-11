@@ -10,6 +10,7 @@ import 'package:margaritaville_flutter/features/work_session/domain/models/house
 import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_overlay_controller.dart';
 import 'package:margaritaville_flutter/shared/persistence/app_database_provider.dart';
 
 void main() {
@@ -165,7 +166,9 @@ void main() {
       const Offset(72, 0),
       const Duration(milliseconds: 500),
     );
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(
+      EdrOverlayController.presentationSuspendDeadline,
+    );
     await tester.tap(find.byKey(const Key('room-action-media')));
     await tester.pumpAndSettle();
 

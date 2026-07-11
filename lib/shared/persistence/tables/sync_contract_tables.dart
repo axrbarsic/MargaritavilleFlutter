@@ -72,9 +72,50 @@ class MediaManifestRecords extends Table {
   TextColumn get mimeType => text().nullable()();
   IntColumn get durationMs => integer().nullable()();
   TextColumn get transcript => text().nullable()();
+  IntColumn get byteLength => integer().nullable()();
+  IntColumn get widthPixels => integer().nullable()();
+  IntColumn get heightPixels => integer().nullable()();
+  TextColumn get originalExtension => text().nullable()();
+  IntColumn get orientation => integer().nullable()();
+  TextColumn get colorSpace => text().nullable()();
+  BoolColumn get isHdr => boolean().nullable()();
   TextColumn get lastCommandId => text().nullable()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('MediaPromotionRow')
+class MediaPromotionRecords extends Table {
+  TextColumn get operationId => text()();
+  TextColumn get commandId => text()();
+  TextColumn get mediaId => text().unique()();
+  TextColumn get sessionId =>
+      text().references(WorkSessionRecords, #id, onDelete: KeyAction.cascade)();
+  TextColumn get roomNumber => text()();
+  TextColumn get assignmentId => text().nullable()();
+  TextColumn get kind => text()();
+  TextColumn get stagedRelativePath => text()();
+  TextColumn get transientFilePath => text()();
+  TextColumn get finalRelativePath => text()();
+  TextColumn get checksumSha256 => text()();
+  IntColumn get byteLength => integer()();
+  TextColumn get originDeviceId => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get issuedAt => dateTime()();
+  TextColumn get mimeType => text().nullable()();
+  IntColumn get durationMs => integer().nullable()();
+  TextColumn get transcript => text().nullable()();
+  IntColumn get widthPixels => integer().nullable()();
+  IntColumn get heightPixels => integer().nullable()();
+  TextColumn get originalExtension => text().nullable()();
+  IntColumn get orientation => integer().nullable()();
+  TextColumn get colorSpace => text().nullable()();
+  BoolColumn get isHdr => boolean().nullable()();
+  DateTimeColumn get quarantinedAt => dateTime().nullable()();
+  TextColumn get failureReason => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {operationId};
 }

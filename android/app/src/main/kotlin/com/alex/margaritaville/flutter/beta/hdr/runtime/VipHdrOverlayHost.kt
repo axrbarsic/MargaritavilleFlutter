@@ -22,6 +22,8 @@ interface VipHdrOverlayApi : AutoCloseable {
     fun submit(scene: VipHdrScene?)
 
     fun setFeatureVisible(visible: Boolean)
+
+    fun setPresentationSuppressed(suppressed: Boolean)
 }
 
 class VipHdrOverlayHost(
@@ -116,6 +118,12 @@ class VipHdrOverlayHost(
         checkMainThread()
         checkOpen()
         runtime.setViewportVisible(visible)
+    }
+
+    override fun setPresentationSuppressed(suppressed: Boolean) {
+        checkMainThread()
+        checkOpen()
+        surface.setPresentationSuppressed(suppressed)
     }
 
     override fun close() {

@@ -10,8 +10,8 @@ dart run drift_dev schema dump \
   lib/shared/persistence/local_database.dart \
   "$tmp_dir/schema"
 diff -u \
-  drift_schemas/drift_schema_v4.json \
-  "$tmp_dir/schema/drift_schema_v4.json"
+  drift_schemas/drift_schema_v5.json \
+  "$tmp_dir/schema/drift_schema_v5.json"
 
 dart run drift_dev schema generate --data-classes --companions \
   drift_schemas/ "$tmp_dir/generated/"

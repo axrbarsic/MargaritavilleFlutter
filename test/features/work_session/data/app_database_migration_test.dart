@@ -11,13 +11,13 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  test('v2 to v4 preserves data and moves idempotency to receipts', () async {
+  test('v2 to v5 preserves data and adds durable media promotion', () async {
     final schema = await verifier.schemaAt(2);
     addTearDown(schema.close);
     _seedV2(schema);
 
     final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 4);
+    await verifier.migrateAndValidate(database, 5);
 
     final sessions = await database.select(database.workSessionRecords).get();
     final history = await database.select(database.historyEventRecords).get();
@@ -40,6 +40,17 @@ void main() {
     expect(media.single.durationMs, isNull);
     expect(media.single.transcript, isNull);
     expect(media.single.lastCommandId, isNull);
+    expect(media.single.byteLength, isNull);
+    expect(media.single.widthPixels, isNull);
+    expect(media.single.heightPixels, isNull);
+    expect(media.single.originalExtension, isNull);
+    expect(media.single.orientation, isNull);
+    expect(media.single.colorSpace, isNull);
+    expect(media.single.isHdr, isNull);
+    expect(
+      await database.select(database.mediaPromotionRecords).get(),
+      isEmpty,
+    );
     expect(notes, isEmpty);
     expect(receipts, hasLength(1));
     expect(receipts.single.commandId, 'command-1');
@@ -75,11 +86,13 @@ void main() {
     await database.close();
   });
 
-  test('v3 to v4 preserves notes and media while adding LWW keys', () async {
-    final schema = await verifier.schemaAt(3);
-    addTearDown(schema.close);
-    final raw = schema.rawDatabase;
-    raw.execute('''
+  test(
+    'v3 to v5 preserves notes and media while adding media journal',
+    () async {
+      final schema = await verifier.schemaAt(3);
+      addTearDown(schema.close);
+      final raw = schema.rawDatabase;
+      raw.execute('''
       INSERT INTO work_session_records (
         id, canonical_schema_version, hotel_id, hotel_name, workflow,
         started_at, updated_at, workday_locked
@@ -88,7 +101,7 @@ void main() {
         '2027-02-10T12:00:00.000Z', '2027-02-10T12:30:00.000Z', 0
       )
     ''');
-    raw.execute('''
+      raw.execute('''
       INSERT INTO room_note_records (
         session_id, room_number, text_value, updated_at
       ) VALUES (
@@ -96,7 +109,7 @@ void main() {
         '2027-02-10T12:30:00.000Z'
       )
     ''');
-    raw.execute('''
+      raw.execute('''
       INSERT INTO media_manifest_records (
         id, session_id, room_number, kind, relative_path, checksum_sha256,
         origin_device_id, created_at, updated_at
@@ -107,15 +120,59 @@ void main() {
       )
     ''');
 
-    final database = AppDatabase.forTesting(schema.newConnection());
-    await verifier.migrateAndValidate(database, 4);
+      final database = AppDatabase.forTesting(schema.newConnection());
+      await verifier.migrateAndValidate(database, 5);
 
-    final notes = await database.select(database.roomNoteRecords).get();
+      final notes = await database.select(database.roomNoteRecords).get();
+      final media = await database.select(database.mediaManifestRecords).get();
+      expect(notes.single.textValue, 'legacy local note');
+      expect(notes.single.lastCommandId, isNull);
+      expect(media.single.id, 'media-v3');
+      expect(media.single.lastCommandId, isNull);
+      expect(media.single.byteLength, isNull);
+      expect(
+        await database.select(database.mediaPromotionRecords).get(),
+        isEmpty,
+      );
+      await database.close();
+    },
+  );
+
+  test('v4 to v5 preserves manifest and creates an empty journal', () async {
+    final schema = await verifier.schemaAt(4);
+    addTearDown(schema.close);
+    final raw = schema.rawDatabase;
+    raw.execute('''
+      INSERT INTO work_session_records (
+        id, canonical_schema_version, hotel_id, hotel_name, workflow,
+        started_at, updated_at, workday_locked
+      ) VALUES (
+        'session-v4', 2, 'hotel-1', 'Margaritaville', 'simpleCycle',
+        '2027-02-10T12:00:00.000Z', '2027-02-10T12:30:00.000Z', 0
+      )
+    ''');
+    raw.execute('''
+      INSERT INTO media_manifest_records (
+        id, session_id, room_number, kind, relative_path, checksum_sha256,
+        origin_device_id, created_at, updated_at, last_command_id
+      ) VALUES (
+        'media-v4', 'session-v4', '101', 'photo', 'Media/photo.jpg',
+        'sha256-v4', 'device-1', '2027-02-10T12:30:00.000Z',
+        '2027-02-10T12:30:00.000Z', 'command-v4'
+      )
+    ''');
+
+    final database = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(database, 5);
+
     final media = await database.select(database.mediaManifestRecords).get();
-    expect(notes.single.textValue, 'legacy local note');
-    expect(notes.single.lastCommandId, isNull);
-    expect(media.single.id, 'media-v3');
-    expect(media.single.lastCommandId, isNull);
+    expect(media.single.id, 'media-v4');
+    expect(media.single.byteLength, isNull);
+    expect(media.single.widthPixels, isNull);
+    expect(
+      await database.select(database.mediaPromotionRecords).get(),
+      isEmpty,
+    );
     await database.close();
   });
 }

@@ -1086,9 +1086,489 @@ class Shape11 extends i0.VersionedTable {
       columnsByName['deleted_at']! as i1.GeneratedColumn<String>;
 }
 
+final class Schema5 extends i0.VersionedSchema {
+  Schema5({required super.database}) : super(version: 5);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    workSessionRecords,
+    housekeeperRecords,
+    workAssignmentRecords,
+    roomStateRecords,
+    roomNoteRecords,
+    historyEventRecords,
+    commandReceiptRecords,
+    syncOutboxRecords,
+    syncInboxRecords,
+    mediaManifestRecords,
+    mediaPromotionRecords,
+  ];
+  late final Shape0 workSessionRecords = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'work_session_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 housekeeperRecords = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'housekeeper_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(session_id, id)'],
+      columns: [
+        _column_9,
+        _column_0,
+        _column_10,
+        _column_11,
+        _column_6,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 workAssignmentRecords = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'work_assignment_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(session_id, id)',
+        'UNIQUE(session_id, cart_number)',
+      ],
+      columns: [
+        _column_9,
+        _column_0,
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_6,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 roomStateRecords = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'room_state_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(session_id, room_number)'],
+      columns: [
+        _column_9,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_12,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_26,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape10 roomNoteRecords = Shape10(
+    source: i0.VersionedTable(
+      entityName: 'room_note_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(session_id, room_number)'],
+      columns: [
+        _column_9,
+        _column_16,
+        _column_27,
+        _column_6,
+        _column_53,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape5 historyEventRecords = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'history_event_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_9,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 commandReceiptRecords = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'command_receipt_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(session_id, command_id)'],
+      columns: [_column_9, _column_28, _column_33, _column_34, _column_35],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape7 syncOutboxRecords = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'sync_outbox_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(event_id)'],
+      columns: [_column_36, _column_9, _column_37, _column_38, _column_39],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 syncInboxRecords = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'sync_inbox_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(event_id)'],
+      columns: [_column_36, _column_40, _column_41, _column_42],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape12 mediaManifestRecords = Shape12(
+    source: i0.VersionedTable(
+      entityName: 'media_manifest_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_9,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_6,
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_53,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape13 mediaPromotionRecords = Shape13(
+    source: i0.VersionedTable(
+      entityName: 'media_promotion_records',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(operation_id)'],
+      columns: [
+        _column_61,
+        _column_28,
+        _column_62,
+        _column_9,
+        _column_16,
+        _column_43,
+        _column_45,
+        _column_63,
+        _column_64,
+        _column_65,
+        _column_47,
+        _column_66,
+        _column_48,
+        _column_49,
+        _column_67,
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_55,
+        _column_56,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_68,
+        _column_69,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape12 extends i0.VersionedTable {
+  Shape12({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get sessionId =>
+      columnsByName['session_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get assignmentId =>
+      columnsByName['assignment_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get roomNumber =>
+      columnsByName['room_number']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get kind =>
+      columnsByName['kind']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get relativePath =>
+      columnsByName['relative_path']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get checksumSha256 =>
+      columnsByName['checksum_sha256']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get originDeviceId =>
+      columnsByName['origin_device_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get mimeType =>
+      columnsByName['mime_type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get durationMs =>
+      columnsByName['duration_ms']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get transcript =>
+      columnsByName['transcript']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get byteLength =>
+      columnsByName['byte_length']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get widthPixels =>
+      columnsByName['width_pixels']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get heightPixels =>
+      columnsByName['height_pixels']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get originalExtension =>
+      columnsByName['original_extension']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get orientation =>
+      columnsByName['orientation']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get colorSpace =>
+      columnsByName['color_space']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get isHdr =>
+      columnsByName['is_hdr']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get lastCommandId =>
+      columnsByName['last_command_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get deletedAt =>
+      columnsByName['deleted_at']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<int> _column_54(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'byte_length',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_55(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'width_pixels',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_56(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'height_pixels',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<String> _column_57(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'original_extension',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_58(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'orientation',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<String> _column_59(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'color_space',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_60(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'is_hdr',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL CHECK (is_hdr IN (0, 1))',
+    );
+
+class Shape13 extends i0.VersionedTable {
+  Shape13({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get operationId =>
+      columnsByName['operation_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get commandId =>
+      columnsByName['command_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get mediaId =>
+      columnsByName['media_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get sessionId =>
+      columnsByName['session_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get roomNumber =>
+      columnsByName['room_number']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get assignmentId =>
+      columnsByName['assignment_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get kind =>
+      columnsByName['kind']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get stagedRelativePath =>
+      columnsByName['staged_relative_path']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get transientFilePath =>
+      columnsByName['transient_file_path']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get finalRelativePath =>
+      columnsByName['final_relative_path']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get checksumSha256 =>
+      columnsByName['checksum_sha256']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get byteLength =>
+      columnsByName['byte_length']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get originDeviceId =>
+      columnsByName['origin_device_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get issuedAt =>
+      columnsByName['issued_at']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get mimeType =>
+      columnsByName['mime_type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get durationMs =>
+      columnsByName['duration_ms']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get transcript =>
+      columnsByName['transcript']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get widthPixels =>
+      columnsByName['width_pixels']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get heightPixels =>
+      columnsByName['height_pixels']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get originalExtension =>
+      columnsByName['original_extension']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get orientation =>
+      columnsByName['orientation']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get colorSpace =>
+      columnsByName['color_space']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get isHdr =>
+      columnsByName['is_hdr']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get quarantinedAt =>
+      columnsByName['quarantined_at']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get failureReason =>
+      columnsByName['failure_reason']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<String> _column_61(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'operation_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_62(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'media_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL UNIQUE',
+    );
+i1.GeneratedColumn<String> _column_63(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'staged_relative_path',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_64(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'transient_file_path',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_65(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'final_relative_path',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_66(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'byte_length',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_67(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'issued_at',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_68(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'quarantined_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<String> _column_69(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'failure_reason',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -1102,6 +1582,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from3To4(migrator, schema);
         return 4;
+      case 4:
+        final schema = Schema5(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from4To5(migrator, schema);
+        return 5;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -1111,6 +1596,11 @@ i0.MigrationStepWithVersion migrationSteps({
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from2To3: from2To3, from3To4: from3To4),
+  step: migrationSteps(
+    from2To3: from2To3,
+    from3To4: from3To4,
+    from4To5: from4To5,
+  ),
 );

@@ -4459,6 +4459,85 @@ class $MediaManifestRecordsTable extends MediaManifestRecords
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _byteLengthMeta = const VerificationMeta(
+    'byteLength',
+  );
+  @override
+  late final GeneratedColumn<int> byteLength = GeneratedColumn<int>(
+    'byte_length',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _widthPixelsMeta = const VerificationMeta(
+    'widthPixels',
+  );
+  @override
+  late final GeneratedColumn<int> widthPixels = GeneratedColumn<int>(
+    'width_pixels',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _heightPixelsMeta = const VerificationMeta(
+    'heightPixels',
+  );
+  @override
+  late final GeneratedColumn<int> heightPixels = GeneratedColumn<int>(
+    'height_pixels',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _originalExtensionMeta = const VerificationMeta(
+    'originalExtension',
+  );
+  @override
+  late final GeneratedColumn<String> originalExtension =
+      GeneratedColumn<String>(
+        'original_extension',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _orientationMeta = const VerificationMeta(
+    'orientation',
+  );
+  @override
+  late final GeneratedColumn<int> orientation = GeneratedColumn<int>(
+    'orientation',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _colorSpaceMeta = const VerificationMeta(
+    'colorSpace',
+  );
+  @override
+  late final GeneratedColumn<String> colorSpace = GeneratedColumn<String>(
+    'color_space',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isHdrMeta = const VerificationMeta('isHdr');
+  @override
+  late final GeneratedColumn<bool> isHdr = GeneratedColumn<bool>(
+    'is_hdr',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_hdr" IN (0, 1))',
+    ),
+  );
   static const VerificationMeta _lastCommandIdMeta = const VerificationMeta(
     'lastCommandId',
   );
@@ -4496,6 +4575,13 @@ class $MediaManifestRecordsTable extends MediaManifestRecords
     mimeType,
     durationMs,
     transcript,
+    byteLength,
+    widthPixels,
+    heightPixels,
+    originalExtension,
+    orientation,
+    colorSpace,
+    isHdr,
     lastCommandId,
     deletedAt,
   ];
@@ -4614,6 +4700,60 @@ class $MediaManifestRecordsTable extends MediaManifestRecords
         transcript.isAcceptableOrUnknown(data['transcript']!, _transcriptMeta),
       );
     }
+    if (data.containsKey('byte_length')) {
+      context.handle(
+        _byteLengthMeta,
+        byteLength.isAcceptableOrUnknown(data['byte_length']!, _byteLengthMeta),
+      );
+    }
+    if (data.containsKey('width_pixels')) {
+      context.handle(
+        _widthPixelsMeta,
+        widthPixels.isAcceptableOrUnknown(
+          data['width_pixels']!,
+          _widthPixelsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('height_pixels')) {
+      context.handle(
+        _heightPixelsMeta,
+        heightPixels.isAcceptableOrUnknown(
+          data['height_pixels']!,
+          _heightPixelsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_extension')) {
+      context.handle(
+        _originalExtensionMeta,
+        originalExtension.isAcceptableOrUnknown(
+          data['original_extension']!,
+          _originalExtensionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('orientation')) {
+      context.handle(
+        _orientationMeta,
+        orientation.isAcceptableOrUnknown(
+          data['orientation']!,
+          _orientationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('color_space')) {
+      context.handle(
+        _colorSpaceMeta,
+        colorSpace.isAcceptableOrUnknown(data['color_space']!, _colorSpaceMeta),
+      );
+    }
+    if (data.containsKey('is_hdr')) {
+      context.handle(
+        _isHdrMeta,
+        isHdr.isAcceptableOrUnknown(data['is_hdr']!, _isHdrMeta),
+      );
+    }
     if (data.containsKey('last_command_id')) {
       context.handle(
         _lastCommandIdMeta,
@@ -4690,6 +4830,34 @@ class $MediaManifestRecordsTable extends MediaManifestRecords
         DriftSqlType.string,
         data['${effectivePrefix}transcript'],
       ),
+      byteLength: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}byte_length'],
+      ),
+      widthPixels: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}width_pixels'],
+      ),
+      heightPixels: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}height_pixels'],
+      ),
+      originalExtension: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_extension'],
+      ),
+      orientation: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}orientation'],
+      ),
+      colorSpace: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_space'],
+      ),
+      isHdr: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_hdr'],
+      ),
       lastCommandId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}last_command_id'],
@@ -4722,6 +4890,13 @@ class MediaManifestRow extends DataClass
   final String? mimeType;
   final int? durationMs;
   final String? transcript;
+  final int? byteLength;
+  final int? widthPixels;
+  final int? heightPixels;
+  final String? originalExtension;
+  final int? orientation;
+  final String? colorSpace;
+  final bool? isHdr;
   final String? lastCommandId;
   final DateTime? deletedAt;
   const MediaManifestRow({
@@ -4738,6 +4913,13 @@ class MediaManifestRow extends DataClass
     this.mimeType,
     this.durationMs,
     this.transcript,
+    this.byteLength,
+    this.widthPixels,
+    this.heightPixels,
+    this.originalExtension,
+    this.orientation,
+    this.colorSpace,
+    this.isHdr,
     this.lastCommandId,
     this.deletedAt,
   });
@@ -4766,6 +4948,27 @@ class MediaManifestRow extends DataClass
     }
     if (!nullToAbsent || transcript != null) {
       map['transcript'] = Variable<String>(transcript);
+    }
+    if (!nullToAbsent || byteLength != null) {
+      map['byte_length'] = Variable<int>(byteLength);
+    }
+    if (!nullToAbsent || widthPixels != null) {
+      map['width_pixels'] = Variable<int>(widthPixels);
+    }
+    if (!nullToAbsent || heightPixels != null) {
+      map['height_pixels'] = Variable<int>(heightPixels);
+    }
+    if (!nullToAbsent || originalExtension != null) {
+      map['original_extension'] = Variable<String>(originalExtension);
+    }
+    if (!nullToAbsent || orientation != null) {
+      map['orientation'] = Variable<int>(orientation);
+    }
+    if (!nullToAbsent || colorSpace != null) {
+      map['color_space'] = Variable<String>(colorSpace);
+    }
+    if (!nullToAbsent || isHdr != null) {
+      map['is_hdr'] = Variable<bool>(isHdr);
     }
     if (!nullToAbsent || lastCommandId != null) {
       map['last_command_id'] = Variable<String>(lastCommandId);
@@ -4801,6 +5004,27 @@ class MediaManifestRow extends DataClass
       transcript: transcript == null && nullToAbsent
           ? const Value.absent()
           : Value(transcript),
+      byteLength: byteLength == null && nullToAbsent
+          ? const Value.absent()
+          : Value(byteLength),
+      widthPixels: widthPixels == null && nullToAbsent
+          ? const Value.absent()
+          : Value(widthPixels),
+      heightPixels: heightPixels == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heightPixels),
+      originalExtension: originalExtension == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalExtension),
+      orientation: orientation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(orientation),
+      colorSpace: colorSpace == null && nullToAbsent
+          ? const Value.absent()
+          : Value(colorSpace),
+      isHdr: isHdr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(isHdr),
       lastCommandId: lastCommandId == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCommandId),
@@ -4829,6 +5053,15 @@ class MediaManifestRow extends DataClass
       mimeType: serializer.fromJson<String?>(json['mimeType']),
       durationMs: serializer.fromJson<int?>(json['durationMs']),
       transcript: serializer.fromJson<String?>(json['transcript']),
+      byteLength: serializer.fromJson<int?>(json['byteLength']),
+      widthPixels: serializer.fromJson<int?>(json['widthPixels']),
+      heightPixels: serializer.fromJson<int?>(json['heightPixels']),
+      originalExtension: serializer.fromJson<String?>(
+        json['originalExtension'],
+      ),
+      orientation: serializer.fromJson<int?>(json['orientation']),
+      colorSpace: serializer.fromJson<String?>(json['colorSpace']),
+      isHdr: serializer.fromJson<bool?>(json['isHdr']),
       lastCommandId: serializer.fromJson<String?>(json['lastCommandId']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
@@ -4850,6 +5083,13 @@ class MediaManifestRow extends DataClass
       'mimeType': serializer.toJson<String?>(mimeType),
       'durationMs': serializer.toJson<int?>(durationMs),
       'transcript': serializer.toJson<String?>(transcript),
+      'byteLength': serializer.toJson<int?>(byteLength),
+      'widthPixels': serializer.toJson<int?>(widthPixels),
+      'heightPixels': serializer.toJson<int?>(heightPixels),
+      'originalExtension': serializer.toJson<String?>(originalExtension),
+      'orientation': serializer.toJson<int?>(orientation),
+      'colorSpace': serializer.toJson<String?>(colorSpace),
+      'isHdr': serializer.toJson<bool?>(isHdr),
       'lastCommandId': serializer.toJson<String?>(lastCommandId),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
@@ -4869,6 +5109,13 @@ class MediaManifestRow extends DataClass
     Value<String?> mimeType = const Value.absent(),
     Value<int?> durationMs = const Value.absent(),
     Value<String?> transcript = const Value.absent(),
+    Value<int?> byteLength = const Value.absent(),
+    Value<int?> widthPixels = const Value.absent(),
+    Value<int?> heightPixels = const Value.absent(),
+    Value<String?> originalExtension = const Value.absent(),
+    Value<int?> orientation = const Value.absent(),
+    Value<String?> colorSpace = const Value.absent(),
+    Value<bool?> isHdr = const Value.absent(),
     Value<String?> lastCommandId = const Value.absent(),
     Value<DateTime?> deletedAt = const Value.absent(),
   }) => MediaManifestRow(
@@ -4885,6 +5132,15 @@ class MediaManifestRow extends DataClass
     mimeType: mimeType.present ? mimeType.value : this.mimeType,
     durationMs: durationMs.present ? durationMs.value : this.durationMs,
     transcript: transcript.present ? transcript.value : this.transcript,
+    byteLength: byteLength.present ? byteLength.value : this.byteLength,
+    widthPixels: widthPixels.present ? widthPixels.value : this.widthPixels,
+    heightPixels: heightPixels.present ? heightPixels.value : this.heightPixels,
+    originalExtension: originalExtension.present
+        ? originalExtension.value
+        : this.originalExtension,
+    orientation: orientation.present ? orientation.value : this.orientation,
+    colorSpace: colorSpace.present ? colorSpace.value : this.colorSpace,
+    isHdr: isHdr.present ? isHdr.value : this.isHdr,
     lastCommandId: lastCommandId.present
         ? lastCommandId.value
         : this.lastCommandId,
@@ -4919,6 +5175,25 @@ class MediaManifestRow extends DataClass
       transcript: data.transcript.present
           ? data.transcript.value
           : this.transcript,
+      byteLength: data.byteLength.present
+          ? data.byteLength.value
+          : this.byteLength,
+      widthPixels: data.widthPixels.present
+          ? data.widthPixels.value
+          : this.widthPixels,
+      heightPixels: data.heightPixels.present
+          ? data.heightPixels.value
+          : this.heightPixels,
+      originalExtension: data.originalExtension.present
+          ? data.originalExtension.value
+          : this.originalExtension,
+      orientation: data.orientation.present
+          ? data.orientation.value
+          : this.orientation,
+      colorSpace: data.colorSpace.present
+          ? data.colorSpace.value
+          : this.colorSpace,
+      isHdr: data.isHdr.present ? data.isHdr.value : this.isHdr,
       lastCommandId: data.lastCommandId.present
           ? data.lastCommandId.value
           : this.lastCommandId,
@@ -4942,6 +5217,13 @@ class MediaManifestRow extends DataClass
           ..write('mimeType: $mimeType, ')
           ..write('durationMs: $durationMs, ')
           ..write('transcript: $transcript, ')
+          ..write('byteLength: $byteLength, ')
+          ..write('widthPixels: $widthPixels, ')
+          ..write('heightPixels: $heightPixels, ')
+          ..write('originalExtension: $originalExtension, ')
+          ..write('orientation: $orientation, ')
+          ..write('colorSpace: $colorSpace, ')
+          ..write('isHdr: $isHdr, ')
           ..write('lastCommandId: $lastCommandId, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
@@ -4949,7 +5231,7 @@ class MediaManifestRow extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     sessionId,
     assignmentId,
@@ -4963,9 +5245,16 @@ class MediaManifestRow extends DataClass
     mimeType,
     durationMs,
     transcript,
+    byteLength,
+    widthPixels,
+    heightPixels,
+    originalExtension,
+    orientation,
+    colorSpace,
+    isHdr,
     lastCommandId,
     deletedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4983,6 +5272,13 @@ class MediaManifestRow extends DataClass
           other.mimeType == this.mimeType &&
           other.durationMs == this.durationMs &&
           other.transcript == this.transcript &&
+          other.byteLength == this.byteLength &&
+          other.widthPixels == this.widthPixels &&
+          other.heightPixels == this.heightPixels &&
+          other.originalExtension == this.originalExtension &&
+          other.orientation == this.orientation &&
+          other.colorSpace == this.colorSpace &&
+          other.isHdr == this.isHdr &&
           other.lastCommandId == this.lastCommandId &&
           other.deletedAt == this.deletedAt);
 }
@@ -5001,6 +5297,13 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
   final Value<String?> mimeType;
   final Value<int?> durationMs;
   final Value<String?> transcript;
+  final Value<int?> byteLength;
+  final Value<int?> widthPixels;
+  final Value<int?> heightPixels;
+  final Value<String?> originalExtension;
+  final Value<int?> orientation;
+  final Value<String?> colorSpace;
+  final Value<bool?> isHdr;
   final Value<String?> lastCommandId;
   final Value<DateTime?> deletedAt;
   final Value<int> rowid;
@@ -5018,6 +5321,13 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
     this.mimeType = const Value.absent(),
     this.durationMs = const Value.absent(),
     this.transcript = const Value.absent(),
+    this.byteLength = const Value.absent(),
+    this.widthPixels = const Value.absent(),
+    this.heightPixels = const Value.absent(),
+    this.originalExtension = const Value.absent(),
+    this.orientation = const Value.absent(),
+    this.colorSpace = const Value.absent(),
+    this.isHdr = const Value.absent(),
     this.lastCommandId = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5036,6 +5346,13 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
     this.mimeType = const Value.absent(),
     this.durationMs = const Value.absent(),
     this.transcript = const Value.absent(),
+    this.byteLength = const Value.absent(),
+    this.widthPixels = const Value.absent(),
+    this.heightPixels = const Value.absent(),
+    this.originalExtension = const Value.absent(),
+    this.orientation = const Value.absent(),
+    this.colorSpace = const Value.absent(),
+    this.isHdr = const Value.absent(),
     this.lastCommandId = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5061,6 +5378,13 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
     Expression<String>? mimeType,
     Expression<int>? durationMs,
     Expression<String>? transcript,
+    Expression<int>? byteLength,
+    Expression<int>? widthPixels,
+    Expression<int>? heightPixels,
+    Expression<String>? originalExtension,
+    Expression<int>? orientation,
+    Expression<String>? colorSpace,
+    Expression<bool>? isHdr,
     Expression<String>? lastCommandId,
     Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
@@ -5079,6 +5403,13 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
       if (mimeType != null) 'mime_type': mimeType,
       if (durationMs != null) 'duration_ms': durationMs,
       if (transcript != null) 'transcript': transcript,
+      if (byteLength != null) 'byte_length': byteLength,
+      if (widthPixels != null) 'width_pixels': widthPixels,
+      if (heightPixels != null) 'height_pixels': heightPixels,
+      if (originalExtension != null) 'original_extension': originalExtension,
+      if (orientation != null) 'orientation': orientation,
+      if (colorSpace != null) 'color_space': colorSpace,
+      if (isHdr != null) 'is_hdr': isHdr,
       if (lastCommandId != null) 'last_command_id': lastCommandId,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
@@ -5099,6 +5430,13 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
     Value<String?>? mimeType,
     Value<int?>? durationMs,
     Value<String?>? transcript,
+    Value<int?>? byteLength,
+    Value<int?>? widthPixels,
+    Value<int?>? heightPixels,
+    Value<String?>? originalExtension,
+    Value<int?>? orientation,
+    Value<String?>? colorSpace,
+    Value<bool?>? isHdr,
     Value<String?>? lastCommandId,
     Value<DateTime?>? deletedAt,
     Value<int>? rowid,
@@ -5117,6 +5455,13 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
       mimeType: mimeType ?? this.mimeType,
       durationMs: durationMs ?? this.durationMs,
       transcript: transcript ?? this.transcript,
+      byteLength: byteLength ?? this.byteLength,
+      widthPixels: widthPixels ?? this.widthPixels,
+      heightPixels: heightPixels ?? this.heightPixels,
+      originalExtension: originalExtension ?? this.originalExtension,
+      orientation: orientation ?? this.orientation,
+      colorSpace: colorSpace ?? this.colorSpace,
+      isHdr: isHdr ?? this.isHdr,
       lastCommandId: lastCommandId ?? this.lastCommandId,
       deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
@@ -5165,6 +5510,27 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
     if (transcript.present) {
       map['transcript'] = Variable<String>(transcript.value);
     }
+    if (byteLength.present) {
+      map['byte_length'] = Variable<int>(byteLength.value);
+    }
+    if (widthPixels.present) {
+      map['width_pixels'] = Variable<int>(widthPixels.value);
+    }
+    if (heightPixels.present) {
+      map['height_pixels'] = Variable<int>(heightPixels.value);
+    }
+    if (originalExtension.present) {
+      map['original_extension'] = Variable<String>(originalExtension.value);
+    }
+    if (orientation.present) {
+      map['orientation'] = Variable<int>(orientation.value);
+    }
+    if (colorSpace.present) {
+      map['color_space'] = Variable<String>(colorSpace.value);
+    }
+    if (isHdr.present) {
+      map['is_hdr'] = Variable<bool>(isHdr.value);
+    }
     if (lastCommandId.present) {
       map['last_command_id'] = Variable<String>(lastCommandId.value);
     }
@@ -5193,8 +5559,1503 @@ class MediaManifestRecordsCompanion extends UpdateCompanion<MediaManifestRow> {
           ..write('mimeType: $mimeType, ')
           ..write('durationMs: $durationMs, ')
           ..write('transcript: $transcript, ')
+          ..write('byteLength: $byteLength, ')
+          ..write('widthPixels: $widthPixels, ')
+          ..write('heightPixels: $heightPixels, ')
+          ..write('originalExtension: $originalExtension, ')
+          ..write('orientation: $orientation, ')
+          ..write('colorSpace: $colorSpace, ')
+          ..write('isHdr: $isHdr, ')
           ..write('lastCommandId: $lastCommandId, ')
           ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MediaPromotionRecordsTable extends MediaPromotionRecords
+    with TableInfo<$MediaPromotionRecordsTable, MediaPromotionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MediaPromotionRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _operationIdMeta = const VerificationMeta(
+    'operationId',
+  );
+  @override
+  late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
+    'operation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _commandIdMeta = const VerificationMeta(
+    'commandId',
+  );
+  @override
+  late final GeneratedColumn<String> commandId = GeneratedColumn<String>(
+    'command_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mediaIdMeta = const VerificationMeta(
+    'mediaId',
+  );
+  @override
+  late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
+    'media_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES work_session_records (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _roomNumberMeta = const VerificationMeta(
+    'roomNumber',
+  );
+  @override
+  late final GeneratedColumn<String> roomNumber = GeneratedColumn<String>(
+    'room_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _assignmentIdMeta = const VerificationMeta(
+    'assignmentId',
+  );
+  @override
+  late final GeneratedColumn<String> assignmentId = GeneratedColumn<String>(
+    'assignment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stagedRelativePathMeta =
+      const VerificationMeta('stagedRelativePath');
+  @override
+  late final GeneratedColumn<String> stagedRelativePath =
+      GeneratedColumn<String>(
+        'staged_relative_path',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _transientFilePathMeta = const VerificationMeta(
+    'transientFilePath',
+  );
+  @override
+  late final GeneratedColumn<String> transientFilePath =
+      GeneratedColumn<String>(
+        'transient_file_path',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _finalRelativePathMeta = const VerificationMeta(
+    'finalRelativePath',
+  );
+  @override
+  late final GeneratedColumn<String> finalRelativePath =
+      GeneratedColumn<String>(
+        'final_relative_path',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _checksumSha256Meta = const VerificationMeta(
+    'checksumSha256',
+  );
+  @override
+  late final GeneratedColumn<String> checksumSha256 = GeneratedColumn<String>(
+    'checksum_sha256',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _byteLengthMeta = const VerificationMeta(
+    'byteLength',
+  );
+  @override
+  late final GeneratedColumn<int> byteLength = GeneratedColumn<int>(
+    'byte_length',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _originDeviceIdMeta = const VerificationMeta(
+    'originDeviceId',
+  );
+  @override
+  late final GeneratedColumn<String> originDeviceId = GeneratedColumn<String>(
+    'origin_device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _issuedAtMeta = const VerificationMeta(
+    'issuedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> issuedAt = GeneratedColumn<DateTime>(
+    'issued_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mimeTypeMeta = const VerificationMeta(
+    'mimeType',
+  );
+  @override
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+    'mime_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta(
+    'durationMs',
+  );
+  @override
+  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
+    'duration_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _transcriptMeta = const VerificationMeta(
+    'transcript',
+  );
+  @override
+  late final GeneratedColumn<String> transcript = GeneratedColumn<String>(
+    'transcript',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _widthPixelsMeta = const VerificationMeta(
+    'widthPixels',
+  );
+  @override
+  late final GeneratedColumn<int> widthPixels = GeneratedColumn<int>(
+    'width_pixels',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _heightPixelsMeta = const VerificationMeta(
+    'heightPixels',
+  );
+  @override
+  late final GeneratedColumn<int> heightPixels = GeneratedColumn<int>(
+    'height_pixels',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _originalExtensionMeta = const VerificationMeta(
+    'originalExtension',
+  );
+  @override
+  late final GeneratedColumn<String> originalExtension =
+      GeneratedColumn<String>(
+        'original_extension',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _orientationMeta = const VerificationMeta(
+    'orientation',
+  );
+  @override
+  late final GeneratedColumn<int> orientation = GeneratedColumn<int>(
+    'orientation',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _colorSpaceMeta = const VerificationMeta(
+    'colorSpace',
+  );
+  @override
+  late final GeneratedColumn<String> colorSpace = GeneratedColumn<String>(
+    'color_space',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isHdrMeta = const VerificationMeta('isHdr');
+  @override
+  late final GeneratedColumn<bool> isHdr = GeneratedColumn<bool>(
+    'is_hdr',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_hdr" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _quarantinedAtMeta = const VerificationMeta(
+    'quarantinedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> quarantinedAt =
+      GeneratedColumn<DateTime>(
+        'quarantined_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _failureReasonMeta = const VerificationMeta(
+    'failureReason',
+  );
+  @override
+  late final GeneratedColumn<String> failureReason = GeneratedColumn<String>(
+    'failure_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    operationId,
+    commandId,
+    mediaId,
+    sessionId,
+    roomNumber,
+    assignmentId,
+    kind,
+    stagedRelativePath,
+    transientFilePath,
+    finalRelativePath,
+    checksumSha256,
+    byteLength,
+    originDeviceId,
+    createdAt,
+    issuedAt,
+    mimeType,
+    durationMs,
+    transcript,
+    widthPixels,
+    heightPixels,
+    originalExtension,
+    orientation,
+    colorSpace,
+    isHdr,
+    quarantinedAt,
+    failureReason,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'media_promotion_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MediaPromotionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('operation_id')) {
+      context.handle(
+        _operationIdMeta,
+        operationId.isAcceptableOrUnknown(
+          data['operation_id']!,
+          _operationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_operationIdMeta);
+    }
+    if (data.containsKey('command_id')) {
+      context.handle(
+        _commandIdMeta,
+        commandId.isAcceptableOrUnknown(data['command_id']!, _commandIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_commandIdMeta);
+    }
+    if (data.containsKey('media_id')) {
+      context.handle(
+        _mediaIdMeta,
+        mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mediaIdMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('room_number')) {
+      context.handle(
+        _roomNumberMeta,
+        roomNumber.isAcceptableOrUnknown(data['room_number']!, _roomNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roomNumberMeta);
+    }
+    if (data.containsKey('assignment_id')) {
+      context.handle(
+        _assignmentIdMeta,
+        assignmentId.isAcceptableOrUnknown(
+          data['assignment_id']!,
+          _assignmentIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('staged_relative_path')) {
+      context.handle(
+        _stagedRelativePathMeta,
+        stagedRelativePath.isAcceptableOrUnknown(
+          data['staged_relative_path']!,
+          _stagedRelativePathMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_stagedRelativePathMeta);
+    }
+    if (data.containsKey('transient_file_path')) {
+      context.handle(
+        _transientFilePathMeta,
+        transientFilePath.isAcceptableOrUnknown(
+          data['transient_file_path']!,
+          _transientFilePathMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_transientFilePathMeta);
+    }
+    if (data.containsKey('final_relative_path')) {
+      context.handle(
+        _finalRelativePathMeta,
+        finalRelativePath.isAcceptableOrUnknown(
+          data['final_relative_path']!,
+          _finalRelativePathMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_finalRelativePathMeta);
+    }
+    if (data.containsKey('checksum_sha256')) {
+      context.handle(
+        _checksumSha256Meta,
+        checksumSha256.isAcceptableOrUnknown(
+          data['checksum_sha256']!,
+          _checksumSha256Meta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_checksumSha256Meta);
+    }
+    if (data.containsKey('byte_length')) {
+      context.handle(
+        _byteLengthMeta,
+        byteLength.isAcceptableOrUnknown(data['byte_length']!, _byteLengthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_byteLengthMeta);
+    }
+    if (data.containsKey('origin_device_id')) {
+      context.handle(
+        _originDeviceIdMeta,
+        originDeviceId.isAcceptableOrUnknown(
+          data['origin_device_id']!,
+          _originDeviceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_originDeviceIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('issued_at')) {
+      context.handle(
+        _issuedAtMeta,
+        issuedAt.isAcceptableOrUnknown(data['issued_at']!, _issuedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_issuedAtMeta);
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(
+        _mimeTypeMeta,
+        mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta),
+      );
+    }
+    if (data.containsKey('duration_ms')) {
+      context.handle(
+        _durationMsMeta,
+        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
+      );
+    }
+    if (data.containsKey('transcript')) {
+      context.handle(
+        _transcriptMeta,
+        transcript.isAcceptableOrUnknown(data['transcript']!, _transcriptMeta),
+      );
+    }
+    if (data.containsKey('width_pixels')) {
+      context.handle(
+        _widthPixelsMeta,
+        widthPixels.isAcceptableOrUnknown(
+          data['width_pixels']!,
+          _widthPixelsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('height_pixels')) {
+      context.handle(
+        _heightPixelsMeta,
+        heightPixels.isAcceptableOrUnknown(
+          data['height_pixels']!,
+          _heightPixelsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_extension')) {
+      context.handle(
+        _originalExtensionMeta,
+        originalExtension.isAcceptableOrUnknown(
+          data['original_extension']!,
+          _originalExtensionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('orientation')) {
+      context.handle(
+        _orientationMeta,
+        orientation.isAcceptableOrUnknown(
+          data['orientation']!,
+          _orientationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('color_space')) {
+      context.handle(
+        _colorSpaceMeta,
+        colorSpace.isAcceptableOrUnknown(data['color_space']!, _colorSpaceMeta),
+      );
+    }
+    if (data.containsKey('is_hdr')) {
+      context.handle(
+        _isHdrMeta,
+        isHdr.isAcceptableOrUnknown(data['is_hdr']!, _isHdrMeta),
+      );
+    }
+    if (data.containsKey('quarantined_at')) {
+      context.handle(
+        _quarantinedAtMeta,
+        quarantinedAt.isAcceptableOrUnknown(
+          data['quarantined_at']!,
+          _quarantinedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('failure_reason')) {
+      context.handle(
+        _failureReasonMeta,
+        failureReason.isAcceptableOrUnknown(
+          data['failure_reason']!,
+          _failureReasonMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {operationId};
+  @override
+  MediaPromotionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MediaPromotionRow(
+      operationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_id'],
+      )!,
+      commandId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}command_id'],
+      )!,
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      roomNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}room_number'],
+      )!,
+      assignmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assignment_id'],
+      ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      stagedRelativePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}staged_relative_path'],
+      )!,
+      transientFilePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transient_file_path'],
+      )!,
+      finalRelativePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}final_relative_path'],
+      )!,
+      checksumSha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}checksum_sha256'],
+      )!,
+      byteLength: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}byte_length'],
+      )!,
+      originDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin_device_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      issuedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}issued_at'],
+      )!,
+      mimeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mime_type'],
+      ),
+      durationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_ms'],
+      ),
+      transcript: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transcript'],
+      ),
+      widthPixels: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}width_pixels'],
+      ),
+      heightPixels: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}height_pixels'],
+      ),
+      originalExtension: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_extension'],
+      ),
+      orientation: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}orientation'],
+      ),
+      colorSpace: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_space'],
+      ),
+      isHdr: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_hdr'],
+      ),
+      quarantinedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}quarantined_at'],
+      ),
+      failureReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}failure_reason'],
+      ),
+    );
+  }
+
+  @override
+  $MediaPromotionRecordsTable createAlias(String alias) {
+    return $MediaPromotionRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class MediaPromotionRow extends DataClass
+    implements Insertable<MediaPromotionRow> {
+  final String operationId;
+  final String commandId;
+  final String mediaId;
+  final String sessionId;
+  final String roomNumber;
+  final String? assignmentId;
+  final String kind;
+  final String stagedRelativePath;
+  final String transientFilePath;
+  final String finalRelativePath;
+  final String checksumSha256;
+  final int byteLength;
+  final String originDeviceId;
+  final DateTime createdAt;
+  final DateTime issuedAt;
+  final String? mimeType;
+  final int? durationMs;
+  final String? transcript;
+  final int? widthPixels;
+  final int? heightPixels;
+  final String? originalExtension;
+  final int? orientation;
+  final String? colorSpace;
+  final bool? isHdr;
+  final DateTime? quarantinedAt;
+  final String? failureReason;
+  const MediaPromotionRow({
+    required this.operationId,
+    required this.commandId,
+    required this.mediaId,
+    required this.sessionId,
+    required this.roomNumber,
+    this.assignmentId,
+    required this.kind,
+    required this.stagedRelativePath,
+    required this.transientFilePath,
+    required this.finalRelativePath,
+    required this.checksumSha256,
+    required this.byteLength,
+    required this.originDeviceId,
+    required this.createdAt,
+    required this.issuedAt,
+    this.mimeType,
+    this.durationMs,
+    this.transcript,
+    this.widthPixels,
+    this.heightPixels,
+    this.originalExtension,
+    this.orientation,
+    this.colorSpace,
+    this.isHdr,
+    this.quarantinedAt,
+    this.failureReason,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['operation_id'] = Variable<String>(operationId);
+    map['command_id'] = Variable<String>(commandId);
+    map['media_id'] = Variable<String>(mediaId);
+    map['session_id'] = Variable<String>(sessionId);
+    map['room_number'] = Variable<String>(roomNumber);
+    if (!nullToAbsent || assignmentId != null) {
+      map['assignment_id'] = Variable<String>(assignmentId);
+    }
+    map['kind'] = Variable<String>(kind);
+    map['staged_relative_path'] = Variable<String>(stagedRelativePath);
+    map['transient_file_path'] = Variable<String>(transientFilePath);
+    map['final_relative_path'] = Variable<String>(finalRelativePath);
+    map['checksum_sha256'] = Variable<String>(checksumSha256);
+    map['byte_length'] = Variable<int>(byteLength);
+    map['origin_device_id'] = Variable<String>(originDeviceId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['issued_at'] = Variable<DateTime>(issuedAt);
+    if (!nullToAbsent || mimeType != null) {
+      map['mime_type'] = Variable<String>(mimeType);
+    }
+    if (!nullToAbsent || durationMs != null) {
+      map['duration_ms'] = Variable<int>(durationMs);
+    }
+    if (!nullToAbsent || transcript != null) {
+      map['transcript'] = Variable<String>(transcript);
+    }
+    if (!nullToAbsent || widthPixels != null) {
+      map['width_pixels'] = Variable<int>(widthPixels);
+    }
+    if (!nullToAbsent || heightPixels != null) {
+      map['height_pixels'] = Variable<int>(heightPixels);
+    }
+    if (!nullToAbsent || originalExtension != null) {
+      map['original_extension'] = Variable<String>(originalExtension);
+    }
+    if (!nullToAbsent || orientation != null) {
+      map['orientation'] = Variable<int>(orientation);
+    }
+    if (!nullToAbsent || colorSpace != null) {
+      map['color_space'] = Variable<String>(colorSpace);
+    }
+    if (!nullToAbsent || isHdr != null) {
+      map['is_hdr'] = Variable<bool>(isHdr);
+    }
+    if (!nullToAbsent || quarantinedAt != null) {
+      map['quarantined_at'] = Variable<DateTime>(quarantinedAt);
+    }
+    if (!nullToAbsent || failureReason != null) {
+      map['failure_reason'] = Variable<String>(failureReason);
+    }
+    return map;
+  }
+
+  MediaPromotionRecordsCompanion toCompanion(bool nullToAbsent) {
+    return MediaPromotionRecordsCompanion(
+      operationId: Value(operationId),
+      commandId: Value(commandId),
+      mediaId: Value(mediaId),
+      sessionId: Value(sessionId),
+      roomNumber: Value(roomNumber),
+      assignmentId: assignmentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assignmentId),
+      kind: Value(kind),
+      stagedRelativePath: Value(stagedRelativePath),
+      transientFilePath: Value(transientFilePath),
+      finalRelativePath: Value(finalRelativePath),
+      checksumSha256: Value(checksumSha256),
+      byteLength: Value(byteLength),
+      originDeviceId: Value(originDeviceId),
+      createdAt: Value(createdAt),
+      issuedAt: Value(issuedAt),
+      mimeType: mimeType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mimeType),
+      durationMs: durationMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationMs),
+      transcript: transcript == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transcript),
+      widthPixels: widthPixels == null && nullToAbsent
+          ? const Value.absent()
+          : Value(widthPixels),
+      heightPixels: heightPixels == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heightPixels),
+      originalExtension: originalExtension == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalExtension),
+      orientation: orientation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(orientation),
+      colorSpace: colorSpace == null && nullToAbsent
+          ? const Value.absent()
+          : Value(colorSpace),
+      isHdr: isHdr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(isHdr),
+      quarantinedAt: quarantinedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(quarantinedAt),
+      failureReason: failureReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(failureReason),
+    );
+  }
+
+  factory MediaPromotionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MediaPromotionRow(
+      operationId: serializer.fromJson<String>(json['operationId']),
+      commandId: serializer.fromJson<String>(json['commandId']),
+      mediaId: serializer.fromJson<String>(json['mediaId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      roomNumber: serializer.fromJson<String>(json['roomNumber']),
+      assignmentId: serializer.fromJson<String?>(json['assignmentId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      stagedRelativePath: serializer.fromJson<String>(
+        json['stagedRelativePath'],
+      ),
+      transientFilePath: serializer.fromJson<String>(json['transientFilePath']),
+      finalRelativePath: serializer.fromJson<String>(json['finalRelativePath']),
+      checksumSha256: serializer.fromJson<String>(json['checksumSha256']),
+      byteLength: serializer.fromJson<int>(json['byteLength']),
+      originDeviceId: serializer.fromJson<String>(json['originDeviceId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      issuedAt: serializer.fromJson<DateTime>(json['issuedAt']),
+      mimeType: serializer.fromJson<String?>(json['mimeType']),
+      durationMs: serializer.fromJson<int?>(json['durationMs']),
+      transcript: serializer.fromJson<String?>(json['transcript']),
+      widthPixels: serializer.fromJson<int?>(json['widthPixels']),
+      heightPixels: serializer.fromJson<int?>(json['heightPixels']),
+      originalExtension: serializer.fromJson<String?>(
+        json['originalExtension'],
+      ),
+      orientation: serializer.fromJson<int?>(json['orientation']),
+      colorSpace: serializer.fromJson<String?>(json['colorSpace']),
+      isHdr: serializer.fromJson<bool?>(json['isHdr']),
+      quarantinedAt: serializer.fromJson<DateTime?>(json['quarantinedAt']),
+      failureReason: serializer.fromJson<String?>(json['failureReason']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'operationId': serializer.toJson<String>(operationId),
+      'commandId': serializer.toJson<String>(commandId),
+      'mediaId': serializer.toJson<String>(mediaId),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'roomNumber': serializer.toJson<String>(roomNumber),
+      'assignmentId': serializer.toJson<String?>(assignmentId),
+      'kind': serializer.toJson<String>(kind),
+      'stagedRelativePath': serializer.toJson<String>(stagedRelativePath),
+      'transientFilePath': serializer.toJson<String>(transientFilePath),
+      'finalRelativePath': serializer.toJson<String>(finalRelativePath),
+      'checksumSha256': serializer.toJson<String>(checksumSha256),
+      'byteLength': serializer.toJson<int>(byteLength),
+      'originDeviceId': serializer.toJson<String>(originDeviceId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'issuedAt': serializer.toJson<DateTime>(issuedAt),
+      'mimeType': serializer.toJson<String?>(mimeType),
+      'durationMs': serializer.toJson<int?>(durationMs),
+      'transcript': serializer.toJson<String?>(transcript),
+      'widthPixels': serializer.toJson<int?>(widthPixels),
+      'heightPixels': serializer.toJson<int?>(heightPixels),
+      'originalExtension': serializer.toJson<String?>(originalExtension),
+      'orientation': serializer.toJson<int?>(orientation),
+      'colorSpace': serializer.toJson<String?>(colorSpace),
+      'isHdr': serializer.toJson<bool?>(isHdr),
+      'quarantinedAt': serializer.toJson<DateTime?>(quarantinedAt),
+      'failureReason': serializer.toJson<String?>(failureReason),
+    };
+  }
+
+  MediaPromotionRow copyWith({
+    String? operationId,
+    String? commandId,
+    String? mediaId,
+    String? sessionId,
+    String? roomNumber,
+    Value<String?> assignmentId = const Value.absent(),
+    String? kind,
+    String? stagedRelativePath,
+    String? transientFilePath,
+    String? finalRelativePath,
+    String? checksumSha256,
+    int? byteLength,
+    String? originDeviceId,
+    DateTime? createdAt,
+    DateTime? issuedAt,
+    Value<String?> mimeType = const Value.absent(),
+    Value<int?> durationMs = const Value.absent(),
+    Value<String?> transcript = const Value.absent(),
+    Value<int?> widthPixels = const Value.absent(),
+    Value<int?> heightPixels = const Value.absent(),
+    Value<String?> originalExtension = const Value.absent(),
+    Value<int?> orientation = const Value.absent(),
+    Value<String?> colorSpace = const Value.absent(),
+    Value<bool?> isHdr = const Value.absent(),
+    Value<DateTime?> quarantinedAt = const Value.absent(),
+    Value<String?> failureReason = const Value.absent(),
+  }) => MediaPromotionRow(
+    operationId: operationId ?? this.operationId,
+    commandId: commandId ?? this.commandId,
+    mediaId: mediaId ?? this.mediaId,
+    sessionId: sessionId ?? this.sessionId,
+    roomNumber: roomNumber ?? this.roomNumber,
+    assignmentId: assignmentId.present ? assignmentId.value : this.assignmentId,
+    kind: kind ?? this.kind,
+    stagedRelativePath: stagedRelativePath ?? this.stagedRelativePath,
+    transientFilePath: transientFilePath ?? this.transientFilePath,
+    finalRelativePath: finalRelativePath ?? this.finalRelativePath,
+    checksumSha256: checksumSha256 ?? this.checksumSha256,
+    byteLength: byteLength ?? this.byteLength,
+    originDeviceId: originDeviceId ?? this.originDeviceId,
+    createdAt: createdAt ?? this.createdAt,
+    issuedAt: issuedAt ?? this.issuedAt,
+    mimeType: mimeType.present ? mimeType.value : this.mimeType,
+    durationMs: durationMs.present ? durationMs.value : this.durationMs,
+    transcript: transcript.present ? transcript.value : this.transcript,
+    widthPixels: widthPixels.present ? widthPixels.value : this.widthPixels,
+    heightPixels: heightPixels.present ? heightPixels.value : this.heightPixels,
+    originalExtension: originalExtension.present
+        ? originalExtension.value
+        : this.originalExtension,
+    orientation: orientation.present ? orientation.value : this.orientation,
+    colorSpace: colorSpace.present ? colorSpace.value : this.colorSpace,
+    isHdr: isHdr.present ? isHdr.value : this.isHdr,
+    quarantinedAt: quarantinedAt.present
+        ? quarantinedAt.value
+        : this.quarantinedAt,
+    failureReason: failureReason.present
+        ? failureReason.value
+        : this.failureReason,
+  );
+  MediaPromotionRow copyWithCompanion(MediaPromotionRecordsCompanion data) {
+    return MediaPromotionRow(
+      operationId: data.operationId.present
+          ? data.operationId.value
+          : this.operationId,
+      commandId: data.commandId.present ? data.commandId.value : this.commandId,
+      mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      roomNumber: data.roomNumber.present
+          ? data.roomNumber.value
+          : this.roomNumber,
+      assignmentId: data.assignmentId.present
+          ? data.assignmentId.value
+          : this.assignmentId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      stagedRelativePath: data.stagedRelativePath.present
+          ? data.stagedRelativePath.value
+          : this.stagedRelativePath,
+      transientFilePath: data.transientFilePath.present
+          ? data.transientFilePath.value
+          : this.transientFilePath,
+      finalRelativePath: data.finalRelativePath.present
+          ? data.finalRelativePath.value
+          : this.finalRelativePath,
+      checksumSha256: data.checksumSha256.present
+          ? data.checksumSha256.value
+          : this.checksumSha256,
+      byteLength: data.byteLength.present
+          ? data.byteLength.value
+          : this.byteLength,
+      originDeviceId: data.originDeviceId.present
+          ? data.originDeviceId.value
+          : this.originDeviceId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      issuedAt: data.issuedAt.present ? data.issuedAt.value : this.issuedAt,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
+      durationMs: data.durationMs.present
+          ? data.durationMs.value
+          : this.durationMs,
+      transcript: data.transcript.present
+          ? data.transcript.value
+          : this.transcript,
+      widthPixels: data.widthPixels.present
+          ? data.widthPixels.value
+          : this.widthPixels,
+      heightPixels: data.heightPixels.present
+          ? data.heightPixels.value
+          : this.heightPixels,
+      originalExtension: data.originalExtension.present
+          ? data.originalExtension.value
+          : this.originalExtension,
+      orientation: data.orientation.present
+          ? data.orientation.value
+          : this.orientation,
+      colorSpace: data.colorSpace.present
+          ? data.colorSpace.value
+          : this.colorSpace,
+      isHdr: data.isHdr.present ? data.isHdr.value : this.isHdr,
+      quarantinedAt: data.quarantinedAt.present
+          ? data.quarantinedAt.value
+          : this.quarantinedAt,
+      failureReason: data.failureReason.present
+          ? data.failureReason.value
+          : this.failureReason,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaPromotionRow(')
+          ..write('operationId: $operationId, ')
+          ..write('commandId: $commandId, ')
+          ..write('mediaId: $mediaId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('roomNumber: $roomNumber, ')
+          ..write('assignmentId: $assignmentId, ')
+          ..write('kind: $kind, ')
+          ..write('stagedRelativePath: $stagedRelativePath, ')
+          ..write('transientFilePath: $transientFilePath, ')
+          ..write('finalRelativePath: $finalRelativePath, ')
+          ..write('checksumSha256: $checksumSha256, ')
+          ..write('byteLength: $byteLength, ')
+          ..write('originDeviceId: $originDeviceId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('issuedAt: $issuedAt, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('transcript: $transcript, ')
+          ..write('widthPixels: $widthPixels, ')
+          ..write('heightPixels: $heightPixels, ')
+          ..write('originalExtension: $originalExtension, ')
+          ..write('orientation: $orientation, ')
+          ..write('colorSpace: $colorSpace, ')
+          ..write('isHdr: $isHdr, ')
+          ..write('quarantinedAt: $quarantinedAt, ')
+          ..write('failureReason: $failureReason')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    operationId,
+    commandId,
+    mediaId,
+    sessionId,
+    roomNumber,
+    assignmentId,
+    kind,
+    stagedRelativePath,
+    transientFilePath,
+    finalRelativePath,
+    checksumSha256,
+    byteLength,
+    originDeviceId,
+    createdAt,
+    issuedAt,
+    mimeType,
+    durationMs,
+    transcript,
+    widthPixels,
+    heightPixels,
+    originalExtension,
+    orientation,
+    colorSpace,
+    isHdr,
+    quarantinedAt,
+    failureReason,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MediaPromotionRow &&
+          other.operationId == this.operationId &&
+          other.commandId == this.commandId &&
+          other.mediaId == this.mediaId &&
+          other.sessionId == this.sessionId &&
+          other.roomNumber == this.roomNumber &&
+          other.assignmentId == this.assignmentId &&
+          other.kind == this.kind &&
+          other.stagedRelativePath == this.stagedRelativePath &&
+          other.transientFilePath == this.transientFilePath &&
+          other.finalRelativePath == this.finalRelativePath &&
+          other.checksumSha256 == this.checksumSha256 &&
+          other.byteLength == this.byteLength &&
+          other.originDeviceId == this.originDeviceId &&
+          other.createdAt == this.createdAt &&
+          other.issuedAt == this.issuedAt &&
+          other.mimeType == this.mimeType &&
+          other.durationMs == this.durationMs &&
+          other.transcript == this.transcript &&
+          other.widthPixels == this.widthPixels &&
+          other.heightPixels == this.heightPixels &&
+          other.originalExtension == this.originalExtension &&
+          other.orientation == this.orientation &&
+          other.colorSpace == this.colorSpace &&
+          other.isHdr == this.isHdr &&
+          other.quarantinedAt == this.quarantinedAt &&
+          other.failureReason == this.failureReason);
+}
+
+class MediaPromotionRecordsCompanion
+    extends UpdateCompanion<MediaPromotionRow> {
+  final Value<String> operationId;
+  final Value<String> commandId;
+  final Value<String> mediaId;
+  final Value<String> sessionId;
+  final Value<String> roomNumber;
+  final Value<String?> assignmentId;
+  final Value<String> kind;
+  final Value<String> stagedRelativePath;
+  final Value<String> transientFilePath;
+  final Value<String> finalRelativePath;
+  final Value<String> checksumSha256;
+  final Value<int> byteLength;
+  final Value<String> originDeviceId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> issuedAt;
+  final Value<String?> mimeType;
+  final Value<int?> durationMs;
+  final Value<String?> transcript;
+  final Value<int?> widthPixels;
+  final Value<int?> heightPixels;
+  final Value<String?> originalExtension;
+  final Value<int?> orientation;
+  final Value<String?> colorSpace;
+  final Value<bool?> isHdr;
+  final Value<DateTime?> quarantinedAt;
+  final Value<String?> failureReason;
+  final Value<int> rowid;
+  const MediaPromotionRecordsCompanion({
+    this.operationId = const Value.absent(),
+    this.commandId = const Value.absent(),
+    this.mediaId = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.roomNumber = const Value.absent(),
+    this.assignmentId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.stagedRelativePath = const Value.absent(),
+    this.transientFilePath = const Value.absent(),
+    this.finalRelativePath = const Value.absent(),
+    this.checksumSha256 = const Value.absent(),
+    this.byteLength = const Value.absent(),
+    this.originDeviceId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.issuedAt = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.transcript = const Value.absent(),
+    this.widthPixels = const Value.absent(),
+    this.heightPixels = const Value.absent(),
+    this.originalExtension = const Value.absent(),
+    this.orientation = const Value.absent(),
+    this.colorSpace = const Value.absent(),
+    this.isHdr = const Value.absent(),
+    this.quarantinedAt = const Value.absent(),
+    this.failureReason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MediaPromotionRecordsCompanion.insert({
+    required String operationId,
+    required String commandId,
+    required String mediaId,
+    required String sessionId,
+    required String roomNumber,
+    this.assignmentId = const Value.absent(),
+    required String kind,
+    required String stagedRelativePath,
+    required String transientFilePath,
+    required String finalRelativePath,
+    required String checksumSha256,
+    required int byteLength,
+    required String originDeviceId,
+    required DateTime createdAt,
+    required DateTime issuedAt,
+    this.mimeType = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.transcript = const Value.absent(),
+    this.widthPixels = const Value.absent(),
+    this.heightPixels = const Value.absent(),
+    this.originalExtension = const Value.absent(),
+    this.orientation = const Value.absent(),
+    this.colorSpace = const Value.absent(),
+    this.isHdr = const Value.absent(),
+    this.quarantinedAt = const Value.absent(),
+    this.failureReason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : operationId = Value(operationId),
+       commandId = Value(commandId),
+       mediaId = Value(mediaId),
+       sessionId = Value(sessionId),
+       roomNumber = Value(roomNumber),
+       kind = Value(kind),
+       stagedRelativePath = Value(stagedRelativePath),
+       transientFilePath = Value(transientFilePath),
+       finalRelativePath = Value(finalRelativePath),
+       checksumSha256 = Value(checksumSha256),
+       byteLength = Value(byteLength),
+       originDeviceId = Value(originDeviceId),
+       createdAt = Value(createdAt),
+       issuedAt = Value(issuedAt);
+  static Insertable<MediaPromotionRow> custom({
+    Expression<String>? operationId,
+    Expression<String>? commandId,
+    Expression<String>? mediaId,
+    Expression<String>? sessionId,
+    Expression<String>? roomNumber,
+    Expression<String>? assignmentId,
+    Expression<String>? kind,
+    Expression<String>? stagedRelativePath,
+    Expression<String>? transientFilePath,
+    Expression<String>? finalRelativePath,
+    Expression<String>? checksumSha256,
+    Expression<int>? byteLength,
+    Expression<String>? originDeviceId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? issuedAt,
+    Expression<String>? mimeType,
+    Expression<int>? durationMs,
+    Expression<String>? transcript,
+    Expression<int>? widthPixels,
+    Expression<int>? heightPixels,
+    Expression<String>? originalExtension,
+    Expression<int>? orientation,
+    Expression<String>? colorSpace,
+    Expression<bool>? isHdr,
+    Expression<DateTime>? quarantinedAt,
+    Expression<String>? failureReason,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (operationId != null) 'operation_id': operationId,
+      if (commandId != null) 'command_id': commandId,
+      if (mediaId != null) 'media_id': mediaId,
+      if (sessionId != null) 'session_id': sessionId,
+      if (roomNumber != null) 'room_number': roomNumber,
+      if (assignmentId != null) 'assignment_id': assignmentId,
+      if (kind != null) 'kind': kind,
+      if (stagedRelativePath != null)
+        'staged_relative_path': stagedRelativePath,
+      if (transientFilePath != null) 'transient_file_path': transientFilePath,
+      if (finalRelativePath != null) 'final_relative_path': finalRelativePath,
+      if (checksumSha256 != null) 'checksum_sha256': checksumSha256,
+      if (byteLength != null) 'byte_length': byteLength,
+      if (originDeviceId != null) 'origin_device_id': originDeviceId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (issuedAt != null) 'issued_at': issuedAt,
+      if (mimeType != null) 'mime_type': mimeType,
+      if (durationMs != null) 'duration_ms': durationMs,
+      if (transcript != null) 'transcript': transcript,
+      if (widthPixels != null) 'width_pixels': widthPixels,
+      if (heightPixels != null) 'height_pixels': heightPixels,
+      if (originalExtension != null) 'original_extension': originalExtension,
+      if (orientation != null) 'orientation': orientation,
+      if (colorSpace != null) 'color_space': colorSpace,
+      if (isHdr != null) 'is_hdr': isHdr,
+      if (quarantinedAt != null) 'quarantined_at': quarantinedAt,
+      if (failureReason != null) 'failure_reason': failureReason,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MediaPromotionRecordsCompanion copyWith({
+    Value<String>? operationId,
+    Value<String>? commandId,
+    Value<String>? mediaId,
+    Value<String>? sessionId,
+    Value<String>? roomNumber,
+    Value<String?>? assignmentId,
+    Value<String>? kind,
+    Value<String>? stagedRelativePath,
+    Value<String>? transientFilePath,
+    Value<String>? finalRelativePath,
+    Value<String>? checksumSha256,
+    Value<int>? byteLength,
+    Value<String>? originDeviceId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? issuedAt,
+    Value<String?>? mimeType,
+    Value<int?>? durationMs,
+    Value<String?>? transcript,
+    Value<int?>? widthPixels,
+    Value<int?>? heightPixels,
+    Value<String?>? originalExtension,
+    Value<int?>? orientation,
+    Value<String?>? colorSpace,
+    Value<bool?>? isHdr,
+    Value<DateTime?>? quarantinedAt,
+    Value<String?>? failureReason,
+    Value<int>? rowid,
+  }) {
+    return MediaPromotionRecordsCompanion(
+      operationId: operationId ?? this.operationId,
+      commandId: commandId ?? this.commandId,
+      mediaId: mediaId ?? this.mediaId,
+      sessionId: sessionId ?? this.sessionId,
+      roomNumber: roomNumber ?? this.roomNumber,
+      assignmentId: assignmentId ?? this.assignmentId,
+      kind: kind ?? this.kind,
+      stagedRelativePath: stagedRelativePath ?? this.stagedRelativePath,
+      transientFilePath: transientFilePath ?? this.transientFilePath,
+      finalRelativePath: finalRelativePath ?? this.finalRelativePath,
+      checksumSha256: checksumSha256 ?? this.checksumSha256,
+      byteLength: byteLength ?? this.byteLength,
+      originDeviceId: originDeviceId ?? this.originDeviceId,
+      createdAt: createdAt ?? this.createdAt,
+      issuedAt: issuedAt ?? this.issuedAt,
+      mimeType: mimeType ?? this.mimeType,
+      durationMs: durationMs ?? this.durationMs,
+      transcript: transcript ?? this.transcript,
+      widthPixels: widthPixels ?? this.widthPixels,
+      heightPixels: heightPixels ?? this.heightPixels,
+      originalExtension: originalExtension ?? this.originalExtension,
+      orientation: orientation ?? this.orientation,
+      colorSpace: colorSpace ?? this.colorSpace,
+      isHdr: isHdr ?? this.isHdr,
+      quarantinedAt: quarantinedAt ?? this.quarantinedAt,
+      failureReason: failureReason ?? this.failureReason,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (operationId.present) {
+      map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (commandId.present) {
+      map['command_id'] = Variable<String>(commandId.value);
+    }
+    if (mediaId.present) {
+      map['media_id'] = Variable<String>(mediaId.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (roomNumber.present) {
+      map['room_number'] = Variable<String>(roomNumber.value);
+    }
+    if (assignmentId.present) {
+      map['assignment_id'] = Variable<String>(assignmentId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (stagedRelativePath.present) {
+      map['staged_relative_path'] = Variable<String>(stagedRelativePath.value);
+    }
+    if (transientFilePath.present) {
+      map['transient_file_path'] = Variable<String>(transientFilePath.value);
+    }
+    if (finalRelativePath.present) {
+      map['final_relative_path'] = Variable<String>(finalRelativePath.value);
+    }
+    if (checksumSha256.present) {
+      map['checksum_sha256'] = Variable<String>(checksumSha256.value);
+    }
+    if (byteLength.present) {
+      map['byte_length'] = Variable<int>(byteLength.value);
+    }
+    if (originDeviceId.present) {
+      map['origin_device_id'] = Variable<String>(originDeviceId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (issuedAt.present) {
+      map['issued_at'] = Variable<DateTime>(issuedAt.value);
+    }
+    if (mimeType.present) {
+      map['mime_type'] = Variable<String>(mimeType.value);
+    }
+    if (durationMs.present) {
+      map['duration_ms'] = Variable<int>(durationMs.value);
+    }
+    if (transcript.present) {
+      map['transcript'] = Variable<String>(transcript.value);
+    }
+    if (widthPixels.present) {
+      map['width_pixels'] = Variable<int>(widthPixels.value);
+    }
+    if (heightPixels.present) {
+      map['height_pixels'] = Variable<int>(heightPixels.value);
+    }
+    if (originalExtension.present) {
+      map['original_extension'] = Variable<String>(originalExtension.value);
+    }
+    if (orientation.present) {
+      map['orientation'] = Variable<int>(orientation.value);
+    }
+    if (colorSpace.present) {
+      map['color_space'] = Variable<String>(colorSpace.value);
+    }
+    if (isHdr.present) {
+      map['is_hdr'] = Variable<bool>(isHdr.value);
+    }
+    if (quarantinedAt.present) {
+      map['quarantined_at'] = Variable<DateTime>(quarantinedAt.value);
+    }
+    if (failureReason.present) {
+      map['failure_reason'] = Variable<String>(failureReason.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaPromotionRecordsCompanion(')
+          ..write('operationId: $operationId, ')
+          ..write('commandId: $commandId, ')
+          ..write('mediaId: $mediaId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('roomNumber: $roomNumber, ')
+          ..write('assignmentId: $assignmentId, ')
+          ..write('kind: $kind, ')
+          ..write('stagedRelativePath: $stagedRelativePath, ')
+          ..write('transientFilePath: $transientFilePath, ')
+          ..write('finalRelativePath: $finalRelativePath, ')
+          ..write('checksumSha256: $checksumSha256, ')
+          ..write('byteLength: $byteLength, ')
+          ..write('originDeviceId: $originDeviceId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('issuedAt: $issuedAt, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('transcript: $transcript, ')
+          ..write('widthPixels: $widthPixels, ')
+          ..write('heightPixels: $heightPixels, ')
+          ..write('originalExtension: $originalExtension, ')
+          ..write('orientation: $orientation, ')
+          ..write('colorSpace: $colorSpace, ')
+          ..write('isHdr: $isHdr, ')
+          ..write('quarantinedAt: $quarantinedAt, ')
+          ..write('failureReason: $failureReason, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5227,6 +7088,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $MediaManifestRecordsTable mediaManifestRecords =
       $MediaManifestRecordsTable(this);
+  late final $MediaPromotionRecordsTable mediaPromotionRecords =
+      $MediaPromotionRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5242,6 +7105,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncOutboxRecords,
     syncInboxRecords,
     mediaManifestRecords,
+    mediaPromotionRecords,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5300,6 +7164,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('media_manifest_records', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'work_session_records',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('media_promotion_records', kind: UpdateKind.delete)],
     ),
   ]);
   @override
@@ -5520,6 +7391,32 @@ final class $$WorkSessionRecordsTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _mediaManifestRecordsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $MediaPromotionRecordsTable,
+    List<MediaPromotionRow>
+  >
+  _mediaPromotionRecordsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.mediaPromotionRecords,
+        aliasName:
+            'work_session_records__id__media_promotion_records__session_id',
+      );
+
+  $$MediaPromotionRecordsTableProcessedTableManager
+  get mediaPromotionRecordsRefs {
+    final manager = $$MediaPromotionRecordsTableTableManager(
+      $_db,
+      $_db.mediaPromotionRecords,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _mediaPromotionRecordsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -5780,6 +7677,32 @@ class $$WorkSessionRecordsTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> mediaPromotionRecordsRefs(
+    Expression<bool> Function($$MediaPromotionRecordsTableFilterComposer f) f,
+  ) {
+    final $$MediaPromotionRecordsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.mediaPromotionRecords,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$MediaPromotionRecordsTableFilterComposer(
+                $db: $db,
+                $table: $db.mediaPromotionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -6086,6 +8009,32 @@ class $$WorkSessionRecordsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> mediaPromotionRecordsRefs<T extends Object>(
+    Expression<T> Function($$MediaPromotionRecordsTableAnnotationComposer a) f,
+  ) {
+    final $$MediaPromotionRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.mediaPromotionRecords,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$MediaPromotionRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.mediaPromotionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$WorkSessionRecordsTableTableManager
@@ -6110,6 +8059,7 @@ class $$WorkSessionRecordsTableTableManager
             bool commandReceiptRecordsRefs,
             bool syncOutboxRecordsRefs,
             bool mediaManifestRecordsRefs,
+            bool mediaPromotionRecordsRefs,
           })
         > {
   $$WorkSessionRecordsTableTableManager(
@@ -6194,6 +8144,7 @@ class $$WorkSessionRecordsTableTableManager
                 commandReceiptRecordsRefs = false,
                 syncOutboxRecordsRefs = false,
                 mediaManifestRecordsRefs = false,
+                mediaPromotionRecordsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6206,6 +8157,7 @@ class $$WorkSessionRecordsTableTableManager
                     if (commandReceiptRecordsRefs) db.commandReceiptRecords,
                     if (syncOutboxRecordsRefs) db.syncOutboxRecords,
                     if (mediaManifestRecordsRefs) db.mediaManifestRecords,
+                    if (mediaPromotionRecordsRefs) db.mediaPromotionRecords,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6378,6 +8330,27 @@ class $$WorkSessionRecordsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (mediaPromotionRecordsRefs)
+                        await $_getPrefetchedData<
+                          WorkSessionRow,
+                          $WorkSessionRecordsTable,
+                          MediaPromotionRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WorkSessionRecordsTableReferences
+                              ._mediaPromotionRecordsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WorkSessionRecordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).mediaPromotionRecordsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6407,6 +8380,7 @@ typedef $$WorkSessionRecordsTableProcessedTableManager =
         bool commandReceiptRecordsRefs,
         bool syncOutboxRecordsRefs,
         bool mediaManifestRecordsRefs,
+        bool mediaPromotionRecordsRefs,
       })
     >;
 typedef $$HousekeeperRecordsTableCreateCompanionBuilder =
@@ -9265,6 +11239,13 @@ typedef $$MediaManifestRecordsTableCreateCompanionBuilder =
       Value<String?> mimeType,
       Value<int?> durationMs,
       Value<String?> transcript,
+      Value<int?> byteLength,
+      Value<int?> widthPixels,
+      Value<int?> heightPixels,
+      Value<String?> originalExtension,
+      Value<int?> orientation,
+      Value<String?> colorSpace,
+      Value<bool?> isHdr,
       Value<String?> lastCommandId,
       Value<DateTime?> deletedAt,
       Value<int> rowid,
@@ -9284,6 +11265,13 @@ typedef $$MediaManifestRecordsTableUpdateCompanionBuilder =
       Value<String?> mimeType,
       Value<int?> durationMs,
       Value<String?> transcript,
+      Value<int?> byteLength,
+      Value<int?> widthPixels,
+      Value<int?> heightPixels,
+      Value<String?> originalExtension,
+      Value<int?> orientation,
+      Value<String?> colorSpace,
+      Value<bool?> isHdr,
       Value<String?> lastCommandId,
       Value<DateTime?> deletedAt,
       Value<int> rowid,
@@ -9391,6 +11379,41 @@ class $$MediaManifestRecordsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get byteLength => $composableBuilder(
+    column: $table.byteLength,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get widthPixels => $composableBuilder(
+    column: $table.widthPixels,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get heightPixels => $composableBuilder(
+    column: $table.heightPixels,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalExtension => $composableBuilder(
+    column: $table.originalExtension,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get orientation => $composableBuilder(
+    column: $table.orientation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorSpace => $composableBuilder(
+    column: $table.colorSpace,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isHdr => $composableBuilder(
+    column: $table.isHdr,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get lastCommandId => $composableBuilder(
     column: $table.lastCommandId,
     builder: (column) => ColumnFilters(column),
@@ -9494,6 +11517,41 @@ class $$MediaManifestRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get byteLength => $composableBuilder(
+    column: $table.byteLength,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get widthPixels => $composableBuilder(
+    column: $table.widthPixels,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get heightPixels => $composableBuilder(
+    column: $table.heightPixels,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalExtension => $composableBuilder(
+    column: $table.originalExtension,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get orientation => $composableBuilder(
+    column: $table.orientation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorSpace => $composableBuilder(
+    column: $table.colorSpace,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isHdr => $composableBuilder(
+    column: $table.isHdr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get lastCommandId => $composableBuilder(
     column: $table.lastCommandId,
     builder: (column) => ColumnOrderings(column),
@@ -9587,6 +11645,39 @@ class $$MediaManifestRecordsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get byteLength => $composableBuilder(
+    column: $table.byteLength,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get widthPixels => $composableBuilder(
+    column: $table.widthPixels,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get heightPixels => $composableBuilder(
+    column: $table.heightPixels,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalExtension => $composableBuilder(
+    column: $table.originalExtension,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get orientation => $composableBuilder(
+    column: $table.orientation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get colorSpace => $composableBuilder(
+    column: $table.colorSpace,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isHdr =>
+      $composableBuilder(column: $table.isHdr, builder: (column) => column);
+
   GeneratedColumn<String> get lastCommandId => $composableBuilder(
     column: $table.lastCommandId,
     builder: (column) => column,
@@ -9669,6 +11760,13 @@ class $$MediaManifestRecordsTableTableManager
                 Value<String?> mimeType = const Value.absent(),
                 Value<int?> durationMs = const Value.absent(),
                 Value<String?> transcript = const Value.absent(),
+                Value<int?> byteLength = const Value.absent(),
+                Value<int?> widthPixels = const Value.absent(),
+                Value<int?> heightPixels = const Value.absent(),
+                Value<String?> originalExtension = const Value.absent(),
+                Value<int?> orientation = const Value.absent(),
+                Value<String?> colorSpace = const Value.absent(),
+                Value<bool?> isHdr = const Value.absent(),
                 Value<String?> lastCommandId = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -9686,6 +11784,13 @@ class $$MediaManifestRecordsTableTableManager
                 mimeType: mimeType,
                 durationMs: durationMs,
                 transcript: transcript,
+                byteLength: byteLength,
+                widthPixels: widthPixels,
+                heightPixels: heightPixels,
+                originalExtension: originalExtension,
+                orientation: orientation,
+                colorSpace: colorSpace,
+                isHdr: isHdr,
                 lastCommandId: lastCommandId,
                 deletedAt: deletedAt,
                 rowid: rowid,
@@ -9705,6 +11810,13 @@ class $$MediaManifestRecordsTableTableManager
                 Value<String?> mimeType = const Value.absent(),
                 Value<int?> durationMs = const Value.absent(),
                 Value<String?> transcript = const Value.absent(),
+                Value<int?> byteLength = const Value.absent(),
+                Value<int?> widthPixels = const Value.absent(),
+                Value<int?> heightPixels = const Value.absent(),
+                Value<String?> originalExtension = const Value.absent(),
+                Value<int?> orientation = const Value.absent(),
+                Value<String?> colorSpace = const Value.absent(),
+                Value<bool?> isHdr = const Value.absent(),
                 Value<String?> lastCommandId = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -9722,6 +11834,13 @@ class $$MediaManifestRecordsTableTableManager
                 mimeType: mimeType,
                 durationMs: durationMs,
                 transcript: transcript,
+                byteLength: byteLength,
+                widthPixels: widthPixels,
+                heightPixels: heightPixels,
+                originalExtension: originalExtension,
+                orientation: orientation,
+                colorSpace: colorSpace,
+                isHdr: isHdr,
                 lastCommandId: lastCommandId,
                 deletedAt: deletedAt,
                 rowid: rowid,
@@ -9795,6 +11914,783 @@ typedef $$MediaManifestRecordsTableProcessedTableManager =
       MediaManifestRow,
       PrefetchHooks Function({bool sessionId})
     >;
+typedef $$MediaPromotionRecordsTableCreateCompanionBuilder =
+    MediaPromotionRecordsCompanion Function({
+      required String operationId,
+      required String commandId,
+      required String mediaId,
+      required String sessionId,
+      required String roomNumber,
+      Value<String?> assignmentId,
+      required String kind,
+      required String stagedRelativePath,
+      required String transientFilePath,
+      required String finalRelativePath,
+      required String checksumSha256,
+      required int byteLength,
+      required String originDeviceId,
+      required DateTime createdAt,
+      required DateTime issuedAt,
+      Value<String?> mimeType,
+      Value<int?> durationMs,
+      Value<String?> transcript,
+      Value<int?> widthPixels,
+      Value<int?> heightPixels,
+      Value<String?> originalExtension,
+      Value<int?> orientation,
+      Value<String?> colorSpace,
+      Value<bool?> isHdr,
+      Value<DateTime?> quarantinedAt,
+      Value<String?> failureReason,
+      Value<int> rowid,
+    });
+typedef $$MediaPromotionRecordsTableUpdateCompanionBuilder =
+    MediaPromotionRecordsCompanion Function({
+      Value<String> operationId,
+      Value<String> commandId,
+      Value<String> mediaId,
+      Value<String> sessionId,
+      Value<String> roomNumber,
+      Value<String?> assignmentId,
+      Value<String> kind,
+      Value<String> stagedRelativePath,
+      Value<String> transientFilePath,
+      Value<String> finalRelativePath,
+      Value<String> checksumSha256,
+      Value<int> byteLength,
+      Value<String> originDeviceId,
+      Value<DateTime> createdAt,
+      Value<DateTime> issuedAt,
+      Value<String?> mimeType,
+      Value<int?> durationMs,
+      Value<String?> transcript,
+      Value<int?> widthPixels,
+      Value<int?> heightPixels,
+      Value<String?> originalExtension,
+      Value<int?> orientation,
+      Value<String?> colorSpace,
+      Value<bool?> isHdr,
+      Value<DateTime?> quarantinedAt,
+      Value<String?> failureReason,
+      Value<int> rowid,
+    });
+
+final class $$MediaPromotionRecordsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $MediaPromotionRecordsTable,
+          MediaPromotionRow
+        > {
+  $$MediaPromotionRecordsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $WorkSessionRecordsTable _sessionIdTable(_$AppDatabase db) =>
+      db.workSessionRecords.createAlias(
+        'media_promotion_records__session_id__work_session_records__id',
+      );
+
+  $$WorkSessionRecordsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$WorkSessionRecordsTableTableManager(
+      $_db,
+      $_db.workSessionRecords,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$MediaPromotionRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $MediaPromotionRecordsTable> {
+  $$MediaPromotionRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get commandId => $composableBuilder(
+    column: $table.commandId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get roomNumber => $composableBuilder(
+    column: $table.roomNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stagedRelativePath => $composableBuilder(
+    column: $table.stagedRelativePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transientFilePath => $composableBuilder(
+    column: $table.transientFilePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get finalRelativePath => $composableBuilder(
+    column: $table.finalRelativePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get checksumSha256 => $composableBuilder(
+    column: $table.checksumSha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get byteLength => $composableBuilder(
+    column: $table.byteLength,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originDeviceId => $composableBuilder(
+    column: $table.originDeviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get issuedAt => $composableBuilder(
+    column: $table.issuedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transcript => $composableBuilder(
+    column: $table.transcript,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get widthPixels => $composableBuilder(
+    column: $table.widthPixels,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get heightPixels => $composableBuilder(
+    column: $table.heightPixels,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalExtension => $composableBuilder(
+    column: $table.originalExtension,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get orientation => $composableBuilder(
+    column: $table.orientation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorSpace => $composableBuilder(
+    column: $table.colorSpace,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isHdr => $composableBuilder(
+    column: $table.isHdr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get quarantinedAt => $composableBuilder(
+    column: $table.quarantinedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get failureReason => $composableBuilder(
+    column: $table.failureReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WorkSessionRecordsTableFilterComposer get sessionId {
+    final $$WorkSessionRecordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.workSessionRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkSessionRecordsTableFilterComposer(
+            $db: $db,
+            $table: $db.workSessionRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MediaPromotionRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MediaPromotionRecordsTable> {
+  $$MediaPromotionRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get commandId => $composableBuilder(
+    column: $table.commandId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get roomNumber => $composableBuilder(
+    column: $table.roomNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stagedRelativePath => $composableBuilder(
+    column: $table.stagedRelativePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transientFilePath => $composableBuilder(
+    column: $table.transientFilePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get finalRelativePath => $composableBuilder(
+    column: $table.finalRelativePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get checksumSha256 => $composableBuilder(
+    column: $table.checksumSha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get byteLength => $composableBuilder(
+    column: $table.byteLength,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originDeviceId => $composableBuilder(
+    column: $table.originDeviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get issuedAt => $composableBuilder(
+    column: $table.issuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transcript => $composableBuilder(
+    column: $table.transcript,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get widthPixels => $composableBuilder(
+    column: $table.widthPixels,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get heightPixels => $composableBuilder(
+    column: $table.heightPixels,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalExtension => $composableBuilder(
+    column: $table.originalExtension,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get orientation => $composableBuilder(
+    column: $table.orientation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorSpace => $composableBuilder(
+    column: $table.colorSpace,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isHdr => $composableBuilder(
+    column: $table.isHdr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get quarantinedAt => $composableBuilder(
+    column: $table.quarantinedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get failureReason => $composableBuilder(
+    column: $table.failureReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WorkSessionRecordsTableOrderingComposer get sessionId {
+    final $$WorkSessionRecordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.workSessionRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkSessionRecordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.workSessionRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MediaPromotionRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MediaPromotionRecordsTable> {
+  $$MediaPromotionRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get commandId =>
+      $composableBuilder(column: $table.commandId, builder: (column) => column);
+
+  GeneratedColumn<String> get mediaId =>
+      $composableBuilder(column: $table.mediaId, builder: (column) => column);
+
+  GeneratedColumn<String> get roomNumber => $composableBuilder(
+    column: $table.roomNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get assignmentId => $composableBuilder(
+    column: $table.assignmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get stagedRelativePath => $composableBuilder(
+    column: $table.stagedRelativePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transientFilePath => $composableBuilder(
+    column: $table.transientFilePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get finalRelativePath => $composableBuilder(
+    column: $table.finalRelativePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get checksumSha256 => $composableBuilder(
+    column: $table.checksumSha256,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get byteLength => $composableBuilder(
+    column: $table.byteLength,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originDeviceId => $composableBuilder(
+    column: $table.originDeviceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get issuedAt =>
+      $composableBuilder(column: $table.issuedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get mimeType =>
+      $composableBuilder(column: $table.mimeType, builder: (column) => column);
+
+  GeneratedColumn<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transcript => $composableBuilder(
+    column: $table.transcript,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get widthPixels => $composableBuilder(
+    column: $table.widthPixels,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get heightPixels => $composableBuilder(
+    column: $table.heightPixels,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalExtension => $composableBuilder(
+    column: $table.originalExtension,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get orientation => $composableBuilder(
+    column: $table.orientation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get colorSpace => $composableBuilder(
+    column: $table.colorSpace,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isHdr =>
+      $composableBuilder(column: $table.isHdr, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get quarantinedAt => $composableBuilder(
+    column: $table.quarantinedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get failureReason => $composableBuilder(
+    column: $table.failureReason,
+    builder: (column) => column,
+  );
+
+  $$WorkSessionRecordsTableAnnotationComposer get sessionId {
+    final $$WorkSessionRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.sessionId,
+          referencedTable: $db.workSessionRecords,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$WorkSessionRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.workSessionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$MediaPromotionRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MediaPromotionRecordsTable,
+          MediaPromotionRow,
+          $$MediaPromotionRecordsTableFilterComposer,
+          $$MediaPromotionRecordsTableOrderingComposer,
+          $$MediaPromotionRecordsTableAnnotationComposer,
+          $$MediaPromotionRecordsTableCreateCompanionBuilder,
+          $$MediaPromotionRecordsTableUpdateCompanionBuilder,
+          (MediaPromotionRow, $$MediaPromotionRecordsTableReferences),
+          MediaPromotionRow,
+          PrefetchHooks Function({bool sessionId})
+        > {
+  $$MediaPromotionRecordsTableTableManager(
+    _$AppDatabase db,
+    $MediaPromotionRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MediaPromotionRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$MediaPromotionRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$MediaPromotionRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> operationId = const Value.absent(),
+                Value<String> commandId = const Value.absent(),
+                Value<String> mediaId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<String> roomNumber = const Value.absent(),
+                Value<String?> assignmentId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> stagedRelativePath = const Value.absent(),
+                Value<String> transientFilePath = const Value.absent(),
+                Value<String> finalRelativePath = const Value.absent(),
+                Value<String> checksumSha256 = const Value.absent(),
+                Value<int> byteLength = const Value.absent(),
+                Value<String> originDeviceId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> issuedAt = const Value.absent(),
+                Value<String?> mimeType = const Value.absent(),
+                Value<int?> durationMs = const Value.absent(),
+                Value<String?> transcript = const Value.absent(),
+                Value<int?> widthPixels = const Value.absent(),
+                Value<int?> heightPixels = const Value.absent(),
+                Value<String?> originalExtension = const Value.absent(),
+                Value<int?> orientation = const Value.absent(),
+                Value<String?> colorSpace = const Value.absent(),
+                Value<bool?> isHdr = const Value.absent(),
+                Value<DateTime?> quarantinedAt = const Value.absent(),
+                Value<String?> failureReason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MediaPromotionRecordsCompanion(
+                operationId: operationId,
+                commandId: commandId,
+                mediaId: mediaId,
+                sessionId: sessionId,
+                roomNumber: roomNumber,
+                assignmentId: assignmentId,
+                kind: kind,
+                stagedRelativePath: stagedRelativePath,
+                transientFilePath: transientFilePath,
+                finalRelativePath: finalRelativePath,
+                checksumSha256: checksumSha256,
+                byteLength: byteLength,
+                originDeviceId: originDeviceId,
+                createdAt: createdAt,
+                issuedAt: issuedAt,
+                mimeType: mimeType,
+                durationMs: durationMs,
+                transcript: transcript,
+                widthPixels: widthPixels,
+                heightPixels: heightPixels,
+                originalExtension: originalExtension,
+                orientation: orientation,
+                colorSpace: colorSpace,
+                isHdr: isHdr,
+                quarantinedAt: quarantinedAt,
+                failureReason: failureReason,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String operationId,
+                required String commandId,
+                required String mediaId,
+                required String sessionId,
+                required String roomNumber,
+                Value<String?> assignmentId = const Value.absent(),
+                required String kind,
+                required String stagedRelativePath,
+                required String transientFilePath,
+                required String finalRelativePath,
+                required String checksumSha256,
+                required int byteLength,
+                required String originDeviceId,
+                required DateTime createdAt,
+                required DateTime issuedAt,
+                Value<String?> mimeType = const Value.absent(),
+                Value<int?> durationMs = const Value.absent(),
+                Value<String?> transcript = const Value.absent(),
+                Value<int?> widthPixels = const Value.absent(),
+                Value<int?> heightPixels = const Value.absent(),
+                Value<String?> originalExtension = const Value.absent(),
+                Value<int?> orientation = const Value.absent(),
+                Value<String?> colorSpace = const Value.absent(),
+                Value<bool?> isHdr = const Value.absent(),
+                Value<DateTime?> quarantinedAt = const Value.absent(),
+                Value<String?> failureReason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MediaPromotionRecordsCompanion.insert(
+                operationId: operationId,
+                commandId: commandId,
+                mediaId: mediaId,
+                sessionId: sessionId,
+                roomNumber: roomNumber,
+                assignmentId: assignmentId,
+                kind: kind,
+                stagedRelativePath: stagedRelativePath,
+                transientFilePath: transientFilePath,
+                finalRelativePath: finalRelativePath,
+                checksumSha256: checksumSha256,
+                byteLength: byteLength,
+                originDeviceId: originDeviceId,
+                createdAt: createdAt,
+                issuedAt: issuedAt,
+                mimeType: mimeType,
+                durationMs: durationMs,
+                transcript: transcript,
+                widthPixels: widthPixels,
+                heightPixels: heightPixels,
+                originalExtension: originalExtension,
+                orientation: orientation,
+                colorSpace: colorSpace,
+                isHdr: isHdr,
+                quarantinedAt: quarantinedAt,
+                failureReason: failureReason,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MediaPromotionRecordsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sessionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sessionId,
+                                referencedTable:
+                                    $$MediaPromotionRecordsTableReferences
+                                        ._sessionIdTable(db),
+                                referencedColumn:
+                                    $$MediaPromotionRecordsTableReferences
+                                        ._sessionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$MediaPromotionRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MediaPromotionRecordsTable,
+      MediaPromotionRow,
+      $$MediaPromotionRecordsTableFilterComposer,
+      $$MediaPromotionRecordsTableOrderingComposer,
+      $$MediaPromotionRecordsTableAnnotationComposer,
+      $$MediaPromotionRecordsTableCreateCompanionBuilder,
+      $$MediaPromotionRecordsTableUpdateCompanionBuilder,
+      (MediaPromotionRow, $$MediaPromotionRecordsTableReferences),
+      MediaPromotionRow,
+      PrefetchHooks Function({bool sessionId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9819,4 +12715,6 @@ class $AppDatabaseManager {
       $$SyncInboxRecordsTableTableManager(_db, _db.syncInboxRecords);
   $$MediaManifestRecordsTableTableManager get mediaManifestRecords =>
       $$MediaManifestRecordsTableTableManager(_db, _db.mediaManifestRecords);
+  $$MediaPromotionRecordsTableTableManager get mediaPromotionRecords =>
+      $$MediaPromotionRecordsTableTableManager(_db, _db.mediaPromotionRecords);
 }

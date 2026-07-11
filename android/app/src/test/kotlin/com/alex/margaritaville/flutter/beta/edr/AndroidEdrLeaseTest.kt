@@ -61,10 +61,10 @@ class AndroidEdrLeaseTest {
     }
 
     @Test
-    fun `future layout geometry is retained and wins configure race`() {
+    fun `future layout geometry is dropped and configure uses supplied geometry`() {
         val lease = AndroidEdrLease()
         lease.configure(configuration(1, 1, layout = 1), geometry(1, 1, layout = 1))
-        lease.updateGeometry(geometry(1, 1, layout = 2, revision = 9))
+        assertNull(lease.updateGeometry(geometry(1, 1, layout = 2, revision = 9)))
 
         val configured =
             lease.configure(
@@ -72,14 +72,13 @@ class AndroidEdrLeaseTest {
                 geometry(1, 1, layout = 2, revision = 4),
             )
 
-        assertEquals(9L, configured!!.geometry.revision)
-        assertNull(lease.pendingGeometry)
+        assertEquals(4L, configured!!.geometry.revision)
     }
 
     @Test
-    fun `future activation geometry waits for matching configure`() {
+    fun `future activation geometry is dropped`() {
         val lease = AndroidEdrLease()
-        lease.updateGeometry(geometry(session = 7, activation = 8, revision = 11))
+        assertNull(lease.updateGeometry(geometry(session = 7, activation = 8, revision = 11)))
 
         val configured =
             lease.configure(
@@ -87,7 +86,29 @@ class AndroidEdrLeaseTest {
                 geometry(session = 7, activation = 8, revision = 3),
             )
 
-        assertEquals(11L, configured!!.geometry.revision)
+        assertEquals(3L, configured!!.geometry.revision)
+    }
+
+    @Test
+    fun `suspension is monotonic inside exact activation`() {
+        val lease = AndroidEdrLease()
+        lease.configure(configuration(1, 4, presentation = 2), geometry(1, 4, presentation = 2))
+
+        assertTrue(lease.suspend(1, 4, 3))
+        assertFalse(lease.suspend(1, 4, 2))
+        assertFalse(lease.suspend(2, 4, 4))
+        assertEquals(3L, lease.activePresentationRevision)
+    }
+
+    @Test
+    fun `stale suspension cannot hide newer activation`() {
+        val lease = AndroidEdrLease()
+        lease.configure(configuration(1, 1), geometry(1, 1))
+        lease.configure(configuration(2, 2), geometry(2, 2))
+
+        assertFalse(lease.suspend(1, 1, 99))
+        assertEquals(2L, lease.activeActivationId)
+        assertEquals(1L, lease.activePresentationRevision)
     }
 
     @Test
@@ -96,7 +117,7 @@ class AndroidEdrLeaseTest {
         lease.configure(configuration(1, 1, content = 5), geometry(1, 1))
 
         assertFalse(lease.clear(1, 1, 4))
-        assertTrue(lease.isActive(1, 1, 5))
+        assertTrue(lease.isActive(1, 1, 5, 1))
         assertTrue(lease.clear(1, 1, 5))
         assertNull(lease.activeSessionId)
     }
@@ -115,18 +136,21 @@ class AndroidEdrLeaseTest {
         activation: Long,
         layout: Long = 1,
         content: Long = 1,
-    ) = AndroidEdrConfiguration(session, activation, layout, content)
+        presentation: Long = 1,
+    ) = AndroidEdrConfiguration(session, activation, layout, content, presentation)
 
     private fun geometry(
         session: Long,
         activation: Long,
         layout: Long = 1,
+        presentation: Long = 1,
         revision: Long = 1,
     ) =
         AndroidEdrGeometry(
             surfaceSessionId = session,
             activationId = activation,
             layoutGeneration = layout,
+            presentationRevision = presentation,
             revision = revision,
             viewportLeft = 0.0,
             viewportTop = 0.0,

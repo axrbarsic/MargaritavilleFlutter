@@ -66,6 +66,8 @@ void main() {
     );
     await tester.pump();
     await tester.pump();
+    await tester.pump();
+    await tester.pump();
 
     final tileSize = tester.getSize(find.byKey(const Key('summary-room-101')));
     final paintedSize = tester.getSize(
@@ -113,6 +115,8 @@ void main() {
         ),
       ),
     );
+    await tester.pump();
+    await tester.pump();
     await tester.pump();
     await tester.pump();
     final fourColumnWidth = bridge.tiles.single.width;
@@ -185,6 +189,7 @@ final class _RecordingBridge implements EdrOverlayBridge {
     int activationId,
     int layoutGeneration,
     int contentRevision,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -202,6 +207,7 @@ final class _RecordingBridge implements EdrOverlayBridge {
     int surfaceSessionId,
     int activationId,
     int layoutGeneration,
+    int presentationRevision,
     int geometryRevision,
     double viewportLeft,
     double viewportTop,
@@ -209,5 +215,12 @@ final class _RecordingBridge implements EdrOverlayBridge {
     double viewportHeight,
     double scrollOffsetX,
     double scrollOffsetY,
+  ) async {}
+
+  @override
+  Future<void> suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
   ) async {}
 }

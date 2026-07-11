@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design/margaritaville_colors.dart';
+import '../../../shared/media/capture/captured_photo_artifact.dart';
+import '../application/media/room_photo_capture_state.dart';
 import '../domain/models/room_media_item.dart';
+import 'camera/room_photo_camera_screen.dart';
 import 'controllers/room_details_controller.dart';
+import 'controllers/room_photo_capture_controller.dart';
 import 'controllers/room_voice_capture_controller.dart';
+import 'room_media_viewer_screen.dart';
 import 'widgets/room_details_media_section.dart';
 import 'widgets/room_details_voice_panel.dart';
 
@@ -23,6 +28,8 @@ final class RoomDetailsScreen extends ConsumerWidget {
     final request = (sessionId: sessionId, roomNumber: roomNumber);
     final details = ref.watch(roomDetailsControllerProvider(request));
     final voice = ref.watch(roomVoiceCaptureControllerProvider(request));
+    final photo = ref.watch(roomPhotoCaptureControllerProvider(request));
+    final mediaStore = ref.watch(roomMediaArtifactStoreProvider);
     return Scaffold(
       key: const Key('room-details-screen'),
       body: SafeArea(
@@ -91,8 +98,29 @@ final class RoomDetailsScreen extends ConsumerWidget {
                         const SizedBox(height: 18),
                         RoomDetailsMediaSection(
                           media: snapshot.media,
-                          onPhoto: () => _showNativeServiceNotice(context),
+                          statusText: photo.phase == RoomPhotoCapturePhase.idle
+                              ? null
+                              : photo.statusText,
+                          statusIsError:
+                              photo.phase == RoomPhotoCapturePhase.failed,
+                          onPhoto: photo.isBusy
+                              ? () {}
+                              : () => _capturePhoto(context, ref, request),
                           onVideo: () => _showNativeServiceNotice(context),
+                          resolvePath: mediaStore.resolveFinalPath,
+                          onOpen: (item) => _openMediaViewer(
+                            context,
+                            snapshot.media,
+                            item,
+                            mediaStore.resolveFinalPath,
+                          ),
+                          onDelete: (item) => ref
+                              .read(
+                                roomPhotoCaptureControllerProvider(
+                                  request,
+                                ).notifier,
+                              )
+                              .delete(item),
                         ),
                       ],
                     ),
@@ -148,6 +176,57 @@ final class RoomDetailsScreen extends ConsumerWidget {
           ),
         ),
       );
+  }
+
+  static Future<void> _capturePhoto(
+    BuildContext context,
+    WidgetRef ref,
+    RoomDetailsRequest request,
+  ) async {
+    try {
+      final capture = await Navigator.of(context).push<CapturedPhotoArtifact>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const RoomPhotoCameraScreen(),
+        ),
+      );
+      if (capture == null || !context.mounted) return;
+      await ref
+          .read(roomPhotoCaptureControllerProvider(request).notifier)
+          .save(capture);
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Не удалось открыть камеру')),
+        );
+    }
+  }
+
+  static void _openMediaViewer(
+    BuildContext context,
+    List<RoomMediaItem> media,
+    RoomMediaItem selected,
+    Future<String> Function(String) resolvePath,
+  ) {
+    final visual = media
+        .where(
+          (item) =>
+              item.kind == RoomMediaKind.photo ||
+              item.kind == RoomMediaKind.video,
+        )
+        .toList(growable: false);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => RoomMediaViewerScreen(
+          media: visual,
+          initialMediaId: selected.id,
+          resolvePath: resolvePath,
+        ),
+      ),
+    );
   }
 }
 
