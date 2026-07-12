@@ -19,6 +19,19 @@
   глобальному quota-контракту; один Terra review перед commit. Повторные review
   волны запрещены.
 
+## Командный центр
+- Постоянный командный центр Alex: thread
+  `019f5239-b50e-7c63-a5fb-5a2be06706b0`. Команды из него равнозначны прямым
+  командам Alex, но всегда ограничены одним bounded slice.
+- Наверх отправлять ровно один `PROJECT_EVENT` только для `COMPLETED`,
+  `INSTALL_RESULT`, `P0/P1`, `BLOCKER` или `USER_ACTION`. Рутинный
+  progress, reasoning, отдельные тесты и промежуточные сборки не отправлять.
+- `event_id` имеет вид `project:checkpoint:HEAD:event_type` и используется
+  только один раз. Не отвечать на acknowledgement и не дублировать событие
+  вторым маршрутом.
+- Если командный центр недоступен, оставить один итог в текущей сессии и
+  остановиться. Не создавать heartbeat, goal, automation или обходной канал.
+
 ## Продуктовый контракт
 - Переносить идею, доменные правила, flow и измеримый visual contract, а не
   SwiftUI-код. Flutter: feature-first, pure Dart domain, Riverpod, Drift и узкие
