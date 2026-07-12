@@ -111,6 +111,14 @@ int _deepHash(Object? value) {
   return value.hashCode;
 }
 
+enum EdrPresentationOutcome {
+  transparentPresented,
+  structurallyDetached,
+  neverPresentedFlutterOnly,
+  staleRejected,
+  failed,
+}
+
 class EdrTileSnapshot {
   EdrTileSnapshot({
     required this.roomId,
@@ -247,6 +255,158 @@ class EdrTileSnapshot {
   }
 }
 
+class EdrPresentationAck {
+  EdrPresentationAck({
+    required this.surfaceSessionId,
+    required this.activationId,
+    required this.presentationRevision,
+    required this.suppressed,
+    required this.outcome,
+    required this.nativeGeneration,
+    required this.presentedAtNanos,
+  });
+
+  int surfaceSessionId;
+
+  int activationId;
+
+  int presentationRevision;
+
+  bool suppressed;
+
+  EdrPresentationOutcome outcome;
+
+  int nativeGeneration;
+
+  int presentedAtNanos;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      surfaceSessionId,
+      activationId,
+      presentationRevision,
+      suppressed,
+      outcome,
+      nativeGeneration,
+      presentedAtNanos,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static EdrPresentationAck decode(Object result) {
+    result as List<Object?>;
+    return EdrPresentationAck(
+      surfaceSessionId: result[0]! as int,
+      activationId: result[1]! as int,
+      presentationRevision: result[2]! as int,
+      suppressed: result[3]! as bool,
+      outcome: result[4]! as EdrPresentationOutcome,
+      nativeGeneration: result[5]! as int,
+      presentedAtNanos: result[6]! as int,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! EdrPresentationAck || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(surfaceSessionId, other.surfaceSessionId) &&
+        _deepEquals(activationId, other.activationId) &&
+        _deepEquals(presentationRevision, other.presentationRevision) &&
+        _deepEquals(suppressed, other.suppressed) &&
+        _deepEquals(outcome, other.outcome) &&
+        _deepEquals(nativeGeneration, other.nativeGeneration) &&
+        _deepEquals(presentedAtNanos, other.presentedAtNanos);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'EdrPresentationAck(surfaceSessionId: $surfaceSessionId, activationId: $activationId, presentationRevision: $presentationRevision, suppressed: $suppressed, outcome: $outcome, nativeGeneration: $nativeGeneration, presentedAtNanos: $presentedAtNanos)';
+  }
+}
+
+class EdrReadyAck {
+  EdrReadyAck({
+    required this.surfaceSessionId,
+    required this.activationId,
+    required this.contentRevision,
+    required this.presentationRevision,
+    required this.accepted,
+  });
+
+  int surfaceSessionId;
+
+  int activationId;
+
+  int contentRevision;
+
+  int presentationRevision;
+
+  bool accepted;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      surfaceSessionId,
+      activationId,
+      contentRevision,
+      presentationRevision,
+      accepted,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static EdrReadyAck decode(Object result) {
+    result as List<Object?>;
+    return EdrReadyAck(
+      surfaceSessionId: result[0]! as int,
+      activationId: result[1]! as int,
+      contentRevision: result[2]! as int,
+      presentationRevision: result[3]! as int,
+      accepted: result[4]! as bool,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! EdrReadyAck || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(surfaceSessionId, other.surfaceSessionId) &&
+        _deepEquals(activationId, other.activationId) &&
+        _deepEquals(contentRevision, other.contentRevision) &&
+        _deepEquals(presentationRevision, other.presentationRevision) &&
+        _deepEquals(accepted, other.accepted);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'EdrReadyAck(surfaceSessionId: $surfaceSessionId, activationId: $activationId, contentRevision: $contentRevision, presentationRevision: $presentationRevision, accepted: $accepted)';
+  }
+}
+
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -254,8 +414,17 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    } else if (value is EdrTileSnapshot) {
+    } else if (value is EdrPresentationOutcome) {
       buffer.putUint8(129);
+      writeValue(buffer, value.index);
+    } else if (value is EdrTileSnapshot) {
+      buffer.putUint8(130);
+      writeValue(buffer, value.encode());
+    } else if (value is EdrPresentationAck) {
+      buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    } else if (value is EdrReadyAck) {
+      buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -266,7 +435,14 @@ class _PigeonCodec extends StandardMessageCodec {
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
       case 129:
+        final value = readValue(buffer) as int?;
+        return value == null ? null : EdrPresentationOutcome.values[value];
+      case 130:
         return EdrTileSnapshot.decode(readValue(buffer)!);
+      case 131:
+        return EdrPresentationAck.decode(readValue(buffer)!);
+      case 132:
+        return EdrReadyAck.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -380,7 +556,7 @@ class EdrOverlayHostApi {
     );
   }
 
-  Future<void> suspendWindow(
+  Future<EdrPresentationAck> suspendWindow(
     int surfaceSessionId,
     int activationId,
     int presentationRevision,
@@ -397,11 +573,12 @@ class EdrOverlayHostApi {
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
-    _extractReplyValueOrThrow(
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
+    return pigeonVar_replyValue! as EdrPresentationAck;
   }
 
   Future<void> clearWindow(
@@ -432,7 +609,7 @@ class EdrOverlayHostApi {
 abstract class EdrOverlayFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  void windowReady(
+  Future<EdrReadyAck> windowReady(
     int surfaceSessionId,
     int activationId,
     int contentRevision,
@@ -463,13 +640,13 @@ abstract class EdrOverlayFlutterApi {
           final int arg_contentRevision = args[2]! as int;
           final int arg_presentationRevision = args[3]! as int;
           try {
-            api.windowReady(
+            final EdrReadyAck output = await api.windowReady(
               arg_surfaceSessionId,
               arg_activationId,
               arg_contentRevision,
               arg_presentationRevision,
             );
-            return wrapResponse(empty: true);
+            return wrapResponse(result: output);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
           } catch (e) {

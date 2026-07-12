@@ -218,9 +218,17 @@ final class _RecordingBridge implements EdrOverlayBridge {
   ) async {}
 
   @override
-  Future<void> suspendWindow(
+  Future<EdrPresentationAck> suspendWindow(
     int surfaceSessionId,
     int activationId,
     int presentationRevision,
-  ) async {}
+  ) async => EdrPresentationAck(
+    surfaceSessionId: surfaceSessionId,
+    activationId: activationId,
+    presentationRevision: presentationRevision,
+    suppressed: true,
+    outcome: EdrPresentationOutcome.transparentPresented,
+    nativeGeneration: presentationRevision + 1,
+    presentedAtNanos: 1,
+  );
 }

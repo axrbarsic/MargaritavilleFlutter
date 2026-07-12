@@ -23,7 +23,13 @@ interface VipHdrOverlayApi : AutoCloseable {
 
     fun setFeatureVisible(visible: Boolean)
 
-    fun setPresentationSuppressed(suppressed: Boolean)
+    fun setPresentationSuppressed(
+        suppressed: Boolean,
+        onFrameCommitted: (() -> Unit)? = null,
+        onCommitCancelled: (() -> Unit)? = null,
+    )
+
+    fun setFramePresentedListener(listener: ((VipHdrRenderPacket) -> Unit)?)
 }
 
 class VipHdrOverlayHost(
@@ -102,7 +108,7 @@ class VipHdrOverlayHost(
     override val snapshot: VipHdrRuntimeSnapshot
         get() = runtime.snapshot
 
-    fun setFramePresentedListener(listener: ((VipHdrRenderPacket) -> Unit)?) {
+    override fun setFramePresentedListener(listener: ((VipHdrRenderPacket) -> Unit)?) {
         checkMainThread()
         checkOpen()
         surface.framePresentedListener = listener
@@ -120,15 +126,24 @@ class VipHdrOverlayHost(
         runtime.setViewportVisible(visible)
     }
 
-    override fun setPresentationSuppressed(suppressed: Boolean) {
+    override fun setPresentationSuppressed(
+        suppressed: Boolean,
+        onFrameCommitted: (() -> Unit)?,
+        onCommitCancelled: (() -> Unit)?,
+    ) {
         checkMainThread()
         checkOpen()
-        surface.setPresentationSuppressed(suppressed)
+        surface.setPresentationSuppressed(
+            suppressed,
+            onFrameCommitted,
+            onCommitCancelled,
+        )
     }
 
     override fun close() {
         checkMainThread()
         if (closed) return
+        surface.cancelPendingSuppressionCommit()
         closed = true
         if (Build.VERSION.SDK_INT >= 34 && ratioListenerRegistered) {
             activity.display?.unregisterHdrSdrRatioChangedListener(ratioListener)

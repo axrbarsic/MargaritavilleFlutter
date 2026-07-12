@@ -1,4 +1,5 @@
 import Flutter
+import OSLog
 import QuartzCore
 import SharedAppFoundation
 import UIKit
@@ -18,31 +19,85 @@ enum EdrViewportPlugin {
   }
 }
 
+/// Structural presentation fence for the one window-level native surface.
+/// Removing the overlay from the window hierarchy before Flutter starts a
+/// route makes z-order safety deterministic; no transparent compositor frame
+/// is used as a proxy for visibility.
+@MainActor
+final class EdrStructuralOverlayPlane {
+  init(overlay: VisualRuntimeWindowOverlayView) {
+    self.overlay = overlay
+  }
+
+  private let overlay: VisualRuntimeWindowOverlayView
+  private(set) var generation: Int64 = 0
+
+  func detachIfCurrent(_ isCurrent: () -> Bool) -> Int64? {
+    guard isCurrent() else { return nil }
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    overlay.layer.opacity = 0
+    overlay.removeFromSuperview()
+    CATransaction.commit()
+    guard overlay.superview == nil, isCurrent() else { return nil }
+    generation &+= 1
+    return generation
+  }
+}
+
 @MainActor
 private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
   init(binaryMessenger: FlutterBinaryMessenger) {
     flutterApi = EdrOverlayFlutterApi(binaryMessenger: binaryMessenger)
     overlay.onFirstFrameReady = { [weak self] readiness in
       guard let self,
-        let committed = self.presentationFence.commitFrame(
+        let committed = self.presentationFence.prepareFrameCommit(
           contentRevision: Int64(readiness.revision)
         )
       else { return }
-      self.setOverlaySuppressed(false)
+      self.logger.debug(
+        "EDR frame ready prepared session=\(committed.surfaceSessionID, privacy: .public) activation=\(committed.activationID, privacy: .public) content=\(committed.contentRevision, privacy: .public) presentation=\(committed.presentationRevision, privacy: .public)"
+      )
       self.flutterApi.windowReady(
         surfaceSessionId: Int64(committed.surfaceSessionID),
         activationId: Int64(committed.activationID),
         contentRevision: committed.contentRevision,
         presentationRevision: committed.presentationRevision
-      ) { _ in }
+      ) { [weak self] result in
+        guard case .success(let acknowledgement) = result,
+          let self,
+          acknowledgement.accepted,
+          acknowledgement.surfaceSessionId == Int64(committed.surfaceSessionID),
+          acknowledgement.activationId == Int64(committed.activationID),
+          acknowledgement.contentRevision == committed.contentRevision,
+          acknowledgement.presentationRevision == committed.presentationRevision,
+          self.presentationFence.acknowledgeFlutterReady(committed)
+        else {
+          self?.logger.debug(
+            "EDR stale Flutter-ready acknowledgement ignored presentation=\(committed.presentationRevision, privacy: .public)"
+          )
+          return
+        }
+        self.setOverlaySuppressed(false)
+        self.nativeMayPaint = true
+        self.logger.debug(
+          "EDR overlay revealed after Flutter-ready presentation=\(committed.presentationRevision, privacy: .public)"
+        )
+      }
     }
   }
 
   private let flutterApi: EdrOverlayFlutterApi
+  private let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "MargaritavilleFlutter",
+    category: "EdrPresentation"
+  )
   private let overlay = VisualRuntimeWindowOverlayView(frame: .zero)
   private let viewportMask = CAShapeLayer()
+  private lazy var structuralPlane = EdrStructuralOverlayPlane(overlay: overlay)
   private var presentationFence = EdrPresentationFence()
   private var activeLayoutGeneration: Int64 = -1
+  private var nativeMayPaint = false
 
   func configureWindow(
     surfaceSessionId: Int64,
@@ -150,8 +205,18 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
   func suspendWindow(
     surfaceSessionId: Int64,
     activationId: Int64,
-    presentationRevision: Int64
-  ) throws {
+    presentationRevision: Int64,
+    completion: @escaping (Result<EdrPresentationAck, Error>) -> Void
+  ) {
+    let rejected = EdrPresentationAck(
+      surfaceSessionId: surfaceSessionId,
+      activationId: activationId,
+      presentationRevision: presentationRevision,
+      suppressed: false,
+      outcome: .staleRejected,
+      nativeGeneration: 0,
+      presentedAtNanos: 0
+    )
     guard surfaceSessionId >= 0,
       activationId > 0,
       presentationRevision >= 0,
@@ -160,8 +225,59 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
         activationID: UInt64(activationId),
         presentationRevision: presentationRevision
       )
-    else { return }
+    else {
+      logger.debug(
+        "EDR exact suspend rejected session=\(surfaceSessionId, privacy: .public) activation=\(activationId, privacy: .public) presentation=\(presentationRevision, privacy: .public)"
+      )
+      completion(.success(rejected))
+      return
+    }
+    let lease = EdrPresentationLease(
+      surfaceSessionID: UInt64(surfaceSessionId),
+      activationID: UInt64(activationId),
+      contentRevision: presentationFence.activeContentRevision,
+      presentationRevision: presentationRevision
+    )
+    if !nativeMayPaint {
+      setOverlaySuppressed(true)
+      completion(
+        .success(
+          EdrPresentationAck(
+            surfaceSessionId: surfaceSessionId,
+            activationId: activationId,
+            presentationRevision: presentationRevision,
+            suppressed: true,
+            outcome: .neverPresentedFlutterOnly,
+            nativeGeneration: 0,
+            presentedAtNanos: 0
+          )
+        )
+      )
+      return
+    }
     setOverlaySuppressed(true)
+    let generation = structuralPlane.detachIfCurrent { [weak self] in
+      self?.presentationFence.confirmsSuppression(lease) == true
+    }
+    let confirmed = generation != nil
+      && presentationFence.confirmsSuppression(lease)
+    if confirmed { nativeMayPaint = false }
+    logger.notice(
+      "EDR exact structural suspend session=\(surfaceSessionId, privacy: .public) activation=\(activationId, privacy: .public) presentation=\(presentationRevision, privacy: .public) generation=\(generation ?? 0, privacy: .public) confirmed=\(confirmed, privacy: .public)"
+    )
+    completion(
+      .success(
+        EdrPresentationAck(
+          surfaceSessionId: surfaceSessionId,
+          activationId: activationId,
+          presentationRevision: presentationRevision,
+          suppressed: confirmed,
+          outcome: confirmed ? .structurallyDetached : .failed,
+          nativeGeneration: generation ?? 0,
+          presentedAtNanos: 0
+        )
+      )
+    )
   }
 
   func clearWindow(
@@ -257,10 +373,18 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
     )
   }
 
-  private func setOverlaySuppressed(_ suppressed: Bool) {
+  private func setOverlaySuppressed(
+    _ suppressed: Bool
+  ) {
+    let updates = { [viewportMask = self.viewportMask, overlay = self.overlay] in
+      if suppressed {
+        viewportMask.path = nil
+      }
+      overlay.layer.opacity = suppressed ? 0 : 1
+    }
     CATransaction.begin()
     CATransaction.setDisableActions(true)
-    overlay.layer.opacity = suppressed ? 0 : 1
+    updates()
     CATransaction.commit()
   }
 
@@ -326,6 +450,7 @@ struct EdrPresentationFence {
   private(set) var highestActivationID: UInt64 = 0
   private(set) var suppressed = true
   private var awaitingCommit: EdrPresentationLease?
+  private var awaitingFlutterReady: EdrPresentationLease?
 
   mutating func acceptConfiguration(
     surfaceSessionID: UInt64,
@@ -354,6 +479,7 @@ struct EdrPresentationFence {
       activeContentRevision = -1
       activePresentationRevision = -1
       awaitingCommit = nil
+      awaitingFlutterReady = nil
     }
     guard contentRevision >= activeContentRevision,
       presentationRevision >= activePresentationRevision
@@ -362,6 +488,7 @@ struct EdrPresentationFence {
     activePresentationRevision = presentationRevision
     suppressed = true
     awaitingCommit = currentLease
+    awaitingFlutterReady = nil
     return true
   }
 
@@ -376,6 +503,7 @@ struct EdrPresentationFence {
     else { return false }
     activePresentationRevision = presentationRevision
     awaitingCommit = nil
+    awaitingFlutterReady = nil
     suppressed = true
     return true
   }
@@ -390,16 +518,32 @@ struct EdrPresentationFence {
       && activePresentationRevision == presentationRevision
   }
 
-  mutating func commitFrame(
+  mutating func prepareFrameCommit(
     contentRevision: Int64
   ) -> EdrPresentationLease? {
-    guard let awaitingCommit,
-      awaitingCommit == currentLease,
-      awaitingCommit.contentRevision == contentRevision
+    guard let lease = awaitingCommit,
+      lease == currentLease,
+      lease.contentRevision == contentRevision
     else { return nil }
     self.awaitingCommit = nil
+    awaitingFlutterReady = lease
+    return lease
+  }
+
+  mutating func acknowledgeFlutterReady(
+    _ lease: EdrPresentationLease
+  ) -> Bool {
+    guard suppressed,
+      awaitingFlutterReady == lease,
+      currentLease == lease
+    else { return false }
+    awaitingFlutterReady = nil
     suppressed = false
-    return awaitingCommit
+    return true
+  }
+
+  func confirmsSuppression(_ lease: EdrPresentationLease) -> Bool {
+    suppressed && currentLease == lease
   }
 
   mutating func clear(
@@ -416,6 +560,7 @@ struct EdrPresentationFence {
     activeContentRevision = -1
     activePresentationRevision = -1
     awaitingCommit = nil
+    awaitingFlutterReady = nil
     suppressed = true
     return true
   }

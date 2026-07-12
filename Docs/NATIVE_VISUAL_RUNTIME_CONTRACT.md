@@ -86,9 +86,11 @@ Window-level native overlay физически находится выше вс�
   fallback ownership и дожидается `suspendWindow` exact activation/revision;
   только затем начинает навигацию или показывает barrier.
 - Ожидание обязательно и для уже ready ownership, и для принятого configure,
-  который ещё ждёт frame commit. Аварийный дедлайн `250 ms` не даёт умершему
-  platform host навсегда заблокировать навигацию: fallback возвращается до
-  ожидания, поздний ready старой presentation остаётся no-op.
+  который ещё ждёт frame commit. Аварийный дедлайн `250 ms` разрешает
+  навигацию только пока ledger доказывает, что native paint ещё не получал
+  ownership. После реально показанного native membership отсутствие exact
+  suppression receipt является fail-closed: Flutter fallback не способен
+  перекрыть window-level overlay.
 - Safety-net наблюдает primary и secondary route animations. Native resume
   разрешён только когда owning route верхний, primary завершён, secondary
   полностью dismissed и два последовательных Flutter frame подтверждают одну
@@ -114,6 +116,18 @@ layout или presentation оно удаляется. Native полностью 
   layer/window contract.
 - Viewport маска всегда обрезает native paint границей Flutter scroll viewport.
 - Overlay скрыт во время Flutter route/modal transition и до exact frame commit.
+- Suppression не доказывается прозрачным Metal sentinel: compositor вправе
+  отбросить визуально пустой drawable, а `presentedTime == 0` не доказывает
+  ошибку lease. Exact suspension структурно удаляет единый overlay из оконной
+  иерархии до возврата Pigeon. Route начинается только после typed receipt с
+  монотонной structural generation; старый native paint после этого не может
+  оказаться выше Flutter route по построению. На resume overlay заново
+  устанавливается скрытым и раскрывается только после exact native frame плюс
+  Flutter-ready acknowledgement.
+- Ошибка exact suspension блокирует только конкретную presentation-транзакцию.
+  Если owning Flutter route остался верхним, controller обязан немедленно
+  начать новую activation и восстановить scene; вечный poison/re-suspend loop
+  запрещён.
 - Максимальная частота следует диапазону, который реально выдаёт iOS; app-side
   cap 30/60 FPS запрещён.
 

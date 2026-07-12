@@ -25,6 +25,9 @@ class VipHdrOverlaySurface(
     private var cachedSceneRevision: Long? = null
     private var reportedSceneRevision: Long? = null
     private var pendingCommitRevision: Long? = null
+    private var suppressionGeneration = 0L
+    private var registeredSuppressionGeneration: Long? = null
+    private var pendingSuppressionCommit: SuppressionCommit? = null
     private val pathCache = mutableMapOf<String, Path>()
     private val bitmapCache = LinkedHashMap<BitmapKey, Bitmap>(MAX_BITMAP_CACHE_ENTRIES, 0.75f, true)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
@@ -46,6 +49,7 @@ class VipHdrOverlaySurface(
             cachedSceneRevision = packet.scene.revision
             pathCache.clear()
         }
+        scheduleFramePresented(packet)
         postInvalidateOnAnimation()
     }
 
@@ -53,6 +57,7 @@ class VipHdrOverlaySurface(
         checkMainThread()
         if (packet == null) return
         packet = null
+        pendingCommitRevision = null
         postInvalidateOnAnimation()
     }
 
@@ -81,22 +86,78 @@ class VipHdrOverlaySurface(
         }
         canvas.restoreToCount(viewportSaveCount)
         presentationSaveCount?.let(canvas::restoreToCount)
-        reportFramePresented(currentPacket)
     }
 
-    fun setPresentationSuppressed(suppressed: Boolean) {
+    fun setPresentationSuppressed(
+        suppressed: Boolean,
+        onFrameCommitted: (() -> Unit)? = null,
+        onCommitCancelled: (() -> Unit)? = null,
+    ) {
         checkMainThread()
-        if (presentationSuppressed == suppressed) return
+        cancelPendingSuppressionCommit()
+        val generation = ++suppressionGeneration
         presentationSuppressed = suppressed
+        pendingSuppressionCommit =
+            onFrameCommitted?.let {
+                SuppressionCommit(
+                    generation = generation,
+                    suppressed = suppressed,
+                    committed = it,
+                    cancelled = onCommitCancelled,
+                )
+            }
+        scheduleSuppressionFrameCommit()
         postInvalidateOnAnimation()
+    }
+
+    fun cancelPendingSuppressionCommit() {
+        checkMainThread()
+        val cancelled = pendingSuppressionCommit ?: return
+        pendingSuppressionCommit = null
+        registeredSuppressionGeneration = null
+        cancelled.cancelled?.invoke()
+    }
+
+    private fun scheduleSuppressionFrameCommit() {
+        val pending = pendingSuppressionCommit ?: return
+        if (pending.suppressed != presentationSuppressed ||
+            registeredSuppressionGeneration == pending.generation ||
+            !isAttachedToWindow ||
+            !isHardwareAccelerated
+        ) return
+        val onCommitted = {
+            if (registeredSuppressionGeneration == pending.generation) {
+                registeredSuppressionGeneration = null
+            }
+            val current = pendingSuppressionCommit
+            if (
+                current?.generation == pending.generation &&
+                current.suppressed == presentationSuppressed
+            ) {
+                pendingSuppressionCommit = null
+                current.committed()
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (!viewTreeObserver.isAlive) return
+            registeredSuppressionGeneration = pending.generation
+            viewTreeObserver.registerFrameCommitCallback(onCommitted)
+        } else {
+            post(onCommitted)
+        }
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        scheduleSuppressionFrameCommit()
+        packet?.let(::scheduleFramePresented)
+        postInvalidateOnAnimation()
         notifyAvailability()
     }
 
     override fun onDetachedFromWindow() {
+        cancelPendingSuppressionCommit()
+        pendingCommitRevision = null
         availabilityListener?.invoke(false)
         super.onDetachedFromWindow()
     }
@@ -223,14 +284,14 @@ class VipHdrOverlaySurface(
         }
     }
 
-    private fun reportFramePresented(currentPacket: VipHdrRenderPacket) {
+    private fun scheduleFramePresented(currentPacket: VipHdrRenderPacket) {
         val revision = currentPacket.scene.revision
         if (
             !isHardwareAccelerated ||
+            !isAttachedToWindow ||
             reportedSceneRevision == revision ||
             pendingCommitRevision == revision
         ) return
-        pendingCommitRevision = revision
         val onFrameCommitted = {
             if (pendingCommitRevision == revision) pendingCommitRevision = null
             if (packet?.scene?.revision == currentPacket.scene.revision) {
@@ -238,9 +299,12 @@ class VipHdrOverlaySurface(
                 framePresentedListener?.invoke(currentPacket)
             }
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && viewTreeObserver.isAlive) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (!viewTreeObserver.isAlive) return
+            pendingCommitRevision = revision
             viewTreeObserver.registerFrameCommitCallback(onFrameCommitted)
         } else {
+            pendingCommitRevision = revision
             post(onFrameCommitted)
         }
     }
@@ -286,6 +350,13 @@ class VipHdrOverlaySurface(
     private data class BitmapKey(
         val baseColorArgb: Int,
         val headroomCent: Int,
+    )
+
+    private data class SuppressionCommit(
+        val generation: Long,
+        val suppressed: Boolean,
+        val committed: () -> Unit,
+        val cancelled: (() -> Unit)?,
     )
 
     companion object {

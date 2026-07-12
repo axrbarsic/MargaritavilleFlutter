@@ -9,6 +9,7 @@ import 'package:margaritaville_flutter/features/interaction/domain/repositories/
 import 'package:margaritaville_flutter/features/interaction/presentation/controllers/interaction_sound_settings_controller.dart';
 import 'package:margaritaville_flutter/features/interaction/presentation/margaritaville_feedback_scope.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/summary_header.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
@@ -67,7 +68,11 @@ final class SummaryHeaderFeedbackHarness {
     );
   }
 
-  Widget summaryApp({required Future<void> Function() onOpenSettings}) {
+  Widget summaryApp({
+    required Future<void> Function() onOpenSettings,
+    EdrOverlayController? edrController,
+    SummaryVisualPolicy visualPolicy = SummaryVisualPolicy.balanced,
+  }) {
     return ProviderScope(
       overrides: [
         interactionSoundSettingsRepositoryProvider.overrideWithValue(
@@ -80,7 +85,9 @@ final class SummaryHeaderFeedbackHarness {
           theme: MargaritavilleTheme.dark,
           home: SummaryScreen(
             session: _session(),
-            edrController: EdrOverlayController(supported: false),
+            edrController:
+                edrController ?? EdrOverlayController(supported: false),
+            visualPolicy: visualPolicy,
             onOpenSettings: onOpenSettings,
           ),
         ),

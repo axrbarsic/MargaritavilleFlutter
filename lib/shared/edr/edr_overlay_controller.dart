@@ -12,6 +12,7 @@ part 'edr_overlay_measurement.dart';
 part 'edr_overlay_command_lane.dart';
 part 'edr_overlay_geometry_cache.dart';
 part 'edr_overlay_lifecycle.dart';
+part 'edr_overlay_readiness.dart';
 part 'edr_presentation_occlusion.dart';
 part 'edr_overlay_synchronization.dart';
 
@@ -34,7 +35,7 @@ final class EdrOverlayController extends ChangeNotifier {
   );
   final bool supported;
   final GlobalKey surfaceKey = GlobalKey(debugLabel: 'summary-edr-window');
-  final int surfaceSessionId = ++_nextSurfaceSessionId;
+  final int surfaceSessionId = ++_nextEdrSurfaceSessionId;
   final Map<String, _EdrTileEntry> _entries = {};
   final _geometryCache = _EdrOverlayGeometryCache();
   Map<String, GlobalKey> _renderedTiles = const {};
@@ -42,11 +43,15 @@ final class EdrOverlayController extends ChangeNotifier {
   bool _attached = false;
   bool _routeVisible = true;
   bool _windowVisible = true;
+  bool _nativeMayPaint = false;
   int _presentationOcclusionCount = 0;
+  Future<void>? _presentationSuspension;
+  bool _presentationRecoveryPending = false;
   bool _syncScheduled = false;
   bool _syncInProgress = false;
   bool _syncAgain = false;
   bool _disposed = false;
+  int? _readyInFlightRevision;
   int _contentRevision = 0;
   int _contentConfigurationRevision = 0;
   int _presentationRevision = 0;
@@ -61,8 +66,6 @@ final class EdrOverlayController extends ChangeNotifier {
   Offset? _lastGeometryOffset;
   final Map<int, _PendingEdrConfiguration> _pendingConfigurations = {};
 
-  static int _nextSurfaceSessionId = 0;
-  static int _nextActivationId = 0;
   static const presentationSuspendDeadline = Duration(milliseconds: 250);
   static const double effectBleed = 24;
   static const double verticalPreload = 240;
@@ -93,7 +96,11 @@ final class EdrOverlayController extends ChangeNotifier {
   void setWindowVisible(bool visible) {
     if (!supported || _disposed || _routeVisible == visible) return;
     _routeVisible = visible;
-    _applyEffectiveVisibility().ignore();
+    if (!visible) {
+      _trackPresentationSuspension(_applyEffectiveVisibility).ignore();
+    } else {
+      _applyEffectiveVisibility().ignore();
+    }
   }
 
   void upsertTile({
@@ -239,30 +246,5 @@ final class EdrOverlayController extends ChangeNotifier {
         offset.dy,
       ),
     );
-  }
-
-  void _markNativeReady(
-    int activationId,
-    int revision,
-    int presentationRevision,
-  ) {
-    final configuration = _pendingConfigurations[revision];
-    if (_disposed ||
-        !_windowVisible ||
-        activationId != _activationId ||
-        presentationRevision != _presentationRevision ||
-        configuration == null ||
-        revision != _contentConfigurationRevision) {
-      return;
-    }
-    _pendingConfigurations.remove(revision);
-    if (configuration.contentRevision != _contentRevision ||
-        configuration.presentationRevision != _presentationRevision ||
-        configuration.layoutGeneration != _geometryCache.layoutGeneration) {
-      _scheduleSync();
-      return;
-    }
-    _pendingConfigurations.removeWhere((key, _) => key < revision);
-    _replaceRenderedTiles(configuration.renderedTiles);
   }
 }

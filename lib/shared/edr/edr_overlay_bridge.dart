@@ -31,7 +31,7 @@ abstract interface class EdrOverlayBridge {
     double scrollOffsetY,
   );
 
-  Future<void> suspendWindow(
+  Future<EdrPresentationAck> suspendWindow(
     int surfaceSessionId,
     int activationId,
     int presentationRevision,
@@ -113,7 +113,7 @@ final class PigeonEdrOverlayBridge implements EdrOverlayBridge {
   }
 
   @override
-  Future<void> suspendWindow(
+  Future<EdrPresentationAck> suspendWindow(
     int surfaceSessionId,
     int activationId,
     int presentationRevision,

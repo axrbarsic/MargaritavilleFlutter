@@ -8,7 +8,7 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
 
   final Map<
     int,
-    void Function(
+    Future<EdrReadyAck> Function(
       int activationId,
       int contentRevision,
       int presentationRevision,
@@ -25,7 +25,7 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
 
   void register(
     int surfaceSessionId,
-    void Function(
+    Future<EdrReadyAck> Function(
       int activationId,
       int contentRevision,
       int presentationRevision,
@@ -40,16 +40,22 @@ final class EdrReadyRouter implements EdrOverlayFlutterApi {
   }
 
   @override
-  void windowReady(
+  Future<EdrReadyAck> windowReady(
     int surfaceSessionId,
     int activationId,
     int contentRevision,
     int presentationRevision,
-  ) {
-    _callbacks[surfaceSessionId]?.call(
-      activationId,
-      contentRevision,
-      presentationRevision,
+  ) async {
+    final callback = _callbacks[surfaceSessionId];
+    if (callback != null) {
+      return callback(activationId, contentRevision, presentationRevision);
+    }
+    return EdrReadyAck(
+      surfaceSessionId: surfaceSessionId,
+      activationId: activationId,
+      contentRevision: contentRevision,
+      presentationRevision: presentationRevision,
+      accepted: false,
     );
   }
 }

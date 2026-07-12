@@ -17,10 +17,14 @@ import 'package:margaritaville_flutter/shared/edr/generated/edr_overlay_api.g.da
 
 part 'edr_bridge_test_support.dart';
 part 'edr_presentation_controller_tests.dart';
+part 'edr_presentation_fence_tests.dart';
+part 'edr_presentation_readiness_tests.dart';
 part 'edr_presentation_test_support.dart';
 
 void main() {
   _registerEdrPresentationTests();
+  _registerEdrPresentationFenceTests();
+  _registerEdrPresentationReadinessTests();
   test('row snapshot keeps donor EDR and additive colors separate', () {
     final startedAt = DateTime(2027, 2, 10, 20, 47);
     final room = RoomState.pending(roomNumber: '209', selectedAt: startedAt);
@@ -80,7 +84,7 @@ void main() {
 
     bridge.complete(firstRevision);
     await tester.pump();
-    EdrReadyRouter.instance.windowReady(
+    _dispatchReady(
       controller.surfaceSessionId,
       firstConfiguration.activationId,
       firstRevision,
@@ -95,7 +99,7 @@ void main() {
     final secondRevision = secondConfiguration.contentRevision;
     bridge.complete(secondRevision);
     await tester.pump();
-    EdrReadyRouter.instance.windowReady(
+    _dispatchReady(
       controller.surfaceSessionId,
       secondConfiguration.activationId,
       secondRevision,
@@ -118,7 +122,7 @@ void main() {
       controller.attachWindow();
       await tester.pump();
       final firstConfiguration = bridge.configurations.single;
-      EdrReadyRouter.instance.windowReady(
+      _dispatchReady(
         controller.surfaceSessionId,
         firstConfiguration.activationId,
         firstConfiguration.contentRevision,
@@ -126,7 +130,7 @@ void main() {
       );
       await tester.pump();
       final firstRevision = firstConfiguration.contentRevision;
-      EdrReadyRouter.instance.windowReady(
+      _dispatchReady(
         controller.surfaceSessionId,
         firstConfiguration.activationId,
         firstRevision,
@@ -150,7 +154,7 @@ void main() {
         restoredConfiguration.activationId,
         greaterThan(firstConfiguration.activationId),
       );
-      EdrReadyRouter.instance.windowReady(
+      _dispatchReady(
         controller.surfaceSessionId,
         firstConfiguration.activationId,
         restoredRevision,
@@ -159,7 +163,7 @@ void main() {
       await tester.pump();
       expect(controller.isTileRendered('101', renderKey), isFalse);
 
-      EdrReadyRouter.instance.windowReady(
+      _dispatchReady(
         controller.surfaceSessionId,
         restoredConfiguration.activationId,
         restoredRevision,
@@ -185,7 +189,7 @@ void main() {
       controller.attachWindow();
       await tester.pump();
       final configuration = bridge.configurations.single;
-      EdrReadyRouter.instance.windowReady(
+      _dispatchReady(
         controller.surfaceSessionId,
         configuration.activationId,
         configuration.contentRevision,
@@ -248,7 +252,7 @@ void main() {
       expect(bridge.configurations.single.tiles.map((tile) => tile.roomId), [
         '101',
       ]);
-      EdrReadyRouter.instance.windowReady(
+      _dispatchReady(
         controller.surfaceSessionId,
         firstConfiguration.activationId,
         firstRevision,
@@ -270,7 +274,7 @@ void main() {
 
       final secondConfiguration = bridge.configurations.last;
       final secondRevision = secondConfiguration.contentRevision;
-      EdrReadyRouter.instance.windowReady(
+      _dispatchReady(
         controller.surfaceSessionId,
         secondConfiguration.activationId,
         secondRevision,

@@ -1,10 +1,15 @@
 import 'dart:async';
 import 'dart:ui' show SemanticsAction;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:interaction_foundation/interaction_foundation.dart';
 import 'package:margaritaville_flutter/features/interaction/domain/margaritaville_sound_routing.dart';
+import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_overlay_bridge.dart';
+import 'package:margaritaville_flutter/shared/edr/edr_overlay_controller.dart';
+import 'package:margaritaville_flutter/shared/edr/generated/edr_overlay_api.g.dart';
 
 import 'summary_header_interaction_test_support.dart';
 
@@ -171,4 +176,111 @@ void main() {
     await tester.pump();
     semanticsHandle.dispose();
   });
+
+  testWidgets('settings route does not start before exact native suspension', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    tester.view.physicalSize = const Size(440, 956);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final semanticsHandle = tester.ensureSemantics();
+    final harness = SummaryHeaderFeedbackHarness();
+    final bridge = _DeferredSettingsEdrBridge();
+    final edrController = EdrOverlayController(bridge: bridge, supported: true);
+    addTearDown(harness.dispose);
+    addTearDown(edrController.dispose);
+    var routeCalls = 0;
+    await tester.pumpWidget(
+      harness.summaryApp(
+        edrController: edrController,
+        visualPolicy: const SummaryVisualPolicy(statusPulseEnabled: true),
+        onOpenSettings: () async {
+          routeCalls += 1;
+        },
+      ),
+    );
+    for (var frame = 0; frame < 8; frame += 1) {
+      await tester.pump();
+    }
+    expect(bridge.configureCount, greaterThan(0));
+
+    tester.semantics.longPress(find.semantics.byLabel('Открыть настройки'));
+    await tester.pump(const Duration(milliseconds: 249));
+    expect(bridge.suspendCompleter, isNotNull);
+    expect(routeCalls, 0);
+
+    bridge.suspendCompleter!.complete();
+    await tester.pump();
+    expect(routeCalls, 1);
+    debugDefaultTargetPlatformOverride = null;
+    semanticsHandle.dispose();
+  });
+}
+
+final class _DeferredSettingsEdrBridge implements EdrOverlayBridge {
+  Completer<void>? suspendCompleter;
+  var configureCount = 0;
+
+  @override
+  Future<void> configureWindow(
+    int surfaceSessionId,
+    int activationId,
+    int layoutGeneration,
+    int contentRevision,
+    int presentationRevision,
+    int geometryRevision,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
+    double scrollOffsetX,
+    double scrollOffsetY,
+    List<EdrTileSnapshot> tiles,
+  ) async {
+    configureCount += 1;
+  }
+
+  @override
+  Future<void> updateWindowGeometry(
+    int surfaceSessionId,
+    int activationId,
+    int layoutGeneration,
+    int presentationRevision,
+    int geometryRevision,
+    double viewportLeft,
+    double viewportTop,
+    double viewportWidth,
+    double viewportHeight,
+    double scrollOffsetX,
+    double scrollOffsetY,
+  ) async {}
+
+  @override
+  Future<EdrPresentationAck> suspendWindow(
+    int surfaceSessionId,
+    int activationId,
+    int presentationRevision,
+  ) async {
+    suspendCompleter = Completer<void>();
+    await suspendCompleter!.future;
+    return EdrPresentationAck(
+      surfaceSessionId: surfaceSessionId,
+      activationId: activationId,
+      presentationRevision: presentationRevision,
+      suppressed: true,
+      outcome: EdrPresentationOutcome.structurallyDetached,
+      nativeGeneration: presentationRevision + 1,
+      presentedAtNanos: 0,
+    );
+  }
+
+  @override
+  Future<void> clearWindow(
+    int surfaceSessionId,
+    int activationId,
+    int contentRevision,
+  ) async {}
 }

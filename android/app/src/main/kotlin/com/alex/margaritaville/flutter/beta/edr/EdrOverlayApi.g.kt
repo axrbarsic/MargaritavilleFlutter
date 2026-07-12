@@ -195,6 +195,20 @@ class FlutterError (
   val details: Any? = null
 ) : RuntimeException()
 
+enum class EdrPresentationOutcome(val raw: Int) {
+  TRANSPARENT_PRESENTED(0),
+  STRUCTURALLY_DETACHED(1),
+  NEVER_PRESENTED_FLUTTER_ONLY(2),
+  STALE_REJECTED(3),
+  FAILED(4);
+
+  companion object {
+    fun ofRaw(raw: Int): EdrPresentationOutcome? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
 /** Generated class from Pigeon that represents data sent in messages. */
 data class EdrTileSnapshot (
   val roomId: String,
@@ -291,12 +305,141 @@ data class EdrTileSnapshot (
     return "EdrTileSnapshot(roomId=$roomId, timeText=$timeText, left=$left, top=$top, width=$width, height=$height, cornerRadius=$cornerRadius, baseColorArgb=$baseColorArgb, vipHdrEnabled=$vipHdrEnabled, vipJellyEnabled=$vipJellyEnabled, vipJellySpeed=$vipJellySpeed, pulseGeneration=$pulseGeneration, pulseColorArgb=$pulseColorArgb, pulseBoostColorArgb=$pulseBoostColorArgb, pulseStartedAtMicros=$pulseStartedAtMicros, springIntensity=$springIntensity)"
   }
 }
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class EdrPresentationAck (
+  val surfaceSessionId: Long,
+  val activationId: Long,
+  val presentationRevision: Long,
+  val suppressed: Boolean,
+  val outcome: EdrPresentationOutcome,
+  val nativeGeneration: Long,
+  val presentedAtNanos: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): EdrPresentationAck {
+      val surfaceSessionId = pigeonVar_list[0] as Long
+      val activationId = pigeonVar_list[1] as Long
+      val presentationRevision = pigeonVar_list[2] as Long
+      val suppressed = pigeonVar_list[3] as Boolean
+      val outcome = pigeonVar_list[4] as EdrPresentationOutcome
+      val nativeGeneration = pigeonVar_list[5] as Long
+      val presentedAtNanos = pigeonVar_list[6] as Long
+      return EdrPresentationAck(surfaceSessionId, activationId, presentationRevision, suppressed, outcome, nativeGeneration, presentedAtNanos)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      surfaceSessionId,
+      activationId,
+      presentationRevision,
+      suppressed,
+      outcome,
+      nativeGeneration,
+      presentedAtNanos,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as EdrPresentationAck
+    return EdrOverlayApiPigeonUtils.deepEquals(this.surfaceSessionId, other.surfaceSessionId) && EdrOverlayApiPigeonUtils.deepEquals(this.activationId, other.activationId) && EdrOverlayApiPigeonUtils.deepEquals(this.presentationRevision, other.presentationRevision) && EdrOverlayApiPigeonUtils.deepEquals(this.suppressed, other.suppressed) && EdrOverlayApiPigeonUtils.deepEquals(this.outcome, other.outcome) && EdrOverlayApiPigeonUtils.deepEquals(this.nativeGeneration, other.nativeGeneration) && EdrOverlayApiPigeonUtils.deepEquals(this.presentedAtNanos, other.presentedAtNanos)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.surfaceSessionId)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.activationId)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.presentationRevision)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.suppressed)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.outcome)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.nativeGeneration)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.presentedAtNanos)
+    return result
+  }
+  override fun toString(): String {
+    return "EdrPresentationAck(surfaceSessionId=$surfaceSessionId, activationId=$activationId, presentationRevision=$presentationRevision, suppressed=$suppressed, outcome=$outcome, nativeGeneration=$nativeGeneration, presentedAtNanos=$presentedAtNanos)"
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class EdrReadyAck (
+  val surfaceSessionId: Long,
+  val activationId: Long,
+  val contentRevision: Long,
+  val presentationRevision: Long,
+  val accepted: Boolean
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): EdrReadyAck {
+      val surfaceSessionId = pigeonVar_list[0] as Long
+      val activationId = pigeonVar_list[1] as Long
+      val contentRevision = pigeonVar_list[2] as Long
+      val presentationRevision = pigeonVar_list[3] as Long
+      val accepted = pigeonVar_list[4] as Boolean
+      return EdrReadyAck(surfaceSessionId, activationId, contentRevision, presentationRevision, accepted)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      surfaceSessionId,
+      activationId,
+      contentRevision,
+      presentationRevision,
+      accepted,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as EdrReadyAck
+    return EdrOverlayApiPigeonUtils.deepEquals(this.surfaceSessionId, other.surfaceSessionId) && EdrOverlayApiPigeonUtils.deepEquals(this.activationId, other.activationId) && EdrOverlayApiPigeonUtils.deepEquals(this.contentRevision, other.contentRevision) && EdrOverlayApiPigeonUtils.deepEquals(this.presentationRevision, other.presentationRevision) && EdrOverlayApiPigeonUtils.deepEquals(this.accepted, other.accepted)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.surfaceSessionId)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.activationId)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.contentRevision)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.presentationRevision)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.accepted)
+    return result
+  }
+  override fun toString(): String {
+    return "EdrReadyAck(surfaceSessionId=$surfaceSessionId, activationId=$activationId, contentRevision=$contentRevision, presentationRevision=$presentationRevision, accepted=$accepted)"
+  }
+}
 private open class EdrOverlayApiPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
       129.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          EdrPresentationOutcome.ofRaw(it.toInt())
+        }
+      }
+      130.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           EdrTileSnapshot.fromList(it)
+        }
+      }
+      131.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          EdrPresentationAck.fromList(it)
+        }
+      }
+      132.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          EdrReadyAck.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -304,8 +447,20 @@ private open class EdrOverlayApiPigeonCodec : StandardMessageCodec() {
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
     when (value) {
-      is EdrTileSnapshot -> {
+      is EdrPresentationOutcome -> {
         stream.write(129)
+        writeValue(stream, value.raw.toLong())
+      }
+      is EdrTileSnapshot -> {
+        stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      is EdrPresentationAck -> {
+        stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is EdrReadyAck -> {
+        stream.write(132)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -313,11 +468,12 @@ private open class EdrOverlayApiPigeonCodec : StandardMessageCodec() {
   }
 }
 
+
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface EdrOverlayHostApi {
   fun configureWindow(surfaceSessionId: Long, activationId: Long, layoutGeneration: Long, contentRevision: Long, presentationRevision: Long, geometryRevision: Long, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double, tiles: List<EdrTileSnapshot>)
   fun updateWindowGeometry(surfaceSessionId: Long, activationId: Long, layoutGeneration: Long, presentationRevision: Long, geometryRevision: Long, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double)
-  fun suspendWindow(surfaceSessionId: Long, activationId: Long, presentationRevision: Long)
+  fun suspendWindow(surfaceSessionId: Long, activationId: Long, presentationRevision: Long, callback: (Result<EdrPresentationAck>) -> Unit)
   fun clearWindow(surfaceSessionId: Long, activationId: Long, contentRevision: Long)
 
   companion object {
@@ -395,13 +551,15 @@ interface EdrOverlayHostApi {
             val surfaceSessionIdArg = args[0] as Long
             val activationIdArg = args[1] as Long
             val presentationRevisionArg = args[2] as Long
-            val wrapped: List<Any?> = try {
-              api.suspendWindow(surfaceSessionIdArg, activationIdArg, presentationRevisionArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              EdrOverlayApiPigeonUtils.wrapError(exception)
+            api.suspendWindow(surfaceSessionIdArg, activationIdArg, presentationRevisionArg) { result: Result<EdrPresentationAck> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(EdrOverlayApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(EdrOverlayApiPigeonUtils.wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -438,7 +596,7 @@ class EdrOverlayFlutterApi(private val binaryMessenger: BinaryMessenger, private
       EdrOverlayApiPigeonCodec()
     }
   }
-  fun windowReady(surfaceSessionIdArg: Long, activationIdArg: Long, contentRevisionArg: Long, presentationRevisionArg: Long, callback: (Result<Unit>) -> Unit)
+  fun windowReady(surfaceSessionIdArg: Long, activationIdArg: Long, contentRevisionArg: Long, presentationRevisionArg: Long, callback: (Result<EdrReadyAck>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     val channelName = "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayFlutterApi.windowReady$separatedMessageChannelSuffix"
@@ -447,8 +605,11 @@ class EdrOverlayFlutterApi(private val binaryMessenger: BinaryMessenger, private
       if (it is List<*>) {
         if (it.size > 1) {
           callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else if (it[0] == null) {
+          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
         } else {
-          callback(Result.success(Unit))
+          val output = it[0] as EdrReadyAck
+          callback(Result.success(output))
         }
       } else {
         callback(Result.failure(EdrOverlayApiPigeonUtils.createConnectionError(channelName)))

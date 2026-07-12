@@ -73,6 +73,7 @@ void main() {
         binaryMessenger: messenger,
       );
 
+      ByteData? encodedResponse;
       await messenger.handlePlatformMessage(
         channel.name,
         EdrOverlayFlutterApi.pigeonChannelCodec.encodeMessage(<Object?>[
@@ -81,7 +82,7 @@ void main() {
           31,
           5,
         ]),
-        null,
+        (response) => encodedResponse = response,
       );
 
       expect(receiver.lastReady, (
@@ -90,6 +91,14 @@ void main() {
         content: 31,
         presentation: 5,
       ));
+      final response =
+          EdrOverlayFlutterApi.pigeonChannelCodec.decodeMessage(
+                encodedResponse,
+              )!
+              as List<Object?>;
+      final acknowledgement = response.single! as EdrReadyAck;
+      expect(acknowledgement.accepted, isTrue);
+      expect(acknowledgement.presentationRevision, 5);
     },
   );
 
@@ -106,18 +115,31 @@ void main() {
     Object? received;
     messenger.setMockDecodedMessageHandler<Object?>(channel, (message) async {
       received = message;
-      return <Object?>[null];
+      return <Object?>[
+        EdrPresentationAck(
+          surfaceSessionId: 7,
+          activationId: 19,
+          presentationRevision: 5,
+          suppressed: true,
+          outcome: EdrPresentationOutcome.transparentPresented,
+          nativeGeneration: 13,
+          presentedAtNanos: 17,
+        ),
+      ];
     });
     addTearDown(() {
       messenger.setMockDecodedMessageHandler<Object?>(channel, null);
     });
 
-    await EdrOverlayHostApi(
+    final acknowledgement = await EdrOverlayHostApi(
       binaryMessenger: messenger,
       messageChannelSuffix: suffix,
     ).suspendWindow(7, 19, 5);
 
     expect(received, <Object?>[7, 19, 5]);
+    expect(acknowledgement.suppressed, isTrue);
+    expect(acknowledgement.nativeGeneration, 13);
+    expect(acknowledgement.presentedAtNanos, 17);
   });
 }
 
@@ -125,17 +147,24 @@ final class _RecordingFlutterApi implements EdrOverlayFlutterApi {
   ({int session, int activation, int content, int presentation})? lastReady;
 
   @override
-  void windowReady(
+  Future<EdrReadyAck> windowReady(
     int surfaceSessionId,
     int activationId,
     int contentRevision,
     int presentationRevision,
-  ) {
+  ) async {
     lastReady = (
       session: surfaceSessionId,
       activation: activationId,
       content: contentRevision,
       presentation: presentationRevision,
+    );
+    return EdrReadyAck(
+      surfaceSessionId: surfaceSessionId,
+      activationId: activationId,
+      contentRevision: contentRevision,
+      presentationRevision: presentationRevision,
+      accepted: true,
     );
   }
 }

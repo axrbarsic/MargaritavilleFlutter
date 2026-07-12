@@ -198,7 +198,13 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
       MargaritavilleFeedbackScope.dispatcherOf(
         context,
       ).signal(MargaritavilleInteractionIntent.openSettings);
-      await _withEdrOccluded(openSettings);
+      try {
+        await _withEdrOccluded(openSettings);
+      } on StateError catch (error) {
+        debugPrint(
+          'Настройки не открыты: native EDR не подтвердил окклюзию: $error',
+        );
+      }
     } finally {
       _settingsPresentationInFlight = false;
     }

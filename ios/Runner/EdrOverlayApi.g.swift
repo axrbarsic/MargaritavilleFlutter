@@ -188,6 +188,14 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
 }
 
 
+enum EdrPresentationOutcome: Int, CaseIterable {
+  case transparentPresented = 0
+  case structurallyDetached = 1
+  case neverPresentedFlutterOnly = 2
+  case staleRejected = 3
+  case failed = 4
+}
+
 /// Generated class from Pigeon that represents data sent in messages.
 struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   var roomId: String
@@ -298,11 +306,141 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   }
 }
 
+/// Generated class from Pigeon that represents data sent in messages.
+struct EdrPresentationAck: Hashable, CustomStringConvertible {
+  var surfaceSessionId: Int64
+  var activationId: Int64
+  var presentationRevision: Int64
+  var suppressed: Bool
+  var outcome: EdrPresentationOutcome
+  var nativeGeneration: Int64
+  var presentedAtNanos: Int64
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> EdrPresentationAck? {
+    let surfaceSessionId = pigeonVar_list[0] as! Int64
+    let activationId = pigeonVar_list[1] as! Int64
+    let presentationRevision = pigeonVar_list[2] as! Int64
+    let suppressed = pigeonVar_list[3] as! Bool
+    let outcome = pigeonVar_list[4] as! EdrPresentationOutcome
+    let nativeGeneration = pigeonVar_list[5] as! Int64
+    let presentedAtNanos = pigeonVar_list[6] as! Int64
+
+    return EdrPresentationAck(
+      surfaceSessionId: surfaceSessionId,
+      activationId: activationId,
+      presentationRevision: presentationRevision,
+      suppressed: suppressed,
+      outcome: outcome,
+      nativeGeneration: nativeGeneration,
+      presentedAtNanos: presentedAtNanos
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      surfaceSessionId,
+      activationId,
+      presentationRevision,
+      suppressed,
+      outcome,
+      nativeGeneration,
+      presentedAtNanos,
+    ]
+  }
+  static func == (lhs: EdrPresentationAck, rhs: EdrPresentationAck) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return EdrOverlayApiPigeonInternal.deepEquals(lhs.surfaceSessionId, rhs.surfaceSessionId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.activationId, rhs.activationId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.presentationRevision, rhs.presentationRevision) && EdrOverlayApiPigeonInternal.deepEquals(lhs.suppressed, rhs.suppressed) && EdrOverlayApiPigeonInternal.deepEquals(lhs.outcome, rhs.outcome) && EdrOverlayApiPigeonInternal.deepEquals(lhs.nativeGeneration, rhs.nativeGeneration) && EdrOverlayApiPigeonInternal.deepEquals(lhs.presentedAtNanos, rhs.presentedAtNanos)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("EdrPresentationAck")
+    EdrOverlayApiPigeonInternal.deepHash(value: surfaceSessionId, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: activationId, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: presentationRevision, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: suppressed, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: outcome, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: nativeGeneration, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: presentedAtNanos, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "EdrPresentationAck(surfaceSessionId: \(String(describing: surfaceSessionId)), activationId: \(String(describing: activationId)), presentationRevision: \(String(describing: presentationRevision)), suppressed: \(String(describing: suppressed)), outcome: \(String(describing: outcome)), nativeGeneration: \(String(describing: nativeGeneration)), presentedAtNanos: \(String(describing: presentedAtNanos)))"
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct EdrReadyAck: Hashable, CustomStringConvertible {
+  var surfaceSessionId: Int64
+  var activationId: Int64
+  var contentRevision: Int64
+  var presentationRevision: Int64
+  var accepted: Bool
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> EdrReadyAck? {
+    let surfaceSessionId = pigeonVar_list[0] as! Int64
+    let activationId = pigeonVar_list[1] as! Int64
+    let contentRevision = pigeonVar_list[2] as! Int64
+    let presentationRevision = pigeonVar_list[3] as! Int64
+    let accepted = pigeonVar_list[4] as! Bool
+
+    return EdrReadyAck(
+      surfaceSessionId: surfaceSessionId,
+      activationId: activationId,
+      contentRevision: contentRevision,
+      presentationRevision: presentationRevision,
+      accepted: accepted
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      surfaceSessionId,
+      activationId,
+      contentRevision,
+      presentationRevision,
+      accepted,
+    ]
+  }
+  static func == (lhs: EdrReadyAck, rhs: EdrReadyAck) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return EdrOverlayApiPigeonInternal.deepEquals(lhs.surfaceSessionId, rhs.surfaceSessionId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.activationId, rhs.activationId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.contentRevision, rhs.contentRevision) && EdrOverlayApiPigeonInternal.deepEquals(lhs.presentationRevision, rhs.presentationRevision) && EdrOverlayApiPigeonInternal.deepEquals(lhs.accepted, rhs.accepted)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("EdrReadyAck")
+    EdrOverlayApiPigeonInternal.deepHash(value: surfaceSessionId, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: activationId, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: contentRevision, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: presentationRevision, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: accepted, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "EdrReadyAck(surfaceSessionId: \(String(describing: surfaceSessionId)), activationId: \(String(describing: activationId)), contentRevision: \(String(describing: contentRevision)), presentationRevision: \(String(describing: presentationRevision)), accepted: \(String(describing: accepted)))"
+  }
+}
+
 private class EdrOverlayApiPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
     case 129:
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return EdrPresentationOutcome(rawValue: enumResultAsInt)
+      }
+      return nil
+    case 130:
       return EdrTileSnapshot.fromList(self.readValue() as! [Any?])
+    case 131:
+      return EdrPresentationAck.fromList(self.readValue() as! [Any?])
+    case 132:
+      return EdrReadyAck.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -311,8 +449,17 @@ private class EdrOverlayApiPigeonCodecReader: FlutterStandardReader {
 
 private class EdrOverlayApiPigeonCodecWriter: FlutterStandardWriter {
   override func writeValue(_ value: Any) {
-    if let value = value as? EdrTileSnapshot {
+    if let value = value as? EdrPresentationOutcome {
       super.writeByte(129)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? EdrTileSnapshot {
+      super.writeByte(130)
+      super.writeValue(value.toList())
+    } else if let value = value as? EdrPresentationAck {
+      super.writeByte(131)
+      super.writeValue(value.toList())
+    } else if let value = value as? EdrReadyAck {
+      super.writeByte(132)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -334,11 +481,12 @@ class EdrOverlayApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable
   static let shared = EdrOverlayApiPigeonCodec(readerWriter: EdrOverlayApiPigeonCodecReaderWriter())
 }
 
+
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol EdrOverlayHostApi {
   func configureWindow(surfaceSessionId: Int64, activationId: Int64, layoutGeneration: Int64, contentRevision: Int64, presentationRevision: Int64, geometryRevision: Int64, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double, tiles: [EdrTileSnapshot]) throws
   func updateWindowGeometry(surfaceSessionId: Int64, activationId: Int64, layoutGeneration: Int64, presentationRevision: Int64, geometryRevision: Int64, viewportLeft: Double, viewportTop: Double, viewportWidth: Double, viewportHeight: Double, scrollOffsetX: Double, scrollOffsetY: Double) throws
-  func suspendWindow(surfaceSessionId: Int64, activationId: Int64, presentationRevision: Int64) throws
+  func suspendWindow(surfaceSessionId: Int64, activationId: Int64, presentationRevision: Int64, completion: @escaping (Result<EdrPresentationAck, Error>) -> Void)
   func clearWindow(surfaceSessionId: Int64, activationId: Int64, contentRevision: Int64) throws
 }
 
@@ -407,11 +555,13 @@ class EdrOverlayHostApiSetup {
         let surfaceSessionIdArg = args[0] as! Int64
         let activationIdArg = args[1] as! Int64
         let presentationRevisionArg = args[2] as! Int64
-        do {
-          try api.suspendWindow(surfaceSessionId: surfaceSessionIdArg, activationId: activationIdArg, presentationRevision: presentationRevisionArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
+        api.suspendWindow(surfaceSessionId: surfaceSessionIdArg, activationId: activationIdArg, presentationRevision: presentationRevisionArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
         }
       }
     } else {
@@ -439,7 +589,7 @@ class EdrOverlayHostApiSetup {
 
 /// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
 protocol EdrOverlayFlutterApiProtocol {
-  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, presentationRevision presentationRevisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, presentationRevision presentationRevisionArg: Int64, completion: @escaping (Result<EdrReadyAck, PigeonError>) -> Void)
 }
 class EdrOverlayFlutterApi: EdrOverlayFlutterApiProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -451,7 +601,7 @@ class EdrOverlayFlutterApi: EdrOverlayFlutterApiProtocol {
   var codec: EdrOverlayApiPigeonCodec {
     return EdrOverlayApiPigeonCodec.shared
   }
-  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, presentationRevision presentationRevisionArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+  func windowReady(surfaceSessionId surfaceSessionIdArg: Int64, activationId activationIdArg: Int64, contentRevision contentRevisionArg: Int64, presentationRevision presentationRevisionArg: Int64, completion: @escaping (Result<EdrReadyAck, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.margaritaville_flutter.EdrOverlayFlutterApi.windowReady\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage([surfaceSessionIdArg, activationIdArg, contentRevisionArg, presentationRevisionArg] as [Any?]) { response in
@@ -464,8 +614,11 @@ class EdrOverlayFlutterApi: EdrOverlayFlutterApiProtocol {
         let message: String? = nilOrValue(listResponse[1])
         let details: String? = nilOrValue(listResponse[2])
         completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else if listResponse[0] == nil {
+        completion(.failure(PigeonError(code: "null-error", message: "Flutter api returned null value for non-null return value.", details: "")))
       } else {
-        completion(.success(()))
+        let result = listResponse[0] as! EdrReadyAck
+        completion(.success(result))
       }
     }
   }

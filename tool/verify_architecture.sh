@@ -280,7 +280,7 @@ shared_visual_runtime="../SharedAppFoundation/Sources/SharedAppFoundation/Visual
 
 if ! rg -q "https://github.com/axrbarsic/SharedAppFoundation\.git" \
     ios/Runner.xcodeproj/project.pbxproj || \
-   ! rg -q "da9d5edc9b0dc8ba331a2accd4b6dd69e1c9732a" \
+   ! rg -q "b9db5e706561c50401c1b774bbbcea39451cb47a" \
     ios/Runner.xcodeproj/project.pbxproj \
     ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved; then
   echo "ERROR: SharedAppFoundation должен быть закреплён точным remote revision"
@@ -368,13 +368,85 @@ if rg -n "pendingGeometry|storePendingGeometry" \
   failed=1
 fi
 
-if ! rg -q "commitFrame" ios/Runner/EdrOverlayPlugin.swift || \
+if ! rg -q "prepareFrameCommit" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q "acknowledgeFlutterReady" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -U -q '@async[[:space:]]+EdrPresentationAck suspendWindow' \
+    pigeons/edr_overlay_api.dart || \
+   ! rg -U -q '@async[[:space:]]+EdrReadyAck windowReady' \
+    pigeons/edr_overlay_api.dart || \
+   ! rg -q "ack\.suppressed" lib/shared/edr/edr_overlay_lifecycle.dart || \
+   ! rg -q "EdrPresentationOutcome" pigeons/edr_overlay_api.dart || \
+   ! rg -q "nativeGeneration" pigeons/edr_overlay_api.dart \
+    lib/shared/edr/edr_overlay_lifecycle.dart || \
+   ! rg -q "presentedAtNanos" pigeons/edr_overlay_api.dart \
+    ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q "EdrStructuralOverlayPlane" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q "detachIfCurrent" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q "structurallyDetached" pigeons/edr_overlay_api.dart \
+    lib/shared/edr/edr_overlay_lifecycle.dart \
+    ios/Runner/EdrOverlayPlugin.swift || \
+   rg -q "commitPresentedTransaction" ios/Runner/EdrOverlayPlugin.swift || \
+   ! rg -q "_nativeMayPaint" lib/shared/edr/edr_presentation_occlusion.dart || \
+   ! rg -q "endOfFrame" lib/shared/edr/edr_overlay_readiness.dart || \
+   ! rg -q "acknowledgement\.accepted" ios/Runner/EdrOverlayPlugin.swift || \
    ! rg -F -q "setOverlaySuppressed(true)" ios/Runner/EdrOverlayPlugin.swift || \
    ! rg -F -q "setPresentationSuppressed(false)" \
     android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/AndroidEdrOverlayAdapter.kt || \
    ! rg -F -q "saveLayerAlpha(null, 0)" \
     android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/hdr/runtime/VipHdrOverlaySurface.kt; then
-  echo "ERROR: native EDR обязан оставаться скрытым до exact frame commit"
+  echo "ERROR: native EDR обязан подтверждать exact suspend и оставаться скрытым до Flutter-ready ack"
+  failed=1
+fi
+
+if rg -q "CATransaction\.setCompletionBlock|addPresentedHandler" ios/Runner/EdrOverlayPlugin.swift; then
+  echo "ERROR: iOS EDR suppression должна быть structural, без surrogate display receipt"
+  failed=1
+fi
+
+if ! python3 - <<'PY'
+from pathlib import Path
+
+text = Path(
+    "android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/"
+    "hdr/runtime/VipHdrOverlaySurface.kt"
+).read_text()
+present = text.split("override fun present(packet: VipHdrRenderPacket)", 1)[1].split(
+    "override fun clear()", 1
+)[0]
+suppression = text.split("fun setPresentationSuppressed(", 1)[1].split(
+    "fun cancelPendingSuppressionCommit()", 1
+)[0]
+draw = text.split("override fun onDraw(canvas: Canvas)", 1)[1].split(
+    "fun setPresentationSuppressed(", 1
+)[0]
+assert present.index("scheduleFramePresented(packet)") < present.index(
+    "postInvalidateOnAnimation()"
+)
+assert suppression.index("scheduleSuppressionFrameCommit()") < suppression.index(
+    "postInvalidateOnAnimation()"
+)
+assert "registerFrameCommitCallback" not in draw
+assert "cancelled.cancelled?.invoke()" in text
+assert "if (packet == null && onFrameCommitted" not in text
+PY
+then
+  echo "ERROR: Android presentation suspend должен подтверждаться transparent frame commit даже без packet"
+  failed=1
+fi
+
+if ! rg -U -q 'override fun onDetachedFromWindow\(\)[[:space:]]*\{[[:space:]]*cancelPendingSuppressionCommit\(\)' \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/hdr/runtime/VipHdrOverlaySurface.kt || \
+   ! rg -q 'onCommitCancelled = \{ finishSuppression\(frameCommitted = false\) \}' \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/AndroidEdrOverlayAdapter.kt; then
+  echo "ERROR: Android EDR detach обязан завершать pending suppression как failed"
+  failed=1
+fi
+
+if ! rg -U -q 'override fun close\(\)[[:space:]]*\{[[:space:]]*if \(!lifecycleGate\.close\(\)\) return[[:space:]]*suppressionCommitGate\.invalidate\(\)[[:space:]]*readinessGate\.reset\(\)[[:space:]]*lease\.reset\(\)' \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/AndroidEdrOverlayAdapter.kt || \
+   ! rg -q 'accepted && lifecycleGate\.accepts\(callbackEpoch\)' \
+    android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/edr/AndroidEdrOverlayAdapter.kt; then
+  echo "ERROR: Android EDR late callbacks обязаны отбрасываться после close epoch"
   failed=1
 fi
 

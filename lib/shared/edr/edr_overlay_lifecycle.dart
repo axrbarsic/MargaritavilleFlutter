@@ -1,19 +1,45 @@
 part of 'edr_overlay_controller.dart';
 
+int _nextEdrSurfaceSessionId = 0;
+int _nextEdrActivationId = 0;
+
 extension _EdrOverlayLifecycle on EdrOverlayController {
   Future<void> _suspendNative() {
     _pendingConfigurations.clear();
     _resetSentContent();
     final activationId = _activationId;
     final presentationRevision = ++_presentationRevision;
-    return _nativeCommandLane.submitBarrier(
-      () => _bridge.suspendWindow(
+    return _nativeCommandLane.submitBarrier(() async {
+      final ack = await _bridge.suspendWindow(
         surfaceSessionId,
         activationId,
         presentationRevision,
-      ),
-      dropGeometry: true,
-    );
+      );
+      final hasDisplayReceipt =
+          ack.outcome == EdrPresentationOutcome.transparentPresented &&
+          ack.nativeGeneration > 0 &&
+          ack.presentedAtNanos > 0;
+      final hasStructuralReceipt =
+          ack.outcome == EdrPresentationOutcome.structurallyDetached &&
+          ack.nativeGeneration > 0;
+      final hasNoNativePaint =
+          ack.outcome == EdrPresentationOutcome.neverPresentedFlutterOnly;
+      if (!ack.suppressed ||
+          (!hasDisplayReceipt && !hasStructuralReceipt && !hasNoNativePaint) ||
+          ack.surfaceSessionId != surfaceSessionId ||
+          ack.activationId != activationId ||
+          ack.presentationRevision != presentationRevision) {
+        throw StateError(
+          'Native presentation fence не подтвердил exact lease: '
+          'ожидался ($surfaceSessionId, $activationId, '
+          '$presentationRevision), получен (${ack.surfaceSessionId}, '
+          '${ack.activationId}, ${ack.presentationRevision}, '
+          'suppressed=${ack.suppressed}, generation=${ack.nativeGeneration}, '
+          'presentedAtNanos=${ack.presentedAtNanos}, outcome=${ack.outcome})',
+        );
+      }
+      _nativeMayPaint = false;
+    }, dropGeometry: true);
   }
 
   void _clearNative() {
@@ -31,7 +57,7 @@ extension _EdrOverlayLifecycle on EdrOverlayController {
 
   void _beginActivation() {
     _nativeCommandLane.dropGeometry();
-    _activationId = ++EdrOverlayController._nextActivationId;
+    _activationId = ++_nextEdrActivationId;
     _presentationRevision += 1;
     _pendingConfigurations.clear();
     _resetSentContent();

@@ -1547,3 +1547,82 @@ haptics. Физический Pixel сейчас заблокирован, по�
 - U2 закрыт отдельным commit/push. Следующий обязательный checkpoint — U3/5 со
   всеми P1-1…P1-5 из Android-видео, но одинаковой продуктовой семантикой на iOS,
   Android и честным Web fallback согласно project scope invariant.
+
+## 2026-07-12 — U3-iOS P1: structural route fence закрыт на физических устройствах
+
+- Промежуточный build 37 не был исправлением. 60 FPS запись Alex
+  `/tmp/mw-icloud-video/ScreenRecording_07-12-2026 03-19-42_1.mp4` (`1588`
+  кадров) доказала: исходный grid имеет EDR/jelly/rubber; Settings long-press
+  даёт единый sound+haptic, но route не открывается и все три native-эффекта
+  исчезают. Переход `grid → Work Setup → grid` создаёт новую activation и
+  временно восстанавливает runtime; следующая попытка Settings повторяет отказ.
+- Console физического iPhone показала точную ветку: `suspendWindow` возвращал
+  `.failed` с `generation=0` и `presentedAtNanos=0`, после чего Dart бросал
+  `StateError`. Причина общего outage — не gesture/domain и не три отдельных
+  эффекта: прозрачный `1×1` Metal sentinel мог быть отброшен compositor, а
+  sticky `_presentationSuppressionFailed` затем не позволял дойти до новой
+  activation/configure. Flutter при этом честно не рисовал SDR-подмену для
+  native-managed tile, поэтому вместе исчезали EDR, jelly и rubber pulse.
+- Suppression proof заменён причинно: exact iOS lease синхронно и stale-safe
+  удаляет единственный overlay из `UIWindow` hierarchy и возвращает typed
+  `.structurallyDetached` с монотонной generation. Flutter route начинается
+  только после этого structural receipt, поэтому старый native paint не может
+  оказаться поверх route по построению. На resume тот же overlay устанавливается
+  скрытым и раскрывается только после exact native frame плюс Flutter
+  `endOfFrame` acknowledgement. Timer/delay, SDR glow и whole-window brightness
+  не используются.
+- Failed/stale suspension блокирует только конкретную presentation-транзакцию.
+  Если Summary остался owning route, controller очищает fallback ownership,
+  начинает новую activation и повторно конфигурирует scene без рекурсивного
+  suspend-loop. Settings/schedule/media/action-sheet wrappers ловят этот
+  fail-closed отказ, поэтому Future больше не падает как unhandled exception.
+- Android сохраняет собственный transparent compositor frame-commit contract:
+  pre-draw callback регистрируется до invalidation, detach/lifecycle epoch
+  отбрасывают late ready, а новый Pigeon enum не меняет Android paint path.
+  Generated Dart/Swift/Kotlin проверяются одним reproducible Pigeon guard.
+- Tests-first доказательства: rejected exact suspension теперь даёт ровно один
+  suspend и новую activation; старый тест, закреплявший вечный poison, заменён
+  recovery-oracle. `29` targeted EDR tests, Pigeon и architecture guards зелёные.
+  `flutter build ios --profile --no-codesign` и `xcodebuild build-for-testing`
+  под `generic/platform=iOS` успешно скомпилировали Runner и RunnerTests, включая
+  structural detach XCTest.
+- Полный `tool/quality_gate.sh` на текущем structural diff зелёный: `289` Flutter
+  tests, Pigeon/Drift/media/voice generation contracts, format/analyze, Android
+  JVM, file-size и architecture guards. Fresh correctness review не нашёл P0/P1;
+  найденный P2 о противоречивом старом журнале исправлен этой записью. Fresh
+  critical review также дал PASS без P0/P1. Обе review-поверхности не раскрыли
+  фактические model/effort metadata, поэтому учтены как независимые prompt-bound
+  read-only проверки, а не как доказательство model routing. Финальные
+  source/artifact hashes фиксируются до единственной финальной установки.
+- Финальный pre-commit source fingerprint —
+  `616eefb8da206ec0d24ecbc7a2412b494f7cf0c0ac0fb9f8b4f74ccb9e1d64db`,
+  status fingerprint —
+  `0fe1305512ef40c2db623b12cba32b7d5f8ca577083a510c250befcacdbf74a3`.
+  Подписанный iOS Runner build 37 имел SHA-256
+  `e9908fa7ac2dcdac295a5b4edf4a0d85cc78081780dd1040f4cc0f4e074c3804`,
+  CDHash `fcc26c51ae14108814bc82baad9b191a516b3260`; bundle guard подтвердил
+  восемь embedded frameworks с platform `IOS` и deep codesign. Android profile
+  APK build 37 имел SHA-256
+  `3925c40fe50a1e1f4fc41af5a6e4178db61044c573fe84ce7f3c7d1bb3a62744`.
+- Physical Pixel 8 (`44171FDJH003R5`, Android 17/API 37) прошёл три
+  Settings long-press open/close цикла без FATAL. SurfaceFlinger подтвердил
+  `currentHdrSdrRatio=4.9999`, `desiredHdrSdrRatio=5` и frame-rate override
+  `120.00001 Hz`; Android native visual runtime сохранил HDR и interaction
+  semantics после route round trips.
+- Physical iPhone 17 Pro Max (`00008150-001418301E68C01C`) через iPhone
+  Mirroring доказал финальный route contract: cold launch показал живые native
+  jelly cells; exact long-press действительно открыл Settings; во время Settings
+  ни одна native room cell не осталась поверх route; pop вернул grid и jelly;
+  последующий room long-press изменил статус и счётчик, то есть gesture/domain/
+  rubber pipeline остался жив. `devicectl` подтвердил, что запущен Runner ровно
+  из установленного candidate path
+  `834049D1-D303-4C5E-B85B-C3AD7E3BB13B/Runner.app/Runner`, а не старый bundle.
+  Повторные open/close циклы также не воспроизвели прежний permanent suppression.
+- Device gate закрывает причинный P1 и неправильный z-order. Screenshot/60 FPS
+  recording по определению не измеряют luminance, поэтому субъективная
+  физическая EDR-яркость панели остаётся eyes-on-panel проверкой Alex после
+  committed-SHA reinstall; это не заменяется SDR glow и не ослабляет native
+  contract. Полный U3/5 ещё открыт: впереди Work Setup P1-1…P1-5.
+- По прямой команде Alex Web/PWA и U5 приостановлены и не входят в текущий
+  mobile Definition of Done. Общий код намеренно не ломается, но Web не
+  задерживает iOS/Android checkpoints.

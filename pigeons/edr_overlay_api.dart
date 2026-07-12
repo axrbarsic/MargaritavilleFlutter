@@ -33,6 +33,32 @@ class EdrTileSnapshot {
   late double springIntensity;
 }
 
+enum EdrPresentationOutcome {
+  transparentPresented,
+  structurallyDetached,
+  neverPresentedFlutterOnly,
+  staleRejected,
+  failed,
+}
+
+class EdrPresentationAck {
+  late int surfaceSessionId;
+  late int activationId;
+  late int presentationRevision;
+  late bool suppressed;
+  late EdrPresentationOutcome outcome;
+  late int nativeGeneration;
+  late int presentedAtNanos;
+}
+
+class EdrReadyAck {
+  late int surfaceSessionId;
+  late int activationId;
+  late int contentRevision;
+  late int presentationRevision;
+  late bool accepted;
+}
+
 @HostApi()
 abstract class EdrOverlayHostApi {
   void configureWindow(
@@ -65,7 +91,8 @@ abstract class EdrOverlayHostApi {
     double scrollOffsetY,
   );
 
-  void suspendWindow(
+  @async
+  EdrPresentationAck suspendWindow(
     int surfaceSessionId,
     int activationId,
     int presentationRevision,
@@ -76,7 +103,8 @@ abstract class EdrOverlayHostApi {
 
 @FlutterApi()
 abstract class EdrOverlayFlutterApi {
-  void windowReady(
+  @async
+  EdrReadyAck windowReady(
     int surfaceSessionId,
     int activationId,
     int contentRevision,

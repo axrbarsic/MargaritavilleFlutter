@@ -209,7 +209,15 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
   Future<void> _showActionMenu(BuildContext context) async {
     final feedback = MargaritavilleFeedbackScope.dispatcherOf(context);
     final controller = EdrViewportScope.maybeControllerOf(context);
-    final occlusion = await controller?.acquirePresentationOcclusion();
+    EdrPresentationOcclusion? occlusion;
+    try {
+      occlusion = await controller?.acquirePresentationOcclusion();
+    } on StateError catch (error) {
+      debugPrint(
+        'Меню комнаты не открыто: native EDR не подтвердил окклюзию: $error',
+      );
+      return;
+    }
     if (!context.mounted) {
       occlusion?.release();
       return;

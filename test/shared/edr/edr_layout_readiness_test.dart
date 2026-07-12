@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -127,11 +129,13 @@ Matcher _hasSize(double width, double height) => isA<EdrTileSnapshot>()
     .having((tile) => tile.height, 'height', height);
 
 void _ack(EdrOverlayController controller, _Configuration configuration) {
-  EdrReadyRouter.instance.windowReady(
-    controller.surfaceSessionId,
-    configuration.activationId,
-    configuration.contentRevision,
-    configuration.presentationRevision,
+  unawaited(
+    EdrReadyRouter.instance.windowReady(
+      controller.surfaceSessionId,
+      configuration.activationId,
+      configuration.contentRevision,
+      configuration.presentationRevision,
+    ),
   );
 }
 
@@ -243,11 +247,19 @@ final class _RecordingBridge implements EdrOverlayBridge {
   ) async {}
 
   @override
-  Future<void> suspendWindow(
+  Future<EdrPresentationAck> suspendWindow(
     int surfaceSessionId,
     int activationId,
     int presentationRevision,
-  ) async {}
+  ) async => EdrPresentationAck(
+    surfaceSessionId: surfaceSessionId,
+    activationId: activationId,
+    presentationRevision: presentationRevision,
+    suppressed: true,
+    outcome: EdrPresentationOutcome.transparentPresented,
+    nativeGeneration: presentationRevision + 1,
+    presentedAtNanos: 1,
+  );
 
   @override
   Future<void> clearWindow(

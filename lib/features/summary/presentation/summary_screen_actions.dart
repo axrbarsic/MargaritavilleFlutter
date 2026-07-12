@@ -45,19 +45,25 @@ extension _SummaryScreenActions on _SummaryScreenState {
   }
 
   Future<void> _openScheduleOccluded(RoomState room) async {
-    await _withEdrOccluded(
-      () => showRoomScheduleSheet(
-        context: context,
-        room: room,
-        now: ref.read(clockProvider).now(),
-        onSet: (date) => unawaited(
-          _setRoomScheduleAndPulse(room.roomNumber, scheduledFor: date),
+    try {
+      await _withEdrOccluded(
+        () => showRoomScheduleSheet(
+          context: context,
+          room: room,
+          now: ref.read(clockProvider).now(),
+          onSet: (date) => unawaited(
+            _setRoomScheduleAndPulse(room.roomNumber, scheduledFor: date),
+          ),
+          onClear: () => unawaited(
+            _setRoomScheduleAndPulse(room.roomNumber, scheduledFor: null),
+          ),
         ),
-        onClear: () => unawaited(
-          _setRoomScheduleAndPulse(room.roomNumber, scheduledFor: null),
-        ),
-      ),
-    );
+      );
+    } on StateError catch (error) {
+      debugPrint(
+        'Расписание не открыто: native EDR не подтвердил окклюзию: $error',
+      );
+    }
   }
 
   Future<void> _setRoomScheduleAndPulse(
@@ -162,16 +168,20 @@ extension _SummaryScreenActions on _SummaryScreenState {
   }
 
   Future<void> _openMediaOccluded(RoomState room) async {
-    await _withEdrOccluded(
-      () => Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(
-          builder: (_) => RoomDetailsScreen(
-            sessionId: widget.session.id,
-            roomNumber: room.roomNumber,
+    try {
+      await _withEdrOccluded(
+        () => Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => RoomDetailsScreen(
+              sessionId: widget.session.id,
+              roomNumber: room.roomNumber,
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } on StateError catch (error) {
+      debugPrint('Медиа не открыты: native EDR не подтвердил окклюзию: $error');
+    }
   }
 
   Future<T> _withEdrOccluded<T>(Future<T> Function() action) async {

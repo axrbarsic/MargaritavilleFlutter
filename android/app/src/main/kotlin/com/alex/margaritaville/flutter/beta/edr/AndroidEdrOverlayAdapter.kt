@@ -5,7 +5,7 @@ import android.util.Log
 import android.view.ViewGroup
 import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrCellVisual
 import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrJelly
-import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrOverlayHost
+import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrOverlayApi
 import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrPulse
 import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrRenderPacket
 import com.alex.margaritaville.flutter.beta.hdr.runtime.VipHdrScene
@@ -15,13 +15,15 @@ import io.flutter.plugin.common.BinaryMessenger
 class AndroidEdrOverlayAdapter(
     private val activity: Activity,
     binaryMessenger: BinaryMessenger,
-    private val overlayHost: VipHdrOverlayHost?,
+    private val overlayHost: VipHdrOverlayApi?,
     private val maximumSignalHeadroom: Float = DEFAULT_PRODUCTION_SIGNAL_HEADROOM,
 ) : EdrOverlayHostApi,
     AutoCloseable {
     private val flutterApi = EdrOverlayFlutterApi(binaryMessenger)
     private val lease = AndroidEdrLease()
     private val readinessGate = AndroidEdrReadinessGate()
+    private val suppressionCommitGate = AndroidEdrSuppressionCommitGate()
+    private val lifecycleGate = AndroidEdrLifecycleGate()
     private var activeTiles: List<EdrTileSnapshot> = emptyList()
     private var sceneRevision = 0L
 
@@ -44,6 +46,7 @@ class AndroidEdrOverlayAdapter(
         scrollOffsetY: Double,
         tiles: List<EdrTileSnapshot>,
     ) {
+        if (!lifecycleGate.isOpen) return
         val configuration =
             AndroidEdrConfiguration(
                 surfaceSessionId = surfaceSessionId,
@@ -67,6 +70,7 @@ class AndroidEdrOverlayAdapter(
                 scrollOffsetY,
             )
         val accepted = lease.configure(configuration, suppliedGeometry) ?: return
+        suppressionCommitGate.invalidate()
         activeTiles = tiles.filter { it.valid }
         val awaitsCommit =
             readinessGate.await(
@@ -95,6 +99,7 @@ class AndroidEdrOverlayAdapter(
         scrollOffsetX: Double,
         scrollOffsetY: Double,
     ) {
+        if (!lifecycleGate.isOpen) return
         val accepted =
             lease.updateGeometry(
                 geometry(
@@ -118,11 +123,105 @@ class AndroidEdrOverlayAdapter(
         surfaceSessionId: Long,
         activationId: Long,
         presentationRevision: Long,
+        callback: (Result<EdrPresentationAck>) -> Unit,
     ) {
-        if (!lease.suspend(surfaceSessionId, activationId, presentationRevision)) return
+        if (!lifecycleGate.isOpen ||
+            !lease.suspend(surfaceSessionId, activationId, presentationRevision)
+        ) {
+            callback(
+                Result.success(
+                    EdrPresentationAck(
+                        surfaceSessionId,
+                        activationId,
+                        presentationRevision,
+                        false,
+                        EdrPresentationOutcome.STALE_REJECTED,
+                        0,
+                        0,
+                    ),
+                ),
+            )
+            return
+        }
         readinessGate.clearPending()
-        overlayHost?.setPresentationSuppressed(true)
-        overlayHost?.setFeatureVisible(false)
+        val suppressionCommit =
+            suppressionCommitGate.begin(
+                surfaceSessionId,
+                activationId,
+                presentationRevision,
+            )
+        val host = overlayHost
+        if (host == null) {
+            val confirmed =
+                suppressionCommitGate.complete(suppressionCommit) &&
+                    lease.isPresentationActive(
+                        surfaceSessionId,
+                        activationId,
+                        presentationRevision,
+                    )
+            callback(
+                Result.success(
+                    EdrPresentationAck(
+                        surfaceSessionId,
+                        activationId,
+                        presentationRevision,
+                        confirmed,
+                        if (confirmed) {
+                            EdrPresentationOutcome.NEVER_PRESENTED_FLUTTER_ONLY
+                        } else {
+                            EdrPresentationOutcome.STALE_REJECTED
+                        },
+                        0,
+                        0,
+                    ),
+                ),
+            )
+            return
+        }
+        var callbackCompleted = false
+        fun finishSuppression(frameCommitted: Boolean) {
+            if (callbackCompleted) return
+            callbackCompleted = true
+            val currentCommit =
+                if (frameCommitted) {
+                    suppressionCommitGate.complete(suppressionCommit)
+                } else {
+                    suppressionCommitGate.cancel(suppressionCommit)
+                }
+            val leaseStillActive =
+                lease.isPresentationActive(
+                    surfaceSessionId,
+                    activationId,
+                    presentationRevision,
+                )
+            val confirmed = frameCommitted && currentCommit && leaseStillActive
+            if (confirmed) host.setFeatureVisible(false)
+            val presentedAtNanos = if (confirmed) System.nanoTime() else 0L
+            val outcome =
+                when {
+                    confirmed -> EdrPresentationOutcome.TRANSPARENT_PRESENTED
+                    currentCommit && !frameCommitted -> EdrPresentationOutcome.FAILED
+                    else -> EdrPresentationOutcome.STALE_REJECTED
+                }
+            callback(
+                Result.success(
+                    EdrPresentationAck(
+                        surfaceSessionId,
+                        activationId,
+                        presentationRevision,
+                        confirmed,
+                        outcome,
+                        if (confirmed) suppressionCommit.generation else 0,
+                        presentedAtNanos,
+                    ),
+                ),
+            )
+        }
+        host.setPresentationSuppressed(
+            suppressed = true,
+            onFrameCommitted = { finishSuppression(frameCommitted = true) },
+            onCommitCancelled = { finishSuppression(frameCommitted = false) },
+        )
     }
 
     override fun clearWindow(
@@ -130,7 +229,9 @@ class AndroidEdrOverlayAdapter(
         activationId: Long,
         contentRevision: Long,
     ) {
+        if (!lifecycleGate.isOpen) return
         if (!lease.clear(surfaceSessionId, activationId, contentRevision)) return
+        suppressionCommitGate.invalidate()
         activeTiles = emptyList()
         readinessGate.clearPending()
         overlayHost?.setPresentationSuppressed(true)
@@ -139,12 +240,17 @@ class AndroidEdrOverlayAdapter(
     }
 
     override fun close() {
-        overlayHost?.close()
+        if (!lifecycleGate.close()) return
+        suppressionCommitGate.invalidate()
         readinessGate.reset()
+        lease.reset()
         activeTiles = emptyList()
+        overlayHost?.setFramePresentedListener(null)
+        overlayHost?.close()
     }
 
     private fun submitScene(geometry: AndroidEdrGeometry) {
+        if (!lifecycleGate.isOpen) return
         val host = overlayHost ?: return
         val contentRoot = activity.findViewById<ViewGroup>(android.R.id.content)
         val rootLocation = IntArray(2)
@@ -224,6 +330,7 @@ class AndroidEdrOverlayAdapter(
     }
 
     private fun onFramePresented(packet: VipHdrRenderPacket) {
+        val callbackEpoch = lifecycleGate.capture() ?: return
         val contentRevision = packet.scene.contentRevision ?: return
         val presentationRevision = packet.scene.presentationRevision ?: return
         val readiness =
@@ -235,13 +342,28 @@ class AndroidEdrOverlayAdapter(
                     it.presentationRevision,
                 )
             } ?: return
-        overlayHost?.setPresentationSuppressed(false)
         flutterApi.windowReady(
             readiness.surfaceSessionId,
             readiness.activationId,
             readiness.contentRevision,
             readiness.presentationRevision,
         ) { result ->
+            val acknowledgement = result.getOrNull()
+            val accepted =
+                acknowledgement?.accepted == true &&
+                    acknowledgement.surfaceSessionId == readiness.surfaceSessionId &&
+                    acknowledgement.activationId == readiness.activationId &&
+                    acknowledgement.contentRevision == readiness.contentRevision &&
+                    acknowledgement.presentationRevision == readiness.presentationRevision &&
+                    lease.isActive(
+                        readiness.surfaceSessionId,
+                        readiness.activationId,
+                        readiness.contentRevision,
+                        readiness.presentationRevision,
+                    )
+            if (accepted && lifecycleGate.accepts(callbackEpoch)) {
+                overlayHost?.setPresentationSuppressed(false)
+            }
             result.exceptionOrNull()?.let { Log.w(TAG, "windowReady callback failed", it) }
         }
         Log.d(TAG, "windowReady session=${readiness.surfaceSessionId} content=$contentRevision")

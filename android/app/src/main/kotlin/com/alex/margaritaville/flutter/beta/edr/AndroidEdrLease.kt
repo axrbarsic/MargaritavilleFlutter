@@ -164,6 +164,15 @@ class AndroidEdrLease {
         return true
     }
 
+    fun reset() {
+        activeSessionId = null
+        activeActivationId = null
+        activeLayoutGeneration = -1
+        activeContentRevision = -1
+        activePresentationRevision = -1
+        currentGeometry = null
+    }
+
     fun isActive(
         surfaceSessionId: Long,
         activationId: Long,
@@ -173,6 +182,15 @@ class AndroidEdrLease {
         activeSessionId == surfaceSessionId &&
             activeActivationId == activationId &&
             activeContentRevision == contentRevision &&
+            activePresentationRevision == presentationRevision
+
+    fun isPresentationActive(
+        surfaceSessionId: Long,
+        activationId: Long,
+        presentationRevision: Long,
+    ): Boolean =
+        activeSessionId == surfaceSessionId &&
+            activeActivationId == activationId &&
             activePresentationRevision == presentationRevision
 
     private fun activate(

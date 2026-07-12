@@ -72,12 +72,17 @@ extension _EdrOverlaySynchronization on EdrOverlayController {
           );
         }
         final revision = ++_contentConfigurationRevision;
-        _pendingConfigurations[revision] = _PendingEdrConfiguration(
-          contentRevision: contentRevision,
-          presentationRevision: presentationRevision,
-          layoutGeneration: layoutGeneration,
-          renderedTiles: nextRenderedTiles,
-        );
+        // Only the newest exact configuration can ever be accepted by
+        // _markNativeReady. Keeping superseded revisions here would turn a
+        // stalled native-ready callback into unbounded retained UI state.
+        _pendingConfigurations
+          ..clear()
+          ..[revision] = _PendingEdrConfiguration(
+            contentRevision: contentRevision,
+            presentationRevision: presentationRevision,
+            layoutGeneration: layoutGeneration,
+            renderedTiles: nextRenderedTiles,
+          );
         await _nativeCommandLane.submitBarrier(
           () => _bridge.configureWindow(
             surfaceSessionId,
@@ -136,4 +141,9 @@ extension _EdrOverlaySynchronization on EdrOverlayController {
       _syncAgain = true;
     }
   }
+}
+
+extension EdrOverlayTesting on EdrOverlayController {
+  @visibleForTesting
+  int get debugPendingConfigurationCount => _pendingConfigurations.length;
 }
