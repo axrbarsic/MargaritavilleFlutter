@@ -1626,3 +1626,20 @@ haptics. Физический Pixel сейчас заблокирован, по�
 - По прямой команде Alex Web/PWA и U5 приостановлены и не входят в текущий
   mobile Definition of Done. Общий код намеренно не ломается, но Web не
   задерживает iOS/Android checkpoints.
+
+## 2026-07-12 — U3 architecture spike B остановлен по физическому gate
+
+- Persistent Native Presentation Plane был проверен на физическом iPhone 17
+  Pro Max в diagnostic build `2026071208`. Прямой perceptual verdict Alex:
+  задержка возвращения VIP jelly/«клякс» после закрытия Settings не изменилась
+  и осталась около `0,3 с` (`280–330 мс`) вместо обязательных `<=50 мс`.
+- Spike B не достиг своего bounded критерия и остановлен по quota
+  stop-condition. Новые гипотезы, архитектура C, дополнительные review-волны и
+  локальные патчи этого класса не запускаются.
+- Незакоммиченный persistent-plane app/runtime/test/codegen diff полностью
+  удалён. Безопасный committed runtime `8122fcc` остаётся fallback и точкой
+  возобновления. Пользовательские pull/quota-правила в `AGENTS.md` и
+  `MIGRATION_START.md` сохранены отдельно от spike.
+- После фиксации результата действует pull-mode: следующий migration slice не
+  выбирается автоматически; работа продолжится только по новой конкретной
+  команде Alex.
