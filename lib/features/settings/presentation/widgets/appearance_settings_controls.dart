@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
+
 final class AppearanceSettingSegmentedRow<T extends Object>
     extends StatelessWidget {
   const AppearanceSettingSegmentedRow({
@@ -64,7 +67,11 @@ final class AppearanceSettingSegmentedRow<T extends Object>
             segments: segments,
             selected: {value},
             showSelectedIcon: false,
-            onSelectionChanged: (selection) => onChanged(selection.single),
+            onSelectionChanged: (selection) =>
+                MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                  MargaritavilleInteractionIntent.select,
+                  () => onChanged(selection.single),
+                ),
           ),
         ],
       ),
@@ -90,9 +97,16 @@ final class AppearanceSettingToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void toggle() => MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+      value
+          ? MargaritavilleInteractionIntent.toggleOff
+          : MargaritavilleInteractionIntent.toggleOn,
+      () => onChanged(!value),
+    );
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTap: () => onChanged(!value),
+      onTap: toggle,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 7),
         child: Row(
@@ -140,7 +154,7 @@ final class AppearanceSettingToggleRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Switch.adaptive(value: value, onChanged: onChanged),
+            Switch.adaptive(value: value, onChanged: (_) => toggle()),
           ],
         ),
       ),
@@ -210,10 +224,14 @@ final class _AppearanceSettingSliderRowState
               ),
               IconButton(
                 tooltip: 'Сбросить',
-                onPressed: () {
-                  setState(() => _value = widget.defaultValue);
-                  widget.onChanged(widget.defaultValue);
-                },
+                onPressed: () =>
+                    MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                      MargaritavilleInteractionIntent.deselect,
+                      () {
+                        setState(() => _value = widget.defaultValue);
+                        widget.onChanged(widget.defaultValue);
+                      },
+                    ),
                 icon: const Icon(Icons.restart_alt_rounded),
               ),
             ],
@@ -223,7 +241,11 @@ final class _AppearanceSettingSliderRowState
             min: widget.minimum,
             max: widget.maximum,
             onChanged: (value) => setState(() => _value = value),
-            onChangeEnd: widget.onChanged,
+            onChangeEnd: (value) =>
+                MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                  MargaritavilleInteractionIntent.detent,
+                  () => widget.onChanged(value),
+                ),
           ),
         ],
       ),

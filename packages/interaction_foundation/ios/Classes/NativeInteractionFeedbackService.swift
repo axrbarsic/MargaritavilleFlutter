@@ -17,6 +17,9 @@ final class NativeInteractionFeedbackService: NativeInteractionFeedbackHostApi {
   private var coalescingWindow = 0.045
   private var queuedSound: QueuedSound?
   private var soundWorkItem: DispatchWorkItem?
+  private var recentRequestIDs: Set<String> = []
+  private var recentRequestOrder: [String] = []
+  private let requestIDCapacity = 256
 
   func configure(configuration: NativeFeedbackConfiguration) throws {
     onMain {
@@ -36,12 +39,22 @@ final class NativeInteractionFeedbackService: NativeInteractionFeedbackHostApi {
   func emit(request: NativeFeedbackRequest) throws {
     onMain {
       guard self.audioContext != .background else { return }
+      guard self.remember(request.requestId) else { return }
       self.performHaptic(request.cue)
       guard self.audioContext != .voiceCapture, let soundId = request.soundId else {
         return
       }
       self.queueSound(id: soundId, priority: request.soundPriority)
     }
+  }
+
+  private func remember(_ requestID: String) -> Bool {
+    guard recentRequestIDs.insert(requestID).inserted else { return false }
+    recentRequestOrder.append(requestID)
+    if recentRequestOrder.count > requestIDCapacity {
+      recentRequestIDs.remove(recentRequestOrder.removeFirst())
+    }
+    return true
   }
 
   func previewSound(soundId: String) throws {
@@ -75,30 +88,23 @@ final class NativeInteractionFeedbackService: NativeInteractionFeedbackHostApi {
     case .tap:
       light.impactOccurred(intensity: 0.42)
     case .confirm:
-      medium.impactOccurred(intensity: 0.96)
       notification.notificationOccurred(.success)
     case .longPress:
       heavy.impactOccurred(intensity: 1)
-      medium.impactOccurred(intensity: 0.45)
     case .holdStart:
       selection.selectionChanged()
-      light.impactOccurred(intensity: 0.25)
     case .holdWarning:
-      light.impactOccurred(intensity: 0.95)
       notification.notificationOccurred(.warning)
     case .holdCommit:
       heavy.impactOccurred(intensity: 1)
-      notification.notificationOccurred(.success)
     case .select:
       medium.impactOccurred(intensity: 0.86)
     case .deselect:
       light.impactOccurred(intensity: 0.36)
     case .invalid:
-      light.impactOccurred(intensity: 0.18)
       notification.notificationOccurred(.error)
     case .detent:
       selection.selectionChanged()
-      light.impactOccurred(intensity: 0.62)
     }
     DispatchQueue.main.async { [weak self] in self?.prepare() }
   }

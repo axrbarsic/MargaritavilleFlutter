@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_theme.dart';
 import 'package:margaritaville_flutter/features/settings/presentation/widgets/test_data_settings_panel.dart';
+import '../../../../support/test_feedback_scope.dart';
 
 void main() {
   testWidgets('cancel keeps current assignments untouched', (tester) async {
@@ -50,10 +52,14 @@ void main() {
 }
 
 Widget _app({required Future<void> Function() onActivateAllRooms}) {
-  return MaterialApp(
-    theme: MargaritavilleTheme.dark,
-    home: Scaffold(
-      body: TestDataSettingsPanel(onActivateAllRooms: onActivateAllRooms),
+  return ProviderScope(
+    child: TestFeedbackScope(
+      child: MaterialApp(
+        theme: MargaritavilleTheme.dark,
+        home: Scaffold(
+          body: TestDataSettingsPanel(onActivateAllRooms: onActivateAllRooms),
+        ),
+      ),
     ),
   );
 }

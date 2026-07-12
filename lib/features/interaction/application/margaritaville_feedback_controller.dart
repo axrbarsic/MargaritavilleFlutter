@@ -1,6 +1,7 @@
 import 'package:interaction_foundation/interaction_foundation.dart';
 
 import '../../work_session/domain/models/room_state.dart';
+import '../domain/margaritaville_interaction_intent.dart';
 import '../domain/margaritaville_sound_routing.dart';
 
 final class MargaritavilleFeedbackController {
@@ -20,6 +21,18 @@ final class MargaritavilleFeedbackController {
         sounds: MargaritavilleSoundAsset.nativeRegistrations,
       ),
     );
+  }
+
+  void perform(MargaritavilleInteractionIntent intent, {String? eventId}) {
+    final pattern = intent.pattern;
+    _emit(pattern.soundEvent, pattern.cue, eventId: eventId);
+  }
+
+  void performHapticOnly(
+    MargaritavilleInteractionIntent intent, {
+    String? eventId,
+  }) {
+    _runtime.emit(cue: intent.pattern.cue, eventId: eventId);
   }
 
   void tap() => _emit(MargaritavilleSoundEvent.tap, InteractionFeedbackCue.tap);
@@ -64,6 +77,11 @@ final class MargaritavilleFeedbackController {
     InteractionFeedbackCue.confirm,
   );
 
+  void selectionOpenCommitted() => _emit(
+    MargaritavilleSoundEvent.selectionOpen,
+    InteractionFeedbackCue.confirm,
+  );
+
   void selectionOpened() => _playSound(MargaritavilleSoundEvent.selectionOpen);
 
   void updateSoundAssignments(MargaritavilleSoundAssignments assignments) {
@@ -90,10 +108,15 @@ final class MargaritavilleFeedbackController {
 
   void dispose() => _runtime.dispose();
 
-  void _emit(MargaritavilleSoundEvent event, InteractionFeedbackCue cue) {
+  void _emit(
+    MargaritavilleSoundEvent event,
+    InteractionFeedbackCue cue, {
+    String? eventId,
+  }) {
     final asset = _soundAssignments.assetFor(event);
     _runtime.emit(
       cue: cue,
+      eventId: eventId,
       soundId: asset == MargaritavilleSoundAsset.none ? null : asset.id,
       soundPriority: event.priority,
     );

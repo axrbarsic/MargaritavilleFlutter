@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
 import '../../../interaction/domain/margaritaville_sound_routing.dart';
 import '../../../interaction/presentation/controllers/interaction_sound_settings_controller.dart';
 import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
@@ -26,20 +27,31 @@ final class InteractionSoundSettingsPanel extends ConsumerWidget {
                 slot: slot,
                 asset: assignments.assetForSlot(slot),
                 onSelected: (asset) {
-                  unawaited(
-                    ref
-                        .read(
-                          interactionSoundSettingsControllerProvider.notifier,
-                        )
-                        .setAsset(slot, asset),
+                  MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                    MargaritavilleInteractionIntent.select,
+                    () => unawaited(
+                      ref
+                          .read(
+                            interactionSoundSettingsControllerProvider.notifier,
+                          )
+                          .setAsset(slot, asset),
+                    ),
                   );
-                  MargaritavilleFeedbackScope.maybeControllerOf(
+                  MargaritavilleFeedbackScope.dispatcherOf(
                     context,
-                  )?.previewSound(asset);
+                  ).previewSound(asset);
                 },
-                onPreview: () => MargaritavilleFeedbackScope.maybeControllerOf(
-                  context,
-                )?.previewSound(assignments.assetForSlot(slot)),
+                onPreview: () {
+                  final interactions = MargaritavilleFeedbackScope.dispatcherOf(
+                    context,
+                  );
+                  interactions.accept(
+                    MargaritavilleInteractionIntent.tap,
+                    () => interactions.previewSound(
+                      assignments.assetForSlot(slot),
+                    ),
+                  );
+                },
               ),
           ],
         ),
@@ -49,7 +61,12 @@ final class InteractionSoundSettingsPanel extends ConsumerWidget {
             IconButton(
               tooltip: 'Повторить',
               onPressed: () =>
-                  ref.invalidate(interactionSoundSettingsControllerProvider),
+                  MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                    MargaritavilleInteractionIntent.retry,
+                    () => ref.invalidate(
+                      interactionSoundSettingsControllerProvider,
+                    ),
+                  ),
               icon: const Icon(Icons.refresh_rounded),
             ),
           ],

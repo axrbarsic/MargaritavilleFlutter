@@ -11,6 +11,8 @@ import 'package:margaritaville_flutter/features/settings/domain/repositories/app
 import 'package:margaritaville_flutter/features/settings/presentation/appearance_settings_screen.dart';
 import 'package:margaritaville_flutter/features/settings/presentation/controllers/appearance_settings_controller.dart';
 
+import '../../../support/test_feedback_scope.dart';
+
 void main() {
   testWidgets('shows the working donor experimental visual controls', (
     tester,
@@ -126,13 +128,15 @@ Widget _app(
         soundRepository ?? _MemoryInteractionSoundSettingsRepository(),
       ),
     ],
-    child: MaterialApp(
-      theme: MargaritavilleTheme.dark,
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-        child: child!,
+    child: TestFeedbackScope(
+      child: MaterialApp(
+        theme: MargaritavilleTheme.dark,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          child: child!,
+        ),
+        home: const AppearanceSettingsScreen(),
       ),
-      home: const AppearanceSettingsScreen(),
     ),
   );
 }

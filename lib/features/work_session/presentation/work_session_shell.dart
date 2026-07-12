@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/appearance_summary_visual_policy.dart';
 import '../../housekeeper_catalog/presentation/controllers/housekeeper_catalog_controller.dart';
+import '../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../settings/domain/models/appearance_settings.dart';
 import '../../settings/presentation/appearance_settings_screen.dart';
 import '../../settings/presentation/controllers/appearance_settings_controller.dart';
@@ -54,7 +56,10 @@ final class WorkSessionShell extends ConsumerWidget {
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: () =>
-                      ref.invalidate(workSessionControllerProvider),
+                      MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                        MargaritavilleInteractionIntent.retry,
+                        () => ref.invalidate(workSessionControllerProvider),
+                      ),
                   icon: const Icon(Icons.refresh_rounded),
                   label: const Text('Повторить'),
                 ),

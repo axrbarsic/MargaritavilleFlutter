@@ -11,6 +11,7 @@ import 'package:margaritaville_flutter/features/housekeeper_catalog/domain/repos
 import 'package:margaritaville_flutter/features/housekeeper_catalog/presentation/controllers/housekeeper_catalog_controller.dart';
 import 'package:margaritaville_flutter/features/housekeeper_catalog/presentation/housekeeper_catalog_editor_screen.dart';
 import 'package:margaritaville_flutter/shared/persistence/app_database_provider.dart';
+import '../../../support/test_feedback_scope.dart';
 
 void main() {
   late AppDatabase database;
@@ -165,13 +166,15 @@ Widget _app(
       if (repository != null)
         housekeeperCatalogRepositoryProvider.overrideWithValue(repository),
     ],
-    child: MaterialApp(
-      theme: MargaritavilleTheme.dark,
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-        child: child!,
+    child: TestFeedbackScope(
+      child: MaterialApp(
+        theme: MargaritavilleTheme.dark,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          child: child!,
+        ),
+        home: const HousekeeperCatalogEditorScreen(),
       ),
-      home: const HousekeeperCatalogEditorScreen(),
     ),
   );
 }

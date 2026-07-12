@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import 'controllers/housekeeper_catalog_controller.dart';
 import 'widgets/housekeeper_catalog_editor_row.dart';
 
@@ -93,7 +95,11 @@ final class _HousekeeperCatalogEditorScreenState
       children: [
         IconButton.filledTonal(
           key: const Key('housekeeper-catalog-back'),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () =>
+              MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                MargaritavilleInteractionIntent.navigate,
+                () => Navigator.pop(context),
+              ),
           iconSize: 24,
           constraints: const BoxConstraints.tightFor(width: 48, height: 48),
           icon: const Icon(Icons.chevron_left_rounded),
@@ -128,7 +134,9 @@ final class _HousekeeperCatalogEditorScreenState
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.done,
-            onSubmitted: busy ? null : (_) => unawaited(_add()),
+            onSubmitted: busy
+                ? null
+                : _submitFromKeyboard, // interaction-exempt: system-keyboard-submit
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
             decoration: InputDecoration(
               hintText: 'Имя',
@@ -148,7 +156,13 @@ final class _HousekeeperCatalogEditorScreenState
           dimension: 48,
           child: FilledButton(
             key: const Key('housekeeper-add-submit'),
-            onPressed: busy ? null : () => unawaited(_add()),
+            onPressed: busy
+                ? null
+                : () =>
+                      MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                        MargaritavilleInteractionIntent.confirm,
+                        () => unawaited(_add()),
+                      ),
             style: FilledButton.styleFrom(
               padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
@@ -161,4 +175,6 @@ final class _HousekeeperCatalogEditorScreenState
       ],
     );
   }
+
+  void _submitFromKeyboard(String _) => unawaited(_add());
 }

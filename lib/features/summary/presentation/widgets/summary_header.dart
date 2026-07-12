@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
-import '../../../interaction/application/margaritaville_feedback_controller.dart';
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
 import '../../../interaction/presentation/hold_action_target.dart';
 import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../../work_session/domain/models/room_state.dart';
@@ -35,7 +35,6 @@ final class _SummaryHeaderState extends State<SummaryHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
     final rooms = widget.session.activeRooms.toList();
     final completed = rooms
         .where((room) => room.phase == RoomPhase.ready)
@@ -117,7 +116,6 @@ final class _SummaryHeaderState extends State<SummaryHeader> {
                             count: chip.count,
                             activeFilter: widget.activeFilter,
                             onChanged: widget.onFilterChanged,
-                            feedback: feedback,
                           ),
                         ],
                       ],
@@ -134,7 +132,7 @@ final class _SummaryHeaderState extends State<SummaryHeader> {
                 if (progress == _selectionPuzzleProgress) return;
                 setState(() => _selectionPuzzleProgress = progress);
               },
-              onComplete: () => _openSelection(feedback),
+              onComplete: () => _openSelection(context),
             ),
           ),
         ],
@@ -150,9 +148,10 @@ final class _SummaryHeaderState extends State<SummaryHeader> {
     widget.onOpenSettings();
   }
 
-  void _openSelection(MargaritavilleFeedbackController? feedback) {
-    feedback?.confirm();
-    feedback?.selectionOpened();
+  void _openSelection(BuildContext context) {
+    MargaritavilleFeedbackScope.dispatcherOf(
+      context,
+    ).selectionOpenedAfterGestureCommit();
     widget.onOpenSelection();
   }
 }
@@ -200,14 +199,12 @@ final class _StatusChip extends StatelessWidget {
     required this.count,
     required this.activeFilter,
     required this.onChanged,
-    required this.feedback,
   });
 
   final RoomDisplayStatus status;
   final int count;
   final RoomDisplayStatus? activeFilter;
   final ValueChanged<RoomDisplayStatus?> onChanged;
-  final MargaritavilleFeedbackController? feedback;
 
   @override
   Widget build(BuildContext context) {
@@ -221,8 +218,12 @@ final class _StatusChip extends StatelessWidget {
         key: Key('summary-filter-${status.name}'),
         behavior: HitTestBehavior.opaque,
         onTap: () {
-          feedback?.tap();
-          onChanged(isActive ? null : status);
+          MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+            isActive
+                ? MargaritavilleInteractionIntent.deselect
+                : MargaritavilleInteractionIntent.select,
+            () => onChanged(isActive ? null : status),
+          );
         },
         child: Container(
           constraints: const BoxConstraints(minWidth: 38, minHeight: 34),

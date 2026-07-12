@@ -13,6 +13,8 @@ import 'package:margaritaville_flutter/features/work_session/domain/models/work_
 import 'package:margaritaville_flutter/shared/edr/edr_overlay_controller.dart';
 import 'package:margaritaville_flutter/shared/persistence/app_database_provider.dart';
 
+import '../../../support/test_feedback_scope.dart';
+
 void main() {
   testWidgets('status chip filters rooms and toggles back to all', (
     tester,
@@ -24,9 +26,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        child: MaterialApp(
-          theme: MargaritavilleTheme.dark,
-          home: SummaryScreen(session: _mixedSession()),
+        child: TestFeedbackScope(
+          child: MaterialApp(
+            theme: MargaritavilleTheme.dark,
+            home: SummaryScreen(session: _mixedSession()),
+          ),
         ),
       ),
     );
@@ -51,14 +55,18 @@ void main() {
   ) async {
     var completions = 0;
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: SizedBox(
-              width: 440,
-              height: 48,
-              child: SummarySelectionPuzzleHandle(
-                onComplete: () => completions++,
+      ProviderScope(
+        child: TestFeedbackScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 440,
+                  height: 48,
+                  child: SummarySelectionPuzzleHandle(
+                    onComplete: () => completions++,
+                  ),
+                ),
               ),
             ),
           ),
@@ -93,20 +101,24 @@ void main() {
       selectedAt: DateTime(2027, 2, 10, 20, 47),
     );
     await tester.pumpWidget(
-      MaterialApp(
-        theme: MargaritavilleTheme.dark,
-        home: Scaffold(
-          body: Center(
-            child: SizedBox(
-              width: 96,
-              height: 98,
-              child: RoomStatusTile(
-                room: room,
-                onAdvance: () {},
-                onReset: () {},
-                onToggleVip: () => vipToggles++,
-                onSchedule: () {},
-                onOpenMedia: () {},
+      ProviderScope(
+        child: TestFeedbackScope(
+          child: MaterialApp(
+            theme: MargaritavilleTheme.dark,
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 96,
+                  height: 98,
+                  child: RoomStatusTile(
+                    room: room,
+                    onAdvance: () {},
+                    onReset: () {},
+                    onToggleVip: () => vipToggles++,
+                    onSchedule: () {},
+                    onOpenMedia: () {},
+                  ),
+                ),
               ),
             ),
           ),
@@ -153,9 +165,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(database)],
-        child: MaterialApp(
-          theme: MargaritavilleTheme.dark,
-          home: SummaryScreen(session: _mixedSession()),
+        child: TestFeedbackScope(
+          child: MaterialApp(
+            theme: MargaritavilleTheme.dark,
+            home: SummaryScreen(session: _mixedSession()),
+          ),
         ),
       ),
     );

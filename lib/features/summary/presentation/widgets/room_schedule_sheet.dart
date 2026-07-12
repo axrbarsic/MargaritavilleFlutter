@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../../work_session/domain/models/room_schedule_selection.dart';
 import '../../../work_session/domain/models/room_state.dart';
 
@@ -155,11 +157,15 @@ final class _RoomScheduleSheetState extends State<RoomScheduleSheet> {
               values: RoomScheduleSelection.hours
                   .map((value) => '$value')
                   .toList(),
-              onChanged: (index) => setState(() {
-                _selection = _selection.copyWith(
-                  hour: RoomScheduleSelection.hours[index],
-                );
-              }),
+              onChanged: (index) =>
+                  MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                    MargaritavilleInteractionIntent.detent,
+                    () => setState(() {
+                      _selection = _selection.copyWith(
+                        hour: RoomScheduleSelection.hours[index],
+                      );
+                    }),
+                  ),
             ),
           ),
           const SizedBox(width: 8),
@@ -169,11 +175,15 @@ final class _RoomScheduleSheetState extends State<RoomScheduleSheet> {
               values: RoomScheduleSelection.minutes
                   .map((value) => value.toString().padLeft(2, '0'))
                   .toList(),
-              onChanged: (index) => setState(() {
-                _selection = _selection.copyWith(
-                  minute: RoomScheduleSelection.minutes[index],
-                );
-              }),
+              onChanged: (index) =>
+                  MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                    MargaritavilleInteractionIntent.detent,
+                    () => setState(() {
+                      _selection = _selection.copyWith(
+                        minute: RoomScheduleSelection.minutes[index],
+                      );
+                    }),
+                  ),
             ),
           ),
           const SizedBox(width: 8),
@@ -183,11 +193,15 @@ final class _RoomScheduleSheetState extends State<RoomScheduleSheet> {
               values: RoomSchedulePeriod.values
                   .map((period) => period.label)
                   .toList(),
-              onChanged: (index) => setState(() {
-                _selection = _selection.copyWith(
-                  period: RoomSchedulePeriod.values[index],
-                );
-              }),
+              onChanged: (index) =>
+                  MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                    MargaritavilleInteractionIntent.detent,
+                    () => setState(() {
+                      _selection = _selection.copyWith(
+                        period: RoomSchedulePeriod.values[index],
+                      );
+                    }),
+                  ),
             ),
           ),
         ],

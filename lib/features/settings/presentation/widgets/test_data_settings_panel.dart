@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import 'appearance_settings_panel.dart';
 
 final class TestDataSettingsPanel extends StatefulWidget {
@@ -24,7 +26,12 @@ final class _TestDataSettingsPanelState extends State<TestDataSettingsPanel> {
         width: double.infinity,
         child: FilledButton.tonalIcon(
           key: const Key('settings-use-all-hotel-rooms'),
-          onPressed: _isRunning ? null : _confirmAndActivate,
+          onPressed: _isRunning
+              ? null
+              : () => MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                  MargaritavilleInteractionIntent.tap,
+                  _confirmAndActivate,
+                ),
           icon: _isRunning
               ? const SizedBox.square(
                   dimension: 18,
@@ -49,11 +56,19 @@ final class _TestDataSettingsPanelState extends State<TestDataSettingsPanel> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () =>
+                MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                  MargaritavilleInteractionIntent.deselect,
+                  () => Navigator.pop(context, false),
+                ),
             child: const Text('Отмена'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () =>
+                MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                  MargaritavilleInteractionIntent.destructive,
+                  () => Navigator.pop(context, true),
+                ),
             child: const Text('Заменить и перемешать'),
           ),
         ],

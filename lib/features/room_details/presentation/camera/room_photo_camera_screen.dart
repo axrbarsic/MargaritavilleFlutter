@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../shared/media/capture/photo_camera_session.dart';
 import '../../../../shared/media/capture/photo_preview_geometry.dart';
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 
 final class RoomPhotoCameraScreen extends StatefulWidget {
   const RoomPhotoCameraScreen({
@@ -156,7 +158,11 @@ final class _RoomPhotoCameraScreenState extends State<RoomPhotoCameraScreen>
               alignment: Alignment.topLeft,
               child: IconButton(
                 key: const Key('photo-camera-close'),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () =>
+                    MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                      MargaritavilleInteractionIntent.deselect,
+                      () => Navigator.pop(context),
+                    ),
                 icon: const Icon(Icons.close_rounded),
                 color: Colors.white,
                 iconSize: 28,
@@ -175,7 +181,16 @@ final class _RoomPhotoCameraScreenState extends State<RoomPhotoCameraScreen>
                   padding: const EdgeInsets.only(bottom: 24),
                   child: IconButton(
                     key: const Key('photo-camera-shutter'),
-                    onPressed: _capturing ? null : _capture,
+                    onPressed: _capturing
+                        ? null
+                        : () =>
+                              MargaritavilleFeedbackScope.dispatcherOf(
+                                context,
+                              ).acceptAsyncOnce(
+                                'photo-camera-capture',
+                                MargaritavilleInteractionIntent.confirm,
+                                _capture,
+                              ),
                     icon: _capturing
                         ? const SizedBox.square(
                             dimension: 28,

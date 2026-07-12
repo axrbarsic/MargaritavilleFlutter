@@ -39,4 +39,12 @@ android {
     defaultConfig {
         minSdk = 21
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    testImplementation "junit:junit:4.13.2"
 }

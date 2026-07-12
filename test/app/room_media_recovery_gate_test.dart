@@ -5,6 +5,8 @@ import 'package:margaritaville_flutter/app/room_media_recovery_gate.dart';
 import 'package:margaritaville_flutter/features/room_details/application/media/room_media_promotion_recovery.dart';
 import 'package:margaritaville_flutter/features/room_details/presentation/controllers/room_photo_capture_controller.dart';
 
+import '../support/test_feedback_scope.dart';
+
 void main() {
   testWidgets('room content stays hidden until startup recovery completes', (
     tester,
@@ -57,12 +59,14 @@ void main() {
             );
           }),
         ],
-        child: Consumer(
-          builder: (context, ref, _) => MaterialApp(
-            home: RoomMediaRecoveryGate(
-              recovery: ref.watch(roomMediaRecoveryProvider),
-              onRetry: () => ref.invalidate(roomMediaRecoveryProvider),
-              child: const Text('Содержимое комнат'),
+        child: TestFeedbackScope(
+          child: Consumer(
+            builder: (context, ref, _) => MaterialApp(
+              home: RoomMediaRecoveryGate(
+                recovery: ref.watch(roomMediaRecoveryProvider),
+                onRetry: () => ref.invalidate(roomMediaRecoveryProvider),
+                child: const Text('Содержимое комнат'),
+              ),
             ),
           ),
         ),
@@ -82,10 +86,14 @@ void main() {
 Widget _app({
   required AsyncValue<void> recovery,
   required VoidCallback onRetry,
-}) => MaterialApp(
-  home: RoomMediaRecoveryGate(
-    recovery: recovery,
-    onRetry: onRetry,
-    child: const Text('Содержимое комнат'),
+}) => ProviderScope(
+  child: TestFeedbackScope(
+    child: MaterialApp(
+      home: RoomMediaRecoveryGate(
+        recovery: recovery,
+        onRetry: onRetry,
+        child: const Text('Содержимое комнат'),
+      ),
+    ),
   ),
 );

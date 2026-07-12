@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../interaction/presentation/margaritaville_feedback_scope.dart';
+
 import '../domain/models/room_media_item.dart';
 import 'widgets/room_media_thumbnail.dart';
 
@@ -69,7 +72,13 @@ final class _RoomMediaViewerScreenState extends State<RoomMediaViewerScreen> {
                   children: [
                     IconButton(
                       key: const Key('room-media-viewer-close'),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () =>
+                          MargaritavilleFeedbackScope.dispatcherOf(
+                            context,
+                          ).accept(
+                            MargaritavilleInteractionIntent.navigate,
+                            () => Navigator.pop(context),
+                          ),
                       icon: const Icon(Icons.close_rounded),
                       iconSize: 18,
                       color: Colors.white,

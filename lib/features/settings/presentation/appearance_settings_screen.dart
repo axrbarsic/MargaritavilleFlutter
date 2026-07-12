@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../housekeeper_catalog/presentation/widgets/housekeeper_catalog_settings_panel.dart';
+import '../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../work_session/presentation/controllers/work_session_controller.dart';
 import '../domain/models/appearance_settings.dart';
 import '../domain/models/summary_grid_preference.dart';
@@ -35,7 +37,7 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
                   state.when(
                     data: (settings) => Column(
                       children: [
-                        _content(ref, settings),
+                        _content(context, ref, settings),
                         const SizedBox(height: 18),
                         BackgroundSettingsPanel(
                           settings: settings,
@@ -55,7 +57,7 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    error: (error, _) => _error(ref, error),
+                    error: (error, _) => _error(context, ref, error),
                     loading: () => const Padding(
                       padding: EdgeInsets.all(48),
                       child: Center(child: CircularProgressIndicator()),
@@ -77,7 +79,10 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
         IconButton.filledTonal(
           key: const Key('appearance-settings-back'),
           onPressed: Navigator.of(context).canPop()
-              ? () => Navigator.pop(context)
+              ? () => MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                  MargaritavilleInteractionIntent.navigate,
+                  () => Navigator.pop(context),
+                )
               : null,
           iconSize: 24,
           constraints: const BoxConstraints.tightFor(width: 48, height: 48),
@@ -99,7 +104,11 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _content(WidgetRef ref, AppearanceSettings settings) {
+  Widget _content(
+    BuildContext context,
+    WidgetRef ref,
+    AppearanceSettings settings,
+  ) {
     final controller = ref.read(appearanceSettingsControllerProvider.notifier);
     return AppearanceSettingsPanel(
       title: 'Экспериментальное',
@@ -185,7 +194,11 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               key: const Key('appearance-settings-reset'),
-              onPressed: () => unawaited(controller.resetVisualEffects()),
+              onPressed: () =>
+                  MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                    MargaritavilleInteractionIntent.destructive,
+                    () => unawaited(controller.resetVisualEffects()),
+                  ),
               icon: const Icon(Icons.restart_alt_rounded),
               label: const Text('Сбросить эффекты'),
             ),
@@ -195,12 +208,16 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _error(WidgetRef ref, Object error) {
+  Widget _error(BuildContext context, WidgetRef ref, Object error) {
     return AppearanceSettingsPanel(
       title: 'Не удалось открыть настройки',
       subtitle: '$error',
       child: FilledButton.icon(
-        onPressed: () => ref.invalidate(appearanceSettingsControllerProvider),
+        onPressed: () =>
+            MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+              MargaritavilleInteractionIntent.retry,
+              () => ref.invalidate(appearanceSettingsControllerProvider),
+            ),
         icon: const Icon(Icons.refresh_rounded),
         label: const Text('Повторить'),
       ),

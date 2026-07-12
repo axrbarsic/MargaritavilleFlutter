@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/interaction/domain/margaritaville_interaction_intent.dart';
+import '../features/interaction/presentation/margaritaville_feedback_scope.dart';
+
 final class RoomMediaRecoveryGate<T> extends StatelessWidget {
   const RoomMediaRecoveryGate({
     required this.recovery,
@@ -52,7 +55,9 @@ final class RoomMediaRecoveryGate<T> extends StatelessWidget {
               const SizedBox(height: 16),
               FilledButton.icon(
                 key: retryKey,
-                onPressed: onRetry,
+                onPressed: () => MargaritavilleFeedbackScope.dispatcherOf(
+                  context,
+                ).accept(MargaritavilleInteractionIntent.retry, onRetry),
                 icon: const Icon(Icons.refresh),
                 label: const Text('Повторить'),
               ),

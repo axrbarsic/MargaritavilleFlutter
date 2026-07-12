@@ -17,7 +17,7 @@ flutter test --no-pub
     [[ -d /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ]]; then
     export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
   fi
-  ./gradlew :app:testDebugUnitTest
+  ./gradlew :interaction_foundation:testDebugUnitTest :app:testDebugUnitTest
 )
 dart run tool/check_file_size.dart
 tool/verify_architecture.sh

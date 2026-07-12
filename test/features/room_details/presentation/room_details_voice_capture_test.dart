@@ -11,6 +11,7 @@ import 'package:margaritaville_flutter/features/room_details/domain/repositories
 import 'package:margaritaville_flutter/features/room_details/presentation/controllers/room_details_controller.dart';
 import 'package:margaritaville_flutter/features/room_details/presentation/controllers/room_voice_capture_controller.dart';
 import 'package:margaritaville_flutter/features/room_details/presentation/room_details_screen.dart';
+import '../../../support/test_feedback_scope.dart';
 
 void main() {
   testWidgets('records, transcribes and renders a durable voice bubble', (
@@ -32,11 +33,13 @@ void main() {
           ),
           roomDetailsRepositoryProvider.overrideWithValue(repository),
         ],
-        child: MaterialApp(
-          theme: MargaritavilleTheme.dark,
-          home: const RoomDetailsScreen(
-            sessionId: 'session-1',
-            roomNumber: '101',
+        child: TestFeedbackScope(
+          child: MaterialApp(
+            theme: MargaritavilleTheme.dark,
+            home: const RoomDetailsScreen(
+              sessionId: 'session-1',
+              roomNumber: '101',
+            ),
           ),
         ),
       ),

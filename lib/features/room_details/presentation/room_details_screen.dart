@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design/margaritaville_colors.dart';
 import '../../../shared/media/capture/captured_photo_artifact.dart';
+import '../../interaction/application/margaritaville_interaction_dispatcher.dart';
+import '../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../application/media/room_photo_capture_state.dart';
 import '../domain/models/room_media_item.dart';
 import 'camera/room_photo_camera_screen.dart';
@@ -11,6 +14,7 @@ import 'controllers/room_photo_capture_controller.dart';
 import 'controllers/room_voice_capture_controller.dart';
 import 'room_media_viewer_screen.dart';
 import 'widgets/room_details_media_section.dart';
+import 'widgets/room_details_shell_widgets.dart';
 import 'widgets/room_details_voice_panel.dart';
 
 final class RoomDetailsScreen extends ConsumerWidget {
@@ -25,6 +29,8 @@ final class RoomDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    MargaritavilleInteractionDispatcher interactions() =>
+        MargaritavilleFeedbackScope.dispatcherOf(context);
     final request = (sessionId: sessionId, roomNumber: roomNumber);
     final details = ref.watch(roomDetailsControllerProvider(request));
     final voice = ref.watch(roomVoiceCaptureControllerProvider(request));
@@ -38,7 +44,7 @@ final class RoomDetailsScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Header(roomNumber: roomNumber),
+              RoomDetailsHeader(roomNumber: roomNumber),
               const SizedBox(height: 18),
               DecoratedBox(
                 key: const Key('room-details-card'),
@@ -81,13 +87,17 @@ final class RoomDetailsScreen extends ConsumerWidget {
                           voiceNotes: snapshot.media
                               .where((item) => item.kind == RoomMediaKind.voice)
                               .toList(growable: false),
-                          onPressed: () => ref
-                              .read(
-                                roomVoiceCaptureControllerProvider(
-                                  request,
-                                ).notifier,
-                              )
-                              .toggle(),
+                          onPressed: () => interactions().acceptAsyncOnce(
+                            'room-voice-$sessionId-$roomNumber',
+                            MargaritavilleInteractionIntent.confirm,
+                            () => ref
+                                .read(
+                                  roomVoiceCaptureControllerProvider(
+                                    request,
+                                  ).notifier,
+                                )
+                                .toggle(),
+                          ),
                         ),
                         const SizedBox(height: 18),
                         Divider(
@@ -105,22 +115,38 @@ final class RoomDetailsScreen extends ConsumerWidget {
                               photo.phase == RoomPhotoCapturePhase.failed,
                           onPhoto: photo.isBusy
                               ? () {}
-                              : () => _capturePhoto(context, ref, request),
-                          onVideo: () => _showNativeServiceNotice(context),
-                          resolvePath: mediaStore.resolveFinalPath,
-                          onOpen: (item) => _openMediaViewer(
-                            context,
-                            snapshot.media,
-                            item,
-                            mediaStore.resolveFinalPath,
+                              : () => interactions().acceptAsyncOnce(
+                                  'room-photo-route-$sessionId-$roomNumber',
+                                  MargaritavilleInteractionIntent.navigate,
+                                  () => _capturePhoto(context, ref, request),
+                                ),
+                          onVideo: () => interactions().accept(
+                            MargaritavilleInteractionIntent.invalid,
+                            () => _showNativeServiceNotice(context),
                           ),
-                          onDelete: (item) => ref
-                              .read(
-                                roomPhotoCaptureControllerProvider(
-                                  request,
-                                ).notifier,
-                              )
-                              .delete(item),
+                          resolvePath: mediaStore.resolveFinalPath,
+                          onOpen: (item) => interactions().accept(
+                            MargaritavilleInteractionIntent.navigate,
+                            () => _openMediaViewer(
+                              context,
+                              snapshot.media,
+                              item,
+                              mediaStore.resolveFinalPath,
+                            ),
+                          ),
+                          onDelete: photo.isBusy
+                              ? null
+                              : (item) => interactions().acceptAsyncOnce(
+                                  'room-media-delete-${item.id}',
+                                  MargaritavilleInteractionIntent.destructive,
+                                  () => ref
+                                      .read(
+                                        roomPhotoCaptureControllerProvider(
+                                          request,
+                                        ).notifier,
+                                      )
+                                      .delete(item),
+                                ),
                         ),
                       ],
                     ),
@@ -128,7 +154,7 @@ final class RoomDetailsScreen extends ConsumerWidget {
                       height: 240,
                       child: Center(child: CircularProgressIndicator()),
                     ),
-                    error: (error, _) => _LoadError(
+                    error: (error, _) => RoomDetailsLoadError(
                       error: error,
                       onRetry: () => ref
                           .read(roomDetailsControllerProvider(request).notifier)
@@ -224,70 +250,6 @@ final class RoomDetailsScreen extends ConsumerWidget {
           media: visual,
           initialMediaId: selected.id,
           resolvePath: resolvePath,
-        ),
-      ),
-    );
-  }
-}
-
-final class _Header extends StatelessWidget {
-  const _Header({required this.roomNumber});
-
-  final String roomNumber;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          key: const Key('room-details-back'),
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.chevron_left_rounded, size: 24),
-          color: MargaritavilleColors.secondaryText,
-          style: IconButton.styleFrom(
-            fixedSize: const Size(48, 48),
-            backgroundColor: MargaritavilleColors.surface.withValues(
-              alpha: 0.82,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          roomNumber,
-          key: const Key('room-details-room-number'),
-          style: const TextStyle(
-            fontSize: 44,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-final class _LoadError extends StatelessWidget {
-  const _LoadError({required this.error, required this.onRetry});
-
-  final Object error;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 240,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Не удалось открыть комнату: $error'),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('Повторить')),
-          ],
         ),
       ),
     );

@@ -31,6 +31,8 @@ final class _RoomGestureArenaTargetState extends State<RoomGestureArenaTarget> {
   var _translation = Offset.zero;
   var _armed = false;
   var _feedbackStarted = false;
+  var _warningSent = false;
+  var _commitSent = false;
 
   @override
   Widget build(BuildContext context) {
@@ -84,12 +86,12 @@ final class _RoomGestureArenaTargetState extends State<RoomGestureArenaTarget> {
     _translation = details.localPosition - origin;
 
     if (SummaryRoomGesturePolicy.shouldResetForAxis(_translation)) {
-      _resetFeedback();
+      _armed = false;
       return;
     }
     if (!SummaryRoomGesturePolicy.hasRightIntent(_translation)) {
       if (_translation.dx < SummaryRoomGesturePolicy.leftResetDistance) {
-        _resetFeedback();
+        _armed = false;
       }
       return;
     }
@@ -102,12 +104,14 @@ final class _RoomGestureArenaTargetState extends State<RoomGestureArenaTarget> {
       _feedbackStarted = true;
       widget.onSwipeStart();
     }
-    if (nextArmed && !_armed) {
+    if (nextArmed && !_armed && !_commitSent) {
+      _commitSent = true;
       widget.onSwipeCommit();
     } else if (!nextArmed &&
         _translation.dx >=
             threshold * SummaryRoomGesturePolicy.warningFeedbackFraction &&
-        !_armed) {
+        !_warningSent) {
+      _warningSent = true;
       widget.onSwipeWarning();
     }
     _armed = nextArmed;
@@ -139,6 +143,8 @@ final class _RoomGestureArenaTargetState extends State<RoomGestureArenaTarget> {
   void _resetFeedback() {
     _armed = false;
     _feedbackStarted = false;
+    _warningSent = false;
+    _commitSent = false;
   }
 
   double get _cellWidth => context.size?.width ?? 88;

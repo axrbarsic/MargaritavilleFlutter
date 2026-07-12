@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../design/margaritaville_colors.dart';
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../domain/catalogs/housekeeper_catalog_rules.dart';
 import '../../domain/models/housekeeper.dart';
 import '../controllers/housekeeper_catalog_controller.dart';
@@ -98,7 +100,8 @@ final class _HousekeeperCatalogEditorRowState
                 focusNode: _nameFocus,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.done,
-                onSubmitted: (_) => unawaited(_submitName()),
+                onSubmitted:
+                    _submitFromKeyboard, // interaction-exempt: system-keyboard-submit
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w900,
@@ -122,12 +125,18 @@ final class _HousekeeperCatalogEditorRowState
     );
   }
 
+  void _submitFromKeyboard(String _) => unawaited(_submitName());
+
   Widget _paletteMenu(Color color) {
     return PopupMenuButton<String>(
       key: Key('housekeeper-palette-${widget.housekeeper.id}'),
       initialValue: widget.housekeeper.paletteKey,
       tooltip: 'Выбрать цвет',
-      onSelected: (paletteKey) => unawaited(_setPalette(paletteKey)),
+      onSelected: (paletteKey) =>
+          MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+            MargaritavilleInteractionIntent.select,
+            () => unawaited(_setPalette(paletteKey)),
+          ),
       itemBuilder: (_) => [
         for (final paletteKey in HousekeeperCatalogRules.paletteKeys)
           PopupMenuItem(

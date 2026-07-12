@@ -64,11 +64,11 @@ extension _SummaryScreenActions on _SummaryScreenState {
     String roomNumber, {
     required DateTime? scheduledFor,
   }) async {
-    final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
+    final feedback = MargaritavilleFeedbackScope.dispatcherOf(context);
     if (scheduledFor == null) {
-      feedback?.deselect();
+      feedback.signal(MargaritavilleInteractionIntent.deselect);
     } else {
-      feedback?.confirm();
+      feedback.signal(MargaritavilleInteractionIntent.confirm);
     }
     final result = await ref
         .read(workSessionControllerProvider.notifier)
@@ -109,9 +109,9 @@ extension _SummaryScreenActions on _SummaryScreenState {
     if (!state.hasValue || state.requireValue.id != widget.session.id) return;
     final room = state.requireValue.room(roomNumber);
     if (room == null) return;
-    MargaritavilleFeedbackScope.maybeControllerOf(
+    MargaritavilleFeedbackScope.dispatcherOf(
       context,
-    )?.roomStatusChanged(room.displayStatus);
+    ).roomStatusChanged(room.displayStatus);
     _recordCurrentPulse(roomNumber);
   }
 

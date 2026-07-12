@@ -49,7 +49,7 @@ final class PigeonInteractionFeedbackBridge
     return _api.emit(
       NativeFeedbackRequest(
         requestId: request.requestId,
-        cue: NativeFeedbackCue.values[request.cue.index],
+        cue: _nativeCue(request.cue),
         soundId: request.soundId,
         soundPriority: request.soundPriority,
       ),
@@ -61,11 +61,36 @@ final class PigeonInteractionFeedbackBridge
 
   @override
   Future<void> setAudioContext(InteractionAudioContext context) {
-    return _api.setAudioContext(
-      NativeInteractionAudioContext.values[context.index],
-    );
+    return _api.setAudioContext(_nativeAudioContext(context));
   }
 
   @override
   Future<void> clearPending() => _api.clearPending();
 }
+
+NativeFeedbackCue _nativeCue(InteractionFeedbackCue cue) => switch (cue) {
+  InteractionFeedbackCue.none => NativeFeedbackCue.none,
+  InteractionFeedbackCue.tap => NativeFeedbackCue.tap,
+  InteractionFeedbackCue.confirm => NativeFeedbackCue.confirm,
+  InteractionFeedbackCue.longPress => NativeFeedbackCue.longPress,
+  InteractionFeedbackCue.holdStart => NativeFeedbackCue.holdStart,
+  InteractionFeedbackCue.holdWarning => NativeFeedbackCue.holdWarning,
+  InteractionFeedbackCue.holdCommit => NativeFeedbackCue.holdCommit,
+  InteractionFeedbackCue.select => NativeFeedbackCue.select,
+  InteractionFeedbackCue.deselect => NativeFeedbackCue.deselect,
+  InteractionFeedbackCue.invalid => NativeFeedbackCue.invalid,
+  InteractionFeedbackCue.detent => NativeFeedbackCue.detent,
+};
+
+NativeInteractionAudioContext _nativeAudioContext(
+  InteractionAudioContext context,
+) => switch (context) {
+  InteractionAudioContext.interactive =>
+    NativeInteractionAudioContext.interactive,
+  InteractionAudioContext.voiceCapture =>
+    NativeInteractionAudioContext.voiceCapture,
+  InteractionAudioContext.voicePlayback =>
+    NativeInteractionAudioContext.voicePlayback,
+  InteractionAudioContext.background =>
+    NativeInteractionAudioContext.background,
+};

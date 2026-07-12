@@ -19,6 +19,7 @@ internal class AndroidInteractionFeedbackService(
   private var coalescingWindowMs = 45L
   private var queuedSound: QueuedSound? = null
   private var soundRunnable: Runnable? = null
+  private val recentRequestIds = RecentRequestIds()
 
   override fun configure(configuration: NativeFeedbackConfiguration) {
     coalescingWindowMs = configuration.soundCoalescingWindowMs.coerceAtLeast(0)
@@ -27,6 +28,7 @@ internal class AndroidInteractionFeedbackService(
 
   override fun emit(request: NativeFeedbackRequest) {
     if (audioContext == NativeInteractionAudioContext.BACKGROUND) return
+    if (!recentRequestIds.remember(request.requestId)) return
     hapticPlayer.perform(request.cue)
     val soundId = request.soundId ?: return
     if (audioContext == NativeInteractionAudioContext.VOICE_CAPTURE) return

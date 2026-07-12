@@ -107,6 +107,104 @@ if rg -n \
   failed=1
 fi
 
+direct_feedback_files=$(rg -l \
+  'MargaritavilleFeedbackController|MargaritavilleFeedbackScope\.maybeControllerOf' \
+  lib --glob '*.dart' | sort || true)
+expected_direct_feedback_files=$(printf '%s\n' \
+  'lib/features/interaction/application/margaritaville_feedback_controller.dart' \
+  'lib/features/interaction/application/margaritaville_interaction_dispatcher.dart' \
+  'lib/features/interaction/presentation/margaritaville_feedback_scope.dart')
+if [[ "$direct_feedback_files" != "$expected_direct_feedback_files" ]]; then
+  echo "ERROR: feature UI must use the typed interaction dispatcher"
+  diff -u <(printf '%s\n' "$expected_direct_feedback_files") \
+    <(printf '%s\n' "$direct_feedback_files") || true
+  failed=1
+fi
+
+raw_interaction_files=$(rg -l \
+  'onPressed:|onTap:|onLongPress:|onChanged:|onSelectionChanged:|onSelected:|onSubmitted:' \
+  lib --glob '*.dart' | while read -r file; do
+    if ! rg -q 'MargaritavilleFeedbackScope\.dispatcherOf' "$file"; then
+      echo "$file"
+    fi
+  done | sort || true)
+expected_interaction_delegate_files=$(printf '%s\n' \
+  'lib/features/interaction/presentation/hold_action_target.dart' \
+  'lib/features/room_details/presentation/widgets/room_details_media_section.dart' \
+  'lib/features/room_details/presentation/widgets/room_details_voice_panel.dart' \
+  'lib/features/summary/presentation/widgets/room_action_sheet.dart' \
+  'lib/features/work_setup/presentation/widgets/housekeeper_selector.dart' \
+  'lib/features/work_setup/presentation/widgets/setup_room_grid.dart' \
+  'lib/features/work_setup/presentation/widgets/work_setup_assignment_card.dart')
+if [[ "$raw_interaction_files" != "$expected_interaction_delegate_files" ]]; then
+  echo "ERROR: every interactive production file must use the typed dispatcher"
+  diff -u <(printf '%s\n' "$expected_interaction_delegate_files") \
+    <(printf '%s\n' "$raw_interaction_files") || true
+  failed=1
+fi
+
+keyboard_submit_files=$(rg -l 'onSubmitted:' lib --glob '*.dart' | sort || true)
+expected_keyboard_submit_files=$(printf '%s\n' \
+  'lib/features/housekeeper_catalog/presentation/housekeeper_catalog_editor_screen.dart' \
+  'lib/features/housekeeper_catalog/presentation/widgets/housekeeper_catalog_editor_row.dart')
+keyboard_submit_count=$(rg -o 'onSubmitted:' lib --glob '*.dart' | wc -l | tr -d ' ')
+keyboard_submit_exemption_count=$(rg -o \
+  'interaction-exempt: system-keyboard-submit' \
+  lib --glob '*.dart' | wc -l | tr -d ' ')
+if [[ "$keyboard_submit_files" != "$expected_keyboard_submit_files" ]] || \
+   [[ "$keyboard_submit_count" != "2" ]] || \
+   [[ "$keyboard_submit_exemption_count" != "2" ]]; then
+  echo "ERROR: keyboard submit callbacks require an explicit system-owned exemption"
+  failed=1
+fi
+
+if rg -n 'NativeFeedback(Cue|AudioContext)\.values\[' \
+  packages/interaction_foundation/lib --glob '*.dart' --glob '!**/generated/**'; then
+  echo "ERROR: InteractionFoundation Pigeon enums require explicit ABI mapping"
+  failed=1
+fi
+
+if ! rg -q 'remember\(request\.requestId\)' \
+  packages/interaction_foundation/ios/Classes/NativeInteractionFeedbackService.swift || \
+   ! rg -q 'recentRequestIds\.remember\(request\.requestId\)' \
+  packages/interaction_foundation/android/src/main/kotlin/com/axr/interaction_foundation/AndroidInteractionFeedbackService.kt; then
+  echo "ERROR: native feedback adapters must deduplicate stable request IDs"
+  failed=1
+fi
+
+if ! python3 - <<'PY'
+import re
+from pathlib import Path
+
+path = Path(
+    "packages/interaction_foundation/ios/Classes/NativeInteractionFeedbackService.swift"
+)
+source = path.read_text()
+emit = source[source.index("func emit("):source.index("private func remember")]
+if emit.index("remember(request.requestId)") > emit.index("performHaptic(request.cue)"):
+    raise SystemExit("iOS request dedupe must precede every physical effect")
+body = source[
+    source.index("private func performHaptic"):
+    source.index("private func queueSound")
+]
+cases = re.findall(r"case \.([A-Za-z]+):(.*?)(?=\n    case |\n    }\n)", body, re.S)
+for cue, statements in cases:
+    event_count = len(re.findall(
+        r"(?:impactOccurred|notificationOccurred|selectionChanged)\(",
+        statements,
+    ))
+    expected = 0 if cue == "none" else 1
+    if event_count != expected:
+        raise SystemExit(
+            f"iOS cue {cue} must invoke exactly {expected} UIKit haptic event; "
+            f"found {event_count}"
+        )
+PY
+then
+  echo "ERROR: iOS semantic cues must remain one physical haptic event"
+  failed=1
+fi
+
 if rg -n "dart:convert|json(Encode|Decode)" \
   lib/features/settings/data --glob '*.dart'; then
   echo "ERROR: app settings must persist typed values, not a JSON blob"
@@ -365,7 +463,7 @@ if ! rg -q 'verticalGap: 6 \* contentScale' ios/Runner/EdrOverlayPlugin.swift ||
    ! rg -q 'DONOR_TILE_HEIGHT_DP' \
     android/app/src/main/kotlin/com/alex/margaritaville/flutter/beta/hdr/runtime/VipHdrLabelLayout.kt || \
    ! rg -q 'roomNumberAtScale' \
-    lib/features/summary/presentation/widgets/room_status_tile.dart; then
+    lib/features/summary/presentation/widgets/room_status_tile_content.dart; then
   echo "ERROR: Flutter/iOS/Android tile labels must share the compact geometry scale"
   failed=1
 fi

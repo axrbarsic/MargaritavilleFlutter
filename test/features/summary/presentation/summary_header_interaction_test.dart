@@ -44,6 +44,15 @@ void main() {
       InteractionFeedbackCue.holdCommit,
     ]);
 
+    await drag.moveBy(const Offset(20, 0));
+    await drag.moveBy(const Offset(-20, 0));
+    await tester.pump();
+    expect(interactionCues(harness), const [
+      InteractionFeedbackCue.holdStart,
+      InteractionFeedbackCue.holdWarning,
+      InteractionFeedbackCue.holdCommit,
+    ]);
+
     await drag.up();
     await tester.pump();
     expect(completions, 1);
@@ -51,8 +60,6 @@ void main() {
       InteractionFeedbackCue.holdStart,
       InteractionFeedbackCue.holdWarning,
       InteractionFeedbackCue.holdCommit,
-      InteractionFeedbackCue.confirm,
-      InteractionFeedbackCue.confirm,
       InteractionFeedbackCue.none,
     ]);
     expect(harness.bridge.requests.last.soundPriority, 70);
@@ -63,7 +70,7 @@ void main() {
     expect(settingsOpacity(tester), 1);
   });
 
-  testWidgets('status filter emits one tap cue before changing', (
+  testWidgets('status filter emits one selection cue before changing', (
     tester,
   ) async {
     final harness = SummaryHeaderFeedbackHarness();
@@ -78,6 +85,41 @@ void main() {
     await tester.pump();
 
     expect(selected, RoomDisplayStatus.open);
-    expect(interactionCues(harness), const [InteractionFeedbackCue.tap]);
+    expect(interactionCues(harness), const [InteractionFeedbackCue.select]);
+  });
+
+  testWidgets('cancelled armed puzzle restores commit cue for next gesture', (
+    tester,
+  ) async {
+    final harness = SummaryHeaderFeedbackHarness();
+    addTearDown(harness.dispose);
+    var completions = 0;
+    await tester.pumpWidget(harness.app(onOpenSelection: () => completions++));
+    await tester.pump();
+
+    final puzzle = find.byKey(const Key('unlock-workday'));
+    final first = await tester.startGesture(tester.getCenter(puzzle));
+    await first.moveBy(const Offset(-340, 0));
+    await first.moveBy(const Offset(20, 0));
+    await first.up();
+    await tester.pump();
+    expect(completions, 0);
+    expect(interactionCues(harness), const [
+      InteractionFeedbackCue.holdStart,
+      InteractionFeedbackCue.holdCommit,
+    ]);
+
+    final second = await tester.startGesture(tester.getCenter(puzzle));
+    await second.moveBy(const Offset(-340, 0));
+    await second.up();
+    await tester.pump();
+    expect(completions, 1);
+    expect(interactionCues(harness), const [
+      InteractionFeedbackCue.holdStart,
+      InteractionFeedbackCue.holdCommit,
+      InteractionFeedbackCue.holdStart,
+      InteractionFeedbackCue.holdCommit,
+      InteractionFeedbackCue.none,
+    ]);
   });
 }

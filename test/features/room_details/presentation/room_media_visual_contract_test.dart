@@ -75,6 +75,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('1 / 2'), findsOneWidget);
   });
+
+  testWidgets('busy media operation disables destructive acceptance', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: RoomDetailsMediaSection(
+            media: [_photo('photo-1')],
+            onPhoto: () {},
+            onVideo: () {},
+            onOpen: (_) {},
+            onDelete: null,
+            resolvePath: (_) async => '/tmp/missing.jpg',
+          ),
+        ),
+      ),
+    );
+
+    final button = tester.widget<IconButton>(
+      find.byKey(const ValueKey('room-media-delete-photo-1')),
+    );
+    expect(button.onPressed, isNull);
+    await tester.tap(
+      find.byKey(const ValueKey('room-media-delete-photo-1')),
+      warnIfMissed: false,
+    );
+  });
 }
 
 RoomMediaItem _photo(String id) {

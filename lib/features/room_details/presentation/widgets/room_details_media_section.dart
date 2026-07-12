@@ -21,7 +21,7 @@ final class RoomDetailsMediaSection extends StatelessWidget {
   final VoidCallback onPhoto;
   final VoidCallback onVideo;
   final ValueChanged<RoomMediaItem> onOpen;
-  final ValueChanged<RoomMediaItem> onDelete;
+  final ValueChanged<RoomMediaItem>? onDelete;
   final ResolveRoomMediaPath resolvePath;
   final String? statusText;
   final bool statusIsError;
@@ -119,7 +119,9 @@ final class RoomDetailsMediaSection extends StatelessWidget {
                         child: IconButton(
                           key: ValueKey('room-media-delete-${item.id}'),
                           tooltip: 'Удалить медиа',
-                          onPressed: () => onDelete(item),
+                          onPressed: onDelete == null
+                              ? null
+                              : () => onDelete!(item),
                           icon: const Icon(Icons.delete_rounded),
                           iconSize: 12,
                           color: Colors.white,

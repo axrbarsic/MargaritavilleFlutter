@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../domain/models/app_background_mode.dart';
 import '../../domain/models/appearance_settings.dart';
 import '../controllers/appearance_settings_controller.dart';
@@ -45,7 +47,11 @@ final class BackgroundSettingsPanel extends StatelessWidget {
             ],
             selected: {selected},
             onSelectionChanged: (selection) =>
-                unawaited(controller.setBackgroundMode(selection.single)),
+                MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                  MargaritavilleInteractionIntent.select,
+                  () =>
+                      unawaited(controller.setBackgroundMode(selection.single)),
+                ),
           ),
           const SizedBox(height: 12),
           Text(

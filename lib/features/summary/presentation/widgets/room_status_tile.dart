@@ -5,16 +5,16 @@ import 'package:flutter/material.dart';
 import '../../../../design/margaritaville_colors.dart';
 import '../../../../shared/edr/edr_overlay_controller.dart';
 import '../../../../shared/edr/edr_overlay_scope.dart';
+import '../../../interaction/application/margaritaville_interaction_dispatcher.dart';
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
 import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../summary_layout_tokens.dart';
-import '../summary_typography.dart';
 import '../summary_visual_policy.dart';
 import '../summary_visual_pulse.dart';
 import 'room_action_sheet.dart';
 import 'room_gesture_arena_target.dart';
-import 'room_visual_effect_surface.dart';
-import 'summary_minimum_scale_text.dart';
+import 'room_status_tile_content.dart';
 
 final class RoomStatusTile extends StatefulWidget {
   const RoomStatusTile({
@@ -71,7 +71,8 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
     final color = widget.visualPolicy.vividStatusPaletteEnabled
         ? MargaritavilleColors.vividStatus(room.displayStatus)
         : MargaritavilleColors.status(room.displayStatus);
-    final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
+    MargaritavilleInteractionDispatcher feedback() =>
+        MargaritavilleFeedbackScope.dispatcherOf(context);
     final edrController = EdrViewportScope.maybeControllerOf(context);
     final pulse = widget.visualPolicy.transientPulseEnabled
         ? widget.pulseEvent
@@ -103,73 +104,35 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
           child: RoomGestureArenaTarget(
             key: Key('summary-room-${room.roomNumber}'),
             onHoldCommit: () {
-              feedback?.holdCommitHapticOnly();
+              feedback().signalHapticOnly(
+                MargaritavilleInteractionIntent.holdCommit,
+              );
               widget.onAdvance();
             },
-            onSwipeStart: () => feedback?.holdStartHapticOnly(),
-            onSwipeWarning: () => feedback?.holdWarningHapticOnly(),
-            onSwipeCommit: () => feedback?.holdCommitHapticOnly(),
+            onSwipeStart: () => feedback().signalHapticOnly(
+              MargaritavilleInteractionIntent.holdStart,
+            ),
+            onSwipeWarning: () => feedback().signalHapticOnly(
+              MargaritavilleInteractionIntent.holdWarning,
+            ),
+            onSwipeCommit: () => feedback().signalHapticOnly(
+              MargaritavilleInteractionIntent.holdCommit,
+            ),
             onOpenActions: () {
-              feedback?.actionMenuOpened();
+              feedback().actionMenuOpened();
               unawaited(_showActionMenu(context));
             },
-            child: SizedBox.expand(
-              child: RoomVisualEffectSurface(
-                room: room,
-                baseColor: color,
-                policy: widget.visualPolicy,
-                pulseEvent: widget.pulseEvent,
-                nativeEdrActive: nativeEdrActive,
-                nativeEdrManaged: nativeEdrManaged,
-                child: Opacity(
-                  opacity: nativeEdrActive ? 0 : 1,
-                  child: DecoratedBox(
-                    key: Key('summary-room-surface-${room.roomNumber}'),
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(
-                        SummaryLayoutTokens.tileCornerRadius,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 10 * widget.contentScale,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: SummaryMinimumScaleText(
-                              key: Key(
-                                'summary-room-number-text-${room.roomNumber}',
-                              ),
-                              text: room.roomNumber,
-                              style: SummaryTypography.roomNumberAtScale(
-                                widget.fontScale,
-                              ),
-                              minimumScaleFactor: 0.50,
-                              compressHeightOnly: widget.compressTextVertically,
-                            ),
-                          ),
-                          SizedBox(height: 6 * widget.contentScale),
-                          SummaryMinimumScaleText(
-                            key: Key(
-                              'summary-room-time-text-${room.roomNumber}',
-                            ),
-                            text: _time(_timestamp),
-                            style: SummaryTypography.roomTimeAtScale(
-                              widget.fontScale,
-                            ),
-                            minimumScaleFactor: 0.62,
-                            compressHeightOnly: widget.compressTextVertically,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            child: RoomStatusTileContent(
+              room: room,
+              color: color,
+              visualPolicy: widget.visualPolicy,
+              pulseEvent: widget.pulseEvent,
+              nativeEdrActive: nativeEdrActive,
+              nativeEdrManaged: nativeEdrManaged,
+              contentScale: widget.contentScale,
+              fontScale: widget.fontScale,
+              compressTextVertically: widget.compressTextVertically,
+              timestampText: _time(_timestamp),
             ),
           ),
         ),
@@ -244,7 +207,7 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
       widget.room.scheduledFor != null;
 
   Future<void> _showActionMenu(BuildContext context) async {
-    final feedback = MargaritavilleFeedbackScope.maybeControllerOf(context);
+    final feedback = MargaritavilleFeedbackScope.dispatcherOf(context);
     final controller = EdrViewportScope.maybeControllerOf(context);
     final occlusion = await controller?.acquirePresentationOcclusion();
     if (!context.mounted) {
@@ -263,20 +226,30 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
     }
     switch (action) {
       case RoomAction.media:
-        feedback?.tap();
-        widget.onOpenMedia();
+        feedback.accept(
+          MargaritavilleInteractionIntent.navigate,
+          widget.onOpenMedia,
+        );
         break;
       case RoomAction.vip:
-        feedback?.confirm();
-        widget.onToggleVip();
+        feedback.accept(
+          widget.room.isVip
+              ? MargaritavilleInteractionIntent.toggleOff
+              : MargaritavilleInteractionIntent.toggleOn,
+          widget.onToggleVip,
+        );
         break;
       case RoomAction.schedule:
-        feedback?.tap();
-        widget.onSchedule();
+        feedback.accept(
+          MargaritavilleInteractionIntent.navigate,
+          widget.onSchedule,
+        );
         break;
       case RoomAction.reset:
-        feedback?.deselect();
-        widget.onReset();
+        feedback.accept(
+          MargaritavilleInteractionIntent.destructive,
+          widget.onReset,
+        );
         break;
       case null:
         break;

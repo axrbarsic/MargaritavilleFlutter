@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/room_details/presentation/camera/room_photo_camera_screen.dart';
 import 'package:margaritaville_flutter/shared/media/capture/captured_photo_artifact.dart';
 import 'package:margaritaville_flutter/shared/media/capture/photo_camera_session.dart';
+import '../../../support/test_feedback_scope.dart';
 
 void main() {
   testWidgets('camera returns one captured photo from the shutter', (
@@ -13,7 +15,7 @@ void main() {
     final session = _FakeSession();
     CapturedPhotoArtifact? captured;
     await tester.pumpWidget(
-      MaterialApp(
+      _feedbackApp(
         home: Builder(
           builder: (context) => TextButton(
             onPressed: () async {
@@ -48,7 +50,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
+      _feedbackApp(
         home: RoomPhotoCameraScreen(
           sessionFactory: () async =>
               throw const PhotoCameraFailure(PhotoCameraFailureCode.denied),
@@ -64,7 +66,7 @@ void main() {
   testWidgets('inactive lifecycle disposes camera resources', (tester) async {
     final session = _FakeSession();
     await tester.pumpWidget(
-      MaterialApp(
+      _feedbackApp(
         home: RoomPhotoCameraScreen(sessionFactory: () async => session),
       ),
     );
@@ -86,7 +88,7 @@ void main() {
     var factoryCalls = 0;
 
     await tester.pumpWidget(
-      MaterialApp(
+      _feedbackApp(
         home: RoomPhotoCameraScreen(
           sessionFactory: () async {
             factoryCalls += 1;
@@ -111,6 +113,12 @@ void main() {
     expect(factoryCalls, 2);
     expect(find.byKey(const Key('fake-camera-preview')), findsOneWidget);
   });
+}
+
+Widget _feedbackApp({required Widget home}) {
+  return ProviderScope(
+    child: TestFeedbackScope(child: MaterialApp(home: home)),
+  );
 }
 
 final class _FakeSession implements PhotoCameraSession {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 
@@ -10,8 +11,12 @@ final class InteractionFeedbackRuntime {
     : _bridge = bridge ?? PigeonInteractionFeedbackBridge();
 
   final InteractionFeedbackBridge _bridge;
+  final _recentEventIds = <String>{};
+  final _recentEventOrder = ListQueue<String>();
   var _requestSequence = 0;
   var _disposed = false;
+
+  static const _eventIdCapacity = 256;
 
   Future<void> configure(InteractionFeedbackConfiguration configuration) {
     return _bestEffort(() => _bridge.configure(configuration));
@@ -19,18 +24,32 @@ final class InteractionFeedbackRuntime {
 
   void emit({
     required InteractionFeedbackCue cue,
+    String? eventId,
     String? soundId,
     int soundPriority = 0,
   }) {
     if (_disposed) return;
+    final requestId = eventId ?? _nextRequestId();
+    if (!_remember(requestId)) return;
     final request = InteractionFeedbackRequest(
-      requestId:
-          '${DateTime.now().microsecondsSinceEpoch}-${_requestSequence++}',
+      requestId: requestId,
       cue: cue,
       soundId: soundId,
       soundPriority: soundPriority,
     );
     unawaited(_bestEffort(() => _bridge.emit(request)));
+  }
+
+  String _nextRequestId() =>
+      '${DateTime.now().microsecondsSinceEpoch}-${_requestSequence++}';
+
+  bool _remember(String eventId) {
+    if (!_recentEventIds.add(eventId)) return false;
+    _recentEventOrder.addLast(eventId);
+    if (_recentEventOrder.length > _eventIdCapacity) {
+      _recentEventIds.remove(_recentEventOrder.removeFirst());
+    }
+    return true;
   }
 
   void previewSound(String soundId) {

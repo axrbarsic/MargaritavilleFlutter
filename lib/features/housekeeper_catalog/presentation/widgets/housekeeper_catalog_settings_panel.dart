@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../interaction/domain/margaritaville_interaction_intent.dart';
+import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../../settings/presentation/widgets/appearance_settings_panel.dart';
 import '../housekeeper_catalog_editor_screen.dart';
 
@@ -17,11 +19,15 @@ final class HousekeeperCatalogSettingsPanel extends StatelessWidget {
         height: 48,
         child: FilledButton.icon(
           key: const Key('open-housekeeper-catalog'),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const HousekeeperCatalogEditorScreen(),
-            ),
-          ),
+          onPressed: () =>
+              MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                MargaritavilleInteractionIntent.navigate,
+                () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HousekeeperCatalogEditorScreen(),
+                  ),
+                ),
+              ),
           icon: const Icon(Icons.groups_rounded),
           label: const Text('Изменить имена и цвета'),
         ),

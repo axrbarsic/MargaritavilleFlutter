@@ -7,6 +7,7 @@ import '../../../shared/edr/edr_overlay_controller.dart';
 import '../../../shared/edr/edr_overlay_scope.dart';
 import '../../../shared/edr/edr_window_surface.dart';
 import '../../housekeeper_catalog/domain/models/housekeeper.dart';
+import '../../interaction/domain/margaritaville_interaction_intent.dart';
 import '../../interaction/presentation/margaritaville_feedback_scope.dart';
 import '../../room_details/presentation/room_details_screen.dart';
 import '../../work_session/domain/models/room_state.dart';
@@ -194,9 +195,9 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
     if (openSettings == null || _settingsPresentationInFlight) return;
     _settingsPresentationInFlight = true;
     try {
-      MargaritavilleFeedbackScope.maybeControllerOf(
+      MargaritavilleFeedbackScope.dispatcherOf(
         context,
-      )?.settingsOpenCommitted();
+      ).signal(MargaritavilleInteractionIntent.openSettings);
       await _withEdrOccluded(openSettings);
     } finally {
       _settingsPresentationInFlight = false;

@@ -1467,3 +1467,83 @@ haptics. Физический Pixel сейчас заблокирован, по�
   измеряет, но code-level combined request и Pixel system history подтверждают
   отсутствие double-fire. Следующий шаг — отдельный commit/push U1, затем возврат
   к ближайшему незакрытому donor migration gap по прямой команде Alex.
+
+## 2026-07-11 — Durable checklist срочного ответвления после U1
+
+- [x] U1/5: единый Settings long-press, один semantic commit, один haptic и один
+  sound; software/device gates, review, commit `bd4af53` и push завершены.
+- [x] U2/5: глобальный typed `InteractionFoundation` contract, инвентаризация
+  всех дискретных действий, отсутствие double-fire и architecture guard против
+  прямых haptic/platform обходов; применимые physical device gates.
+- [ ] U3/5: быстрый иерархический Work Setup с prefix filter, focus/scroll,
+  single-tap haptic и настоящим native HDR/EDR selection pulse для имени
+  уборщицы, building/floor и комнаты через существующий typed visual runtime;
+  устранение вспышки всей панели при удержании; active-first автоскролл;
+  physical haptic stress `3 taps / 1 s = 3 single-shot events`; обязательные
+  physical iPhone 17 Pro Max и Pixel 8 gates. Android использует API 34+
+  Gainmap/system HDR headroom, iOS — SharedAppFoundation EDR; SDR glow и
+  whole-window brightness не считаются HDR.
+- [ ] U4/5: интерактивный стенд нескольких реальных production room-cell
+  статусов с pinch-калибровкой шрифтов на Pixel 8 и iPhone. Стенд переключает
+  3/4 колонки той же production-геометрией, синхронно меняет выбранную text-role
+  (номер и все вторичные роли) на всех образцах и показывает font size/scale,
+  line height, available width, overflow/fit, layout bounds и painted bounds.
+  Обязательны coarse/fine adjustment, reset donor/default, undo, сохранение
+  versioned typed snapshot с device/viewport/density/platform, paddings и bounds,
+  а также отдельный Apply/Confirm: случайный pinch не меняет production defaults.
+  Route доступен в установленной beta и не изменяет рабочие назначения/данные.
+  HDR/EDR samples используют существующий native runtime, но screenshot не
+  считается доказательством luminance.
+- [ ] U5/5: production/review Flutter Web PWA на GitHub Pages, публичная HTTPS
+  ссылка и browser smoke с честно обозначенными native limitations.
+- Каждый U остаётся отдельным bounded checkpoint: targeted tests, полный
+  применимый gate, independent integrated-diff review, MIGRATION_LOG, отдельный
+  commit и push. После U5 работа автоматически возвращается к сохранённому
+  donor migration gap; read-only аудит определил Cart Details presentation как
+  ближайший кандидат, но его реализация до завершения U2–U5 не начата.
+- Сквозной cross-platform invariant для U2–U5 и дальнейшей миграции: единые
+  Flutter domain/presentation/typed semantics обязательны одновременно на iOS и
+  Android; платформенная реализация различается только на нативной границе.
+  Любое исправление flash, prefix/focus, room assignment, calibration/snapshot и
+  haptics проверяется на обеих системах. Один checkpoint не готов по одной
+  платформе: требуются применимые tests и physical smoke на Pixel 8 и iPhone 17
+  Pro Max; временно недоступный телефон остаётся открытым device gate.
+
+## 2026-07-11 — U2/5: глобальный typed InteractionFoundation закрыт
+
+- Все известные дискретные действия проходят через typed
+  `MargaritavilleInteractionDispatcher`; прямые feature-вызовы controller и
+  platform haptic API запрещены ratchet/architecture guard. Системная клавиатура
+  остаётся явным system-owned исключением, scroll/drag frames не вибрируют.
+- `acceptAsyncOnce` синхронно принимает только первую camera/voice/delete/route
+  операцию и выдаёт cue до async work; быстрый повтор до завершения Future не
+  создаёт ни второй route/operation, ни ложный haptic. Dart и оба native adapter
+  дедуплицируют stable request ID bounded cache на 256 записей; Android cache
+  имеет отдельный JVM eviction-test.
+- Gesture-session latches гарантируют максимум один start/warning/commit на
+  свайп комнаты и один commit на puzzle даже при axis excursion или
+  arm-disarm-rearm. Отменённый puzzle полностью сбрасывает latch для следующего
+  жеста. Открытие selection после commit воспроизводит только звук и не добавляет
+  второй haptic.
+- На iOS каждый semantic cue теперь вызывает ровно один UIKit feedback API;
+  source guard запрещает возвращение составной дроби. Busy media delete disabled
+  до локального acceptance. Два presentation-файла разделены на небольшие
+  виджеты вместо ослабления лимита 300 строк.
+- Финальный `tool/quality_gate.sh` зелёный: `277` Flutter tests, Pigeon/Drift/
+  media/voice generation contracts, format/analyze, Android app JVM и отдельный
+  InteractionFoundation JVM test, file-size и architecture guards. Свежие
+  critical и integrated reviews дали PASS без P0/P1/P2; residual — iOS native
+  cache защищён executable Dart contract + source guard + physical build, но не
+  отдельным XCTest.
+- Physical Pixel 8 получил финальный profile APK. Tap Summary-фильтра изменил
+  selected-state и добавил ровно одну новую package vibration-history запись
+  (`CLICK`, один system event); приложение осталось живо без FATAL/SQLite ошибок.
+- Physical iPhone 17 Pro Max получил подписанную profile-сборку через
+  terminate-before-install runbook; bundle guard проверил восемь IOS frameworks,
+  запущен ровно один Runner. После первого live storage access остановленный
+  snapshot доказал `integrity_check=ok`, schema v10, 20 catalog rows и одну
+  смену; приложение штатно перезапущено. Субъективную силу UIKit cue отдельно
+  калибруем в U3 на обеих физических платформах по прямому требованию Alex.
+- U2 закрыт отдельным commit/push. Следующий обязательный checkpoint — U3/5 со
+  всеми P1-1…P1-5 из Android-видео, но одинаковой продуктовой семантикой на iOS,
+  Android и честным Web fallback согласно project scope invariant.
