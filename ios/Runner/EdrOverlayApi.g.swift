@@ -200,6 +200,8 @@ enum EdrPresentationOutcome: Int, CaseIterable {
 struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   var roomId: String
   var timeText: String
+  var primaryFontSize: Double
+  var secondaryFontSize: Double
   var left: Double
   var top: Double
   var width: Double
@@ -220,24 +222,28 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   static func fromList(_ pigeonVar_list: [Any?]) -> EdrTileSnapshot? {
     let roomId = pigeonVar_list[0] as! String
     let timeText = pigeonVar_list[1] as! String
-    let left = pigeonVar_list[2] as! Double
-    let top = pigeonVar_list[3] as! Double
-    let width = pigeonVar_list[4] as! Double
-    let height = pigeonVar_list[5] as! Double
-    let cornerRadius = pigeonVar_list[6] as! Double
-    let baseColorArgb = pigeonVar_list[7] as! Int64
-    let vipHdrEnabled = pigeonVar_list[8] as! Bool
-    let vipJellyEnabled = pigeonVar_list[9] as! Bool
-    let vipJellySpeed = pigeonVar_list[10] as! Double
-    let pulseGeneration: Int64? = nilOrValue(pigeonVar_list[11])
-    let pulseColorArgb: Int64? = nilOrValue(pigeonVar_list[12])
-    let pulseBoostColorArgb: Int64? = nilOrValue(pigeonVar_list[13])
-    let pulseStartedAtMicros: Int64? = nilOrValue(pigeonVar_list[14])
-    let springIntensity = pigeonVar_list[15] as! Double
+    let primaryFontSize = pigeonVar_list[2] as! Double
+    let secondaryFontSize = pigeonVar_list[3] as! Double
+    let left = pigeonVar_list[4] as! Double
+    let top = pigeonVar_list[5] as! Double
+    let width = pigeonVar_list[6] as! Double
+    let height = pigeonVar_list[7] as! Double
+    let cornerRadius = pigeonVar_list[8] as! Double
+    let baseColorArgb = pigeonVar_list[9] as! Int64
+    let vipHdrEnabled = pigeonVar_list[10] as! Bool
+    let vipJellyEnabled = pigeonVar_list[11] as! Bool
+    let vipJellySpeed = pigeonVar_list[12] as! Double
+    let pulseGeneration: Int64? = nilOrValue(pigeonVar_list[13])
+    let pulseColorArgb: Int64? = nilOrValue(pigeonVar_list[14])
+    let pulseBoostColorArgb: Int64? = nilOrValue(pigeonVar_list[15])
+    let pulseStartedAtMicros: Int64? = nilOrValue(pigeonVar_list[16])
+    let springIntensity = pigeonVar_list[17] as! Double
 
     return EdrTileSnapshot(
       roomId: roomId,
       timeText: timeText,
+      primaryFontSize: primaryFontSize,
+      secondaryFontSize: secondaryFontSize,
       left: left,
       top: top,
       width: width,
@@ -258,6 +264,8 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
     return [
       roomId,
       timeText,
+      primaryFontSize,
+      secondaryFontSize,
       left,
       top,
       width,
@@ -278,13 +286,15 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return EdrOverlayApiPigeonInternal.deepEquals(lhs.roomId, rhs.roomId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.timeText, rhs.timeText) && EdrOverlayApiPigeonInternal.deepEquals(lhs.left, rhs.left) && EdrOverlayApiPigeonInternal.deepEquals(lhs.top, rhs.top) && EdrOverlayApiPigeonInternal.deepEquals(lhs.width, rhs.width) && EdrOverlayApiPigeonInternal.deepEquals(lhs.height, rhs.height) && EdrOverlayApiPigeonInternal.deepEquals(lhs.cornerRadius, rhs.cornerRadius) && EdrOverlayApiPigeonInternal.deepEquals(lhs.baseColorArgb, rhs.baseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipHdrEnabled, rhs.vipHdrEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellyEnabled, rhs.vipJellyEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellySpeed, rhs.vipJellySpeed) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseGeneration, rhs.pulseGeneration) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseColorArgb, rhs.pulseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseBoostColorArgb, rhs.pulseBoostColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseStartedAtMicros, rhs.pulseStartedAtMicros) && EdrOverlayApiPigeonInternal.deepEquals(lhs.springIntensity, rhs.springIntensity)
+    return EdrOverlayApiPigeonInternal.deepEquals(lhs.roomId, rhs.roomId) && EdrOverlayApiPigeonInternal.deepEquals(lhs.timeText, rhs.timeText) && EdrOverlayApiPigeonInternal.deepEquals(lhs.primaryFontSize, rhs.primaryFontSize) && EdrOverlayApiPigeonInternal.deepEquals(lhs.secondaryFontSize, rhs.secondaryFontSize) && EdrOverlayApiPigeonInternal.deepEquals(lhs.left, rhs.left) && EdrOverlayApiPigeonInternal.deepEquals(lhs.top, rhs.top) && EdrOverlayApiPigeonInternal.deepEquals(lhs.width, rhs.width) && EdrOverlayApiPigeonInternal.deepEquals(lhs.height, rhs.height) && EdrOverlayApiPigeonInternal.deepEquals(lhs.cornerRadius, rhs.cornerRadius) && EdrOverlayApiPigeonInternal.deepEquals(lhs.baseColorArgb, rhs.baseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipHdrEnabled, rhs.vipHdrEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellyEnabled, rhs.vipJellyEnabled) && EdrOverlayApiPigeonInternal.deepEquals(lhs.vipJellySpeed, rhs.vipJellySpeed) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseGeneration, rhs.pulseGeneration) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseColorArgb, rhs.pulseColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseBoostColorArgb, rhs.pulseBoostColorArgb) && EdrOverlayApiPigeonInternal.deepEquals(lhs.pulseStartedAtMicros, rhs.pulseStartedAtMicros) && EdrOverlayApiPigeonInternal.deepEquals(lhs.springIntensity, rhs.springIntensity)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("EdrTileSnapshot")
     EdrOverlayApiPigeonInternal.deepHash(value: roomId, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: timeText, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: primaryFontSize, hasher: &hasher)
+    EdrOverlayApiPigeonInternal.deepHash(value: secondaryFontSize, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: left, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: top, hasher: &hasher)
     EdrOverlayApiPigeonInternal.deepHash(value: width, hasher: &hasher)
@@ -302,7 +312,7 @@ struct EdrTileSnapshot: Hashable, CustomStringConvertible {
   }
 
   public var description: String {
-    return "EdrTileSnapshot(roomId: \(String(describing: roomId)), timeText: \(String(describing: timeText)), left: \(String(describing: left)), top: \(String(describing: top)), width: \(String(describing: width)), height: \(String(describing: height)), cornerRadius: \(String(describing: cornerRadius)), baseColorArgb: \(String(describing: baseColorArgb)), vipHdrEnabled: \(String(describing: vipHdrEnabled)), vipJellyEnabled: \(String(describing: vipJellyEnabled)), vipJellySpeed: \(String(describing: vipJellySpeed)), pulseGeneration: \(String(describing: pulseGeneration)), pulseColorArgb: \(String(describing: pulseColorArgb)), pulseBoostColorArgb: \(String(describing: pulseBoostColorArgb)), pulseStartedAtMicros: \(String(describing: pulseStartedAtMicros)), springIntensity: \(String(describing: springIntensity)))"
+    return "EdrTileSnapshot(roomId: \(String(describing: roomId)), timeText: \(String(describing: timeText)), primaryFontSize: \(String(describing: primaryFontSize)), secondaryFontSize: \(String(describing: secondaryFontSize)), left: \(String(describing: left)), top: \(String(describing: top)), width: \(String(describing: width)), height: \(String(describing: height)), cornerRadius: \(String(describing: cornerRadius)), baseColorArgb: \(String(describing: baseColorArgb)), vipHdrEnabled: \(String(describing: vipHdrEnabled)), vipJellyEnabled: \(String(describing: vipJellyEnabled)), vipJellySpeed: \(String(describing: vipJellySpeed)), pulseGeneration: \(String(describing: pulseGeneration)), pulseColorArgb: \(String(describing: pulseColorArgb)), pulseBoostColorArgb: \(String(describing: pulseBoostColorArgb)), pulseStartedAtMicros: \(String(describing: pulseStartedAtMicros)), springIntensity: \(String(describing: springIntensity)))"
   }
 }
 

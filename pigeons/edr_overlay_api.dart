@@ -17,6 +17,8 @@ import 'package:pigeon/pigeon.dart';
 class EdrTileSnapshot {
   late String roomId;
   late String timeText;
+  late double primaryFontSize;
+  late double secondaryFontSize;
   late double left;
   late double top;
   late double width;

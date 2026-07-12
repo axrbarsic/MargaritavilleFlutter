@@ -71,6 +71,8 @@ final class _EdrOverlayGeometryCache {
       pulseBoostColorArgb: entry.pulseBoostColorArgb,
       pulseStartedAtMicros: entry.pulseStartedAtMicros,
       springIntensity: entry.springIntensity,
+      primaryFontSize: entry.primaryFontSize,
+      secondaryFontSize: entry.secondaryFontSize,
     );
   }
 

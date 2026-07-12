@@ -26,6 +26,7 @@ void main() {
     expect(find.text('Уборщицы'), findsOneWidget);
     expect(find.text('Изменить имена и цвета'), findsOneWidget);
     expect(find.text('Экспериментальное'), findsOneWidget);
+    expect(find.text('Стенд ячеек'), findsOneWidget);
     expect(find.text('Живые ячейки'), findsOneWidget);
     expect(find.text('VIP-желе'), findsOneWidget);
     expect(find.text('Сила пружины'), findsNothing);
@@ -113,6 +114,53 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.value.summaryGridPreference, SummaryGridPreference.three);
+  });
+
+  testWidgets('cell stand entry returns the typed navigation request', (
+    tester,
+  ) async {
+    AppearanceSettingsResult? result;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appearanceSettingsRepositoryProvider.overrideWithValue(
+            _MemoryAppearanceSettingsRepository(),
+          ),
+          interactionSoundSettingsRepositoryProvider.overrideWithValue(
+            _MemoryInteractionSoundSettingsRepository(),
+          ),
+        ],
+        child: TestFeedbackScope(
+          child: MaterialApp(
+            theme: MargaritavilleTheme.dark,
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: FilledButton(
+                  onPressed: () async {
+                    result = await Navigator.of(context)
+                        .push<AppearanceSettingsResult>(
+                          MaterialPageRoute(
+                            builder: (_) => const AppearanceSettingsScreen(),
+                          ),
+                        );
+                  },
+                  child: const Text('Открыть'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Открыть'));
+    await tester.pumpAndSettle();
+    final entry = find.byKey(const Key('open-cell-calibration'));
+    await tester.ensureVisible(entry);
+    await tester.pumpAndSettle();
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+
+    expect(result, AppearanceSettingsResult.openCellCalibration);
   });
 }
 

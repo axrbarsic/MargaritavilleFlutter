@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../design/margaritaville_colors.dart';
+import '../../cell_calibration/domain/models/room_cell_typography_profile.dart';
 
 abstract final class SummaryTypography {
   static TextStyle housekeeperName(Color color) {
@@ -27,8 +28,10 @@ abstract final class SummaryTypography {
     tabularFigures: true,
   );
 
-  static TextStyle roomNumberAtScale(double scale) =>
-      roomNumber.copyWith(fontSize: 44 * scale);
+  static TextStyle roomNumberAtScale(
+    double scale, {
+    RoomCellTypographyProfile profile = RoomCellTypographyProfile.defaults,
+  }) => roomNumber.copyWith(fontSize: profile.roomNumberSize * scale);
 
   static TextStyle get roomTime => _role(
     size: 16,
@@ -37,8 +40,10 @@ abstract final class SummaryTypography {
     tabularFigures: true,
   );
 
-  static TextStyle roomTimeAtScale(double scale) =>
-      roomTime.copyWith(fontSize: 16 * scale);
+  static TextStyle roomTimeAtScale(
+    double scale, {
+    RoomCellTypographyProfile profile = RoomCellTypographyProfile.defaults,
+  }) => roomTime.copyWith(fontSize: profile.roomTimeSize * scale);
 
   static TextStyle _role({
     required double size,

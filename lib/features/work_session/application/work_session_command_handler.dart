@@ -53,6 +53,7 @@ final class WorkSessionCommandHandler {
         session.replaceAllRoomAssignments(
           roomNumbers: command.roomNumbers,
           housekeepers: command.housekeepers,
+          testRooms: command.testRooms,
           changedAt: command.issuedAt,
         ),
       final LockWorkdayCommand command => _asMutation(

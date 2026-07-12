@@ -42,6 +42,8 @@ abstract final class EdrTileSnapshotFactory {
           : null,
       pulseStartedAtMicros: pulse?.startedAt.microsecondsSinceEpoch,
       springIntensity: policy.springIntensity,
+      primaryFontSize: 44,
+      secondaryFontSize: 16,
     );
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/features/work_session/application/all_rooms_test_data_generator.dart';
 import 'package:margaritaville_flutter/features/work_session/application/commands/work_session_command.dart';
@@ -8,6 +6,7 @@ import 'package:margaritaville_flutter/features/work_session/domain/catalogs/mar
 import 'package:margaritaville_flutter/features/work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/hotel_profile.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/housekeeper.dart';
+import 'package:margaritaville_flutter/features/work_session/domain/models/room_state.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_assignment.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session.dart';
 import 'package:margaritaville_flutter/features/work_session/domain/models/work_session_command_descriptor.dart';
@@ -16,19 +15,46 @@ import 'package:margaritaville_flutter/features/work_session/domain/repositories
 void main() {
   final now = DateTime.utc(2027, 2, 10, 12);
 
-  test('controlled seed returns every catalog room once in shuffled order', () {
+  test('fixture returns every room and housekeeper in deterministic order', () {
     final catalogOrder = MargaritavilleRoomCatalog.territories
         .expand((territory) => territory.rooms)
         .toList(growable: false);
+    final housekeepers = MargaritavilleHousekeeperCatalog.housekeepers(now);
 
-    final generated = const AllRoomsTestDataGenerator().shuffledRoomNumbers(
-      Random(42),
+    final first = const AllRoomsTestDataGenerator().generate(
+      housekeepers: housekeepers,
+      changedAt: now,
+      seed: 42,
+    );
+    final second = const AllRoomsTestDataGenerator().generate(
+      housekeepers: housekeepers,
+      changedAt: now,
+      seed: 42,
     );
 
-    expect(generated, hasLength(catalogOrder.length));
-    expect(generated.toSet(), catalogOrder.toSet());
-    expect(generated, isNot(equals(catalogOrder)));
-    expect(generated.where((roomNumber) => roomNumber == '101'), hasLength(1));
+    expect(first.roomNumbers, hasLength(catalogOrder.length));
+    expect(first.roomNumbers.toSet(), catalogOrder.toSet());
+    expect(first.roomNumbers, isNot(equals(catalogOrder)));
+    expect(first.housekeepers, isNot(equals(housekeepers)));
+    expect(_fixtureSignature(first), _fixtureSignature(second));
+  });
+
+  test('fixture covers every live status and makes most rooms real VIP', () {
+    final fixture = const AllRoomsTestDataGenerator().generate(
+      housekeepers: MargaritavilleHousekeeperCatalog.housekeepers(now),
+      changedAt: now,
+      seed: 42,
+    );
+
+    expect(
+      fixture.rooms.map((room) => room.displayStatus).toSet(),
+      RoomDisplayStatus.values.toSet(),
+    );
+    expect(
+      fixture.rooms.where((room) => room.isVip).length,
+      greaterThanOrEqualTo((fixture.rooms.length * 0.6).ceil()),
+    );
+    expect(fixture.rooms.where((room) => !room.isVip), isNotEmpty);
   });
 
   test(
@@ -36,19 +62,21 @@ void main() {
     () async {
       final repository = _RecordingRepository();
       final session = _session(now).lockWorkday(changedAt: now);
-      final roomNumbers = const AllRoomsTestDataGenerator().shuffledRoomNumbers(
-        Random(42),
+      final fixture = const AllRoomsTestDataGenerator().generate(
+        housekeepers: MargaritavilleHousekeeperCatalog.housekeepers(now),
+        changedAt: now.add(const Duration(minutes: 1)),
+        seed: 42,
       );
       final handler = WorkSessionCommandHandler(repository);
-      final housekeepers = MargaritavilleHousekeeperCatalog.housekeepers(now);
 
       final result = await handler.execute(
         session,
         ReplaceAllRoomAssignmentsCommand(
           commandId: 'all-rooms-1',
           issuedAt: now.add(const Duration(minutes: 1)),
-          roomNumbers: roomNumbers,
-          housekeepers: housekeepers,
+          roomNumbers: fixture.roomNumbers,
+          housekeepers: fixture.housekeepers,
+          testRooms: fixture.rooms,
         ),
       );
 
@@ -61,12 +89,15 @@ void main() {
       expect(repository.writeCount, 1);
       expect(persisted.id, session.id);
       expect(persisted.workdayLocked, isTrue);
-      expect(persisted.activeAssignments, hasLength(housekeepers.length));
+      expect(
+        persisted.activeAssignments,
+        hasLength(fixture.housekeepers.length),
+      );
       expect(
         persisted.activeAssignments
             .map((assignment) => assignment.housekeeper.id)
             .toSet(),
-        housekeepers.map((value) => value.id).toSet(),
+        fixture.housekeepers.map((value) => value.id).toSet(),
       );
       expect(
         persistedRooms,
@@ -80,6 +111,20 @@ void main() {
         ),
         isTrue,
       );
+      expect(
+        persisted.activeRooms.map((room) => room.displayStatus).toSet(),
+        RoomDisplayStatus.values.toSet(),
+      );
+      expect(
+        persisted.activeRooms.where((room) => room.isVip).length,
+        greaterThanOrEqualTo((persistedRooms.length * 0.6).ceil()),
+      );
+      for (final assignment in persisted.activeAssignments) {
+        expect(
+          assignment.activeRooms.map((room) => room.displayStatus).toSet(),
+          RoomDisplayStatus.values.toSet(),
+        );
+      }
       for (final assignment in persisted.activeAssignments) {
         final firstRoom =
             assignment.activeRooms.map((room) => room.roomNumber).toList()
@@ -117,9 +162,9 @@ void main() {
         .session;
 
     final result = session.replaceAllRoomAssignments(
-      roomNumbers: const AllRoomsTestDataGenerator().shuffledRoomNumbers(
-        Random(7),
-      ),
+      roomNumbers: const AllRoomsTestDataGenerator()
+          .generate(housekeepers: [], changedAt: now, seed: 7)
+          .roomNumbers,
       housekeepers: MargaritavilleHousekeeperCatalog.housekeepers(now),
       changedAt: now.add(const Duration(minutes: 1)),
     );
@@ -143,9 +188,9 @@ void main() {
     ];
 
     final result = _session(now).replaceAllRoomAssignments(
-      roomNumbers: const AllRoomsTestDataGenerator().shuffledRoomNumbers(
-        Random(11),
-      ),
+      roomNumbers: const AllRoomsTestDataGenerator()
+          .generate(housekeepers: [], changedAt: now, seed: 11)
+          .roomNumbers,
       housekeepers: housekeepers,
       changedAt: now.add(const Duration(minutes: 1)),
     );
@@ -159,6 +204,12 @@ void main() {
     );
   });
 }
+
+List<Object?> _fixtureSignature(AllRoomsTestData fixture) => [
+  fixture.roomNumbers,
+  fixture.housekeepers.map((value) => value.id).toList(growable: false),
+  fixture.rooms.map((room) => room.toJson()).toList(growable: false),
+];
 
 WorkSession _session(DateTime now) {
   WorkAssignment assignment(String id, int cart, String name) {

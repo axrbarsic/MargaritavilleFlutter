@@ -114,6 +114,8 @@ final class EdrOverlayController extends ChangeNotifier {
     required bool vipJellyEnabled,
     required double vipJellySpeed,
     required double springIntensity,
+    double primaryFontSize = 44,
+    double secondaryFontSize = 16,
     int? pulseGeneration,
     int? pulseColorArgb,
     int? pulseBoostColorArgb,
@@ -134,6 +136,8 @@ final class EdrOverlayController extends ChangeNotifier {
       pulseBoostColorArgb: pulseBoostColorArgb,
       pulseStartedAtMicros: pulseStartedAtMicros,
       springIntensity: springIntensity,
+      primaryFontSize: primaryFontSize,
+      secondaryFontSize: secondaryFontSize,
     );
     final previous = _entries[roomId];
     if (previous == next) return;

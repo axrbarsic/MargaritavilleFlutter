@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/edr/edr_overlay_controller.dart';
 import '../../../shared/edr/edr_overlay_scope.dart';
 import '../../../shared/edr/edr_window_surface.dart';
+import '../../cell_calibration/domain/models/room_cell_typography_profile.dart';
 import '../../housekeeper_catalog/domain/models/housekeeper.dart';
 import '../../interaction/domain/margaritaville_interaction_intent.dart';
 import '../../interaction/presentation/margaritaville_feedback_scope.dart';
@@ -32,6 +33,7 @@ final class SummaryScreen extends ConsumerStatefulWidget {
     this.scrollController,
     this.edrController,
     this.housekeeperCatalogById = const {},
+    this.typographyProfile = RoomCellTypographyProfile.defaults,
     super.key,
   });
 
@@ -42,6 +44,7 @@ final class SummaryScreen extends ConsumerStatefulWidget {
   final ScrollController? scrollController;
   final EdrOverlayController? edrController;
   final Map<String, Housekeeper> housekeeperCatalogById;
+  final RoomCellTypographyProfile typographyProfile;
 
   @override
   ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
@@ -246,6 +249,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen>
       onOpenMedia: _openMedia,
       visualPolicy: widget.visualPolicy,
       pulseEventFor: _visualPulses.eventFor,
+      typographyProfile: widget.typographyProfile,
     );
   }
 

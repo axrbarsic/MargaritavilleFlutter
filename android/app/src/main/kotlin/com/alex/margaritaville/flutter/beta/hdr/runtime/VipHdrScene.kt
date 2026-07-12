@@ -104,6 +104,8 @@ data class VipHdrCellVisual(
     val baseColorArgb: Int,
     val primaryText: String? = null,
     val secondaryText: String? = null,
+    val primaryFontSizeSp: Float = 44f,
+    val secondaryFontSizeSp: Float = 16f,
     val desiredHeadroom: Float = 2f,
     val opacity: Float = 1f,
     val pulse: VipHdrPulse? = null,
@@ -115,6 +117,12 @@ data class VipHdrCellVisual(
             "Desired headroom must be within [1, 10000]"
         }
         require(opacity.isFinite() && opacity in 0f..1f) { "Opacity must be within [0, 1]" }
+        require(primaryFontSizeSp.isFinite() && primaryFontSizeSp > 0f) {
+            "Primary font size must be finite and positive"
+        }
+        require(secondaryFontSizeSp.isFinite() && secondaryFontSizeSp > 0f) {
+            "Secondary font size must be finite and positive"
+        }
     }
 }
 

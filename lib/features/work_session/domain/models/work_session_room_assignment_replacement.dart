@@ -4,6 +4,7 @@ extension WorkSessionRoomAssignmentReplacement on WorkSession {
   WorkSessionMutation replaceAllRoomAssignments({
     required List<String> roomNumbers,
     required List<Housekeeper> housekeepers,
+    List<RoomState>? testRooms,
     required DateTime changedAt,
   }) {
     final normalized = roomNumbers
@@ -35,6 +36,19 @@ extension WorkSessionRoomAssignmentReplacement on WorkSession {
     final existingRooms = {
       for (final room in activeRooms) room.roomNumber: room,
     };
+    final fixtureRooms = {
+      for (final room in testRooms ?? const <RoomState>[])
+        room.roomNumber: room,
+    };
+    if (fixtureRooms.isNotEmpty &&
+        (fixtureRooms.length != normalized.length ||
+            !fixtureRooms.keys.toSet().containsAll(unique))) {
+      throw ArgumentError.value(
+        testRooms,
+        'testRooms',
+        'Expected one test state for every room number.',
+      );
+    }
     final roomsByAssignment = List.generate(
       activeHousekeepers.length,
       (_) => <RoomState>[],
@@ -43,7 +57,8 @@ extension WorkSessionRoomAssignmentReplacement on WorkSession {
     for (var index = 0; index < normalized.length; index++) {
       final roomNumber = normalized[index];
       roomsByAssignment[index % activeHousekeepers.length].add(
-        existingRooms[roomNumber] ??
+        fixtureRooms[roomNumber] ??
+            existingRooms[roomNumber] ??
             RoomState.pending(roomNumber: roomNumber, selectedAt: changedAt),
       );
     }

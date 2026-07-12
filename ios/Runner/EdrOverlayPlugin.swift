@@ -344,6 +344,8 @@ private final class EdrWindowRuntimeAdapter: @preconcurrency EdrOverlayHostApi {
       labels: VisualRuntimeLabels(
         primaryText: snapshot.roomId,
         secondaryText: snapshot.timeText,
+        primaryFontSize: snapshot.primaryFontSize,
+        secondaryFontSize: snapshot.secondaryFontSize,
         verticalGap: 6 * contentScale,
         contentInsets: VisualRuntimeInsets(
           top: 10 * contentScale,

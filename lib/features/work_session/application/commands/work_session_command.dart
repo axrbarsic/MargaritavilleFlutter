@@ -1,4 +1,5 @@
 import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
+import '../../domain/models/room_state.dart';
 
 sealed class WorkSessionCommand {
   const WorkSessionCommand({
@@ -80,10 +81,13 @@ final class ReplaceAllRoomAssignmentsCommand extends WorkSessionCommand {
     required super.issuedAt,
     required this.roomNumbers,
     required List<Housekeeper> housekeepers,
-  }) : housekeepers = List.unmodifiable(housekeepers);
+    List<RoomState>? testRooms,
+  }) : housekeepers = List.unmodifiable(housekeepers),
+       testRooms = testRooms == null ? null : List.unmodifiable(testRooms);
 
   final List<String> roomNumbers;
   final List<Housekeeper> housekeepers;
+  final List<RoomState>? testRooms;
 }
 
 final class LockWorkdayCommand extends WorkSessionCommand {

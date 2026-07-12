@@ -37,56 +37,60 @@ String _commandType(WorkSessionCommand command) => switch (command) {
   AdvanceScheduledRoomsCommand() => 'scheduled_rooms_advanced',
 };
 
-Map<String, Object?> _semanticPayload(
-  WorkSessionCommand command,
-) => switch (command) {
-  ToggleHousekeeperWorkItemCommand(
-    :final housekeeperId,
-    :final displayName,
-    :final paletteKey,
-  ) =>
-    {
-      'housekeeperId': housekeeperId,
-      'displayName': displayName,
-      'paletteKey': paletteKey,
-    },
-  SetAssignmentTerritoryCommand(:final assignmentId, :final territoryId) => {
-    'assignmentId': assignmentId,
-    'territoryId': territoryId,
-  },
-  ToggleRoomSelectionCommand(:final assignmentId, :final roomNumber) ||
-  AssignRoomCommand(:final assignmentId, :final roomNumber) ||
-  UnassignRoomCommand(
-    :final assignmentId,
-    :final roomNumber,
-  ) => {'assignmentId': assignmentId, 'roomNumber': roomNumber},
-  ReplaceAllRoomAssignmentsCommand(:final roomNumbers, :final housekeepers) => {
-    'roomNumbers': roomNumbers,
-    'housekeepers': [
-      for (final value in housekeepers)
+Map<String, Object?> _semanticPayload(WorkSessionCommand command) =>
+    switch (command) {
+      ToggleHousekeeperWorkItemCommand(
+        :final housekeeperId,
+        :final displayName,
+        :final paletteKey,
+      ) =>
         {
-          'id': value.id,
-          'displayName': value.displayName,
-          'paletteKey': value.paletteKey,
-          'updatedAtMicros': value.updatedAt.microsecondsSinceEpoch,
-          'deletedAtMicros': value.deletedAt?.microsecondsSinceEpoch,
+          'housekeeperId': housekeeperId,
+          'displayName': displayName,
+          'paletteKey': paletteKey,
         },
-    ],
-  },
-  LockWorkdayCommand() ||
-  UnlockWorkdayCommand() ||
-  AdvanceScheduledRoomsCommand() => const {},
-  AdvanceRoomCommand(:final roomNumber) ||
-  ResetRoomCommand(:final roomNumber) => {'roomNumber': roomNumber},
-  SetRoomVipCommand(:final roomNumber, :final isVip) => {
-    'roomNumber': roomNumber,
-    'isVip': isVip,
-  },
-  SetRoomScheduleCommand(:final roomNumber, :final scheduledFor) => {
-    'roomNumber': roomNumber,
-    'scheduledForMicros': scheduledFor?.microsecondsSinceEpoch,
-  },
-};
+      SetAssignmentTerritoryCommand(:final assignmentId, :final territoryId) =>
+        {'assignmentId': assignmentId, 'territoryId': territoryId},
+      ToggleRoomSelectionCommand(:final assignmentId, :final roomNumber) ||
+      AssignRoomCommand(:final assignmentId, :final roomNumber) ||
+      UnassignRoomCommand(
+        :final assignmentId,
+        :final roomNumber,
+      ) => {'assignmentId': assignmentId, 'roomNumber': roomNumber},
+      ReplaceAllRoomAssignmentsCommand(
+        :final roomNumbers,
+        :final housekeepers,
+        :final testRooms,
+      ) =>
+        {
+          'roomNumbers': roomNumbers,
+          'housekeepers': [
+            for (final value in housekeepers)
+              {
+                'id': value.id,
+                'displayName': value.displayName,
+                'paletteKey': value.paletteKey,
+                'updatedAtMicros': value.updatedAt.microsecondsSinceEpoch,
+                'deletedAtMicros': value.deletedAt?.microsecondsSinceEpoch,
+              },
+          ],
+          if (testRooms != null)
+            'testRooms': [for (final room in testRooms) room.toJson()],
+        },
+      LockWorkdayCommand() ||
+      UnlockWorkdayCommand() ||
+      AdvanceScheduledRoomsCommand() => const {},
+      AdvanceRoomCommand(:final roomNumber) ||
+      ResetRoomCommand(:final roomNumber) => {'roomNumber': roomNumber},
+      SetRoomVipCommand(:final roomNumber, :final isVip) => {
+        'roomNumber': roomNumber,
+        'isVip': isVip,
+      },
+      SetRoomScheduleCommand(:final roomNumber, :final scheduledFor) => {
+        'roomNumber': roomNumber,
+        'scheduledForMicros': scheduledFor?.microsecondsSinceEpoch,
+      },
+    };
 
 Map<String, Object?> _eventPayload(
   WorkSessionCommand command,

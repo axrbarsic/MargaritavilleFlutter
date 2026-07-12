@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -136,6 +137,30 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
             onChanged: (value) =>
                 unawaited(controller.setSummaryGridPreference(value)),
           ),
+          if (_cellCalibrationAvailable) ...[
+            const Divider(height: 18),
+            ListTile(
+              key: const Key('open-cell-calibration'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.tune_rounded),
+              title: const Text(
+                'Стенд ячеек',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+              subtitle: const Text(
+                'Калибровка номера и времени двумя пальцами на настоящих ячейках.',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () =>
+                  MargaritavilleFeedbackScope.dispatcherOf(context).accept(
+                    MargaritavilleInteractionIntent.navigate,
+                    () => Navigator.pop(
+                      context,
+                      AppearanceSettingsResult.openCellCalibration,
+                    ),
+                  ),
+            ),
+          ],
           const Divider(height: 18),
           AppearanceSettingToggleRow(
             key: const Key('setting-live-cells'),
@@ -223,4 +248,11 @@ final class AppearanceSettingsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  bool get _cellCalibrationAvailable =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android);
 }
+
+enum AppearanceSettingsResult { openCellCalibration }

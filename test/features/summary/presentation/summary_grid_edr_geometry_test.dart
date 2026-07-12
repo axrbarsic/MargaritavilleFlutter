@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:margaritaville_flutter/app/margaritaville_theme.dart';
+import 'package:margaritaville_flutter/features/cell_calibration/domain/models/room_cell_typography_profile.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_screen.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/summary_visual_policy.dart';
 import 'package:margaritaville_flutter/features/summary/presentation/widgets/summary_assignment_section.dart';
@@ -45,6 +46,10 @@ void main() {
                       alignment: Alignment.topCenter,
                       child: SummaryAssignmentSection(
                         assignment: _vipAssignment(),
+                        typographyProfile: const RoomCellTypographyProfile(
+                          roomNumberSize: 48,
+                          roomTimeSize: 18,
+                        ),
                         visualPolicy: const SummaryVisualPolicy(
                           gridColumns: SummaryGridColumns.three,
                           vipHdrLightEnabled: true,
@@ -79,6 +84,8 @@ void main() {
     expect(paintedSize, tileSize);
     expect(snapshot.width, closeTo(tileSize.width, 0.001));
     expect(snapshot.height, tileSize.height);
+    expect(snapshot.primaryFontSize, 48);
+    expect(snapshot.secondaryFontSize, 18);
     debugDefaultTargetPlatformOverride = null;
   });
 

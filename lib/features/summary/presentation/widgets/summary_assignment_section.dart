@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../design/margaritaville_colors.dart';
+import '../../../cell_calibration/domain/models/room_cell_typography_profile.dart';
 import '../../../housekeeper_catalog/domain/models/housekeeper.dart';
 import '../../../work_session/domain/catalogs/margaritaville_room_catalog.dart';
 import '../../../work_session/domain/models/room_state.dart';
@@ -25,6 +26,7 @@ final class SummaryAssignmentSection extends StatelessWidget {
     this.rooms,
     this.visualPolicy = SummaryVisualPolicy.balanced,
     this.pulseEventFor,
+    this.typographyProfile = RoomCellTypographyProfile.defaults,
     super.key,
   });
 
@@ -38,6 +40,7 @@ final class SummaryAssignmentSection extends StatelessWidget {
   final List<RoomState>? rooms;
   final SummaryVisualPolicy visualPolicy;
   final SummaryVisualPulseEvent? Function(String roomNumber)? pulseEventFor;
+  final RoomCellTypographyProfile typographyProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +89,7 @@ final class SummaryAssignmentSection extends StatelessWidget {
                           fontScale: tileGeometry.fontScale,
                           compressTextVertically:
                               tileGeometry.compressTextVertically,
+                          typographyProfile: typographyProfile,
                         ),
                       ),
                   ],

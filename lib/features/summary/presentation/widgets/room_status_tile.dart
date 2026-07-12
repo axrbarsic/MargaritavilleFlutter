@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../design/margaritaville_colors.dart';
 import '../../../../shared/edr/edr_overlay_controller.dart';
 import '../../../../shared/edr/edr_overlay_scope.dart';
+import '../../../cell_calibration/domain/models/room_cell_typography_profile.dart';
 import '../../../interaction/application/margaritaville_interaction_dispatcher.dart';
 import '../../../interaction/domain/margaritaville_interaction_intent.dart';
 import '../../../interaction/presentation/margaritaville_feedback_scope.dart';
@@ -13,8 +14,10 @@ import '../summary_layout_tokens.dart';
 import '../summary_visual_policy.dart';
 import '../summary_visual_pulse.dart';
 import 'room_action_sheet.dart';
-import 'room_gesture_arena_target.dart';
 import 'room_status_tile_content.dart';
+import 'room_status_tile_gesture_target.dart';
+
+export 'room_status_tile_gesture_target.dart' show RoomCellCalibrationGesture;
 
 final class RoomStatusTile extends StatefulWidget {
   const RoomStatusTile({
@@ -29,6 +32,8 @@ final class RoomStatusTile extends StatefulWidget {
     this.contentScale = 1,
     this.fontScale = 1,
     this.compressTextVertically = false,
+    this.typographyProfile = RoomCellTypographyProfile.defaults,
+    this.calibrationGesture,
     super.key,
   }) : assert(contentScale > 0 && contentScale <= 1),
        assert(fontScale > 0 && fontScale <= 1);
@@ -44,6 +49,8 @@ final class RoomStatusTile extends StatefulWidget {
   final double contentScale;
   final double fontScale;
   final bool compressTextVertically;
+  final RoomCellTypographyProfile typographyProfile;
+  final RoomCellCalibrationGesture? calibrationGesture;
 
   @override
   State<RoomStatusTile> createState() => _RoomStatusTileState();
@@ -99,10 +106,12 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
           button: true,
           label: 'Номер ${room.roomNumber}',
           value: '$label${room.isVip ? ', VIP' : ''}',
-          hint:
-              'Удерживайте для следующего статуса, свайпните вправо для действий',
-          child: RoomGestureArenaTarget(
-            key: Key('summary-room-${room.roomNumber}'),
+          hint: widget.calibrationGesture == null
+              ? 'Удерживайте для следующего статуса, свайпните вправо для действий'
+              : 'Сведите или разведите два пальца для калибровки',
+          child: RoomStatusTileGestureTarget(
+            roomNumber: room.roomNumber,
+            calibrationGesture: widget.calibrationGesture,
             onHoldCommit: () {
               feedback().signalHapticOnly(
                 MargaritavilleInteractionIntent.holdCommit,
@@ -133,6 +142,7 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
               fontScale: widget.fontScale,
               compressTextVertically: widget.compressTextVertically,
               timestampText: _time(_timestamp),
+              typographyProfile: widget.typographyProfile,
             ),
           ),
         ),
@@ -192,6 +202,10 @@ final class _RoomStatusTileState extends State<RoomStatusTile> {
           : null,
       pulseStartedAtMicros: pulse?.startedAt.microsecondsSinceEpoch,
       springIntensity: widget.visualPolicy.springIntensity,
+      primaryFontSize:
+          widget.typographyProfile.roomNumberSize * widget.fontScale,
+      secondaryFontSize:
+          widget.typographyProfile.roomTimeSize * widget.fontScale,
     );
   }
 

@@ -30,6 +30,8 @@ final class _EdrTileEntry {
     required this.pulseBoostColorArgb,
     required this.pulseStartedAtMicros,
     required this.springIntensity,
+    required this.primaryFontSize,
+    required this.secondaryFontSize,
   });
 
   final GlobalKey renderKey;
@@ -45,6 +47,8 @@ final class _EdrTileEntry {
   final int? pulseBoostColorArgb;
   final int? pulseStartedAtMicros;
   final double springIntensity;
+  final double primaryFontSize;
+  final double secondaryFontSize;
 
   @override
   bool operator ==(Object other) {
@@ -61,7 +65,9 @@ final class _EdrTileEntry {
         other.pulseColorArgb == pulseColorArgb &&
         other.pulseBoostColorArgb == pulseBoostColorArgb &&
         other.pulseStartedAtMicros == pulseStartedAtMicros &&
-        other.springIntensity == springIntensity;
+        other.springIntensity == springIntensity &&
+        other.primaryFontSize == primaryFontSize &&
+        other.secondaryFontSize == secondaryFontSize;
   }
 
   @override
@@ -79,5 +85,7 @@ final class _EdrTileEntry {
     pulseBoostColorArgb,
     pulseStartedAtMicros,
     springIntensity,
+    primaryFontSize,
+    secondaryFontSize,
   );
 }

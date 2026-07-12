@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../cell_calibration/domain/models/room_cell_typography_profile.dart';
 import '../../../work_session/domain/models/room_state.dart';
 import '../summary_layout_tokens.dart';
 import '../summary_typography.dart';
@@ -20,6 +21,7 @@ final class RoomStatusTileContent extends StatelessWidget {
     required this.fontScale,
     required this.compressTextVertically,
     required this.timestampText,
+    this.typographyProfile = RoomCellTypographyProfile.defaults,
     super.key,
   });
 
@@ -33,6 +35,7 @@ final class RoomStatusTileContent extends StatelessWidget {
   final double fontScale;
   final bool compressTextVertically;
   final String timestampText;
+  final RoomCellTypographyProfile typographyProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +69,10 @@ final class RoomStatusTileContent extends StatelessWidget {
                     child: SummaryMinimumScaleText(
                       key: Key('summary-room-number-text-${room.roomNumber}'),
                       text: room.roomNumber,
-                      style: SummaryTypography.roomNumberAtScale(fontScale),
+                      style: SummaryTypography.roomNumberAtScale(
+                        fontScale,
+                        profile: typographyProfile,
+                      ),
                       minimumScaleFactor: 0.50,
                       compressHeightOnly: compressTextVertically,
                     ),
@@ -75,7 +81,10 @@ final class RoomStatusTileContent extends StatelessWidget {
                   SummaryMinimumScaleText(
                     key: Key('summary-room-time-text-${room.roomNumber}'),
                     text: timestampText,
-                    style: SummaryTypography.roomTimeAtScale(fontScale),
+                    style: SummaryTypography.roomTimeAtScale(
+                      fontScale,
+                      profile: typographyProfile,
+                    ),
                     minimumScaleFactor: 0.62,
                     compressHeightOnly: compressTextVertically,
                   ),

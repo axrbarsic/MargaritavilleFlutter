@@ -291,6 +291,8 @@ class AndroidEdrOverlayAdapter(
             baseColorArgb = baseColorArgb.toInt(),
             primaryText = roomId,
             secondaryText = timeText,
+            primaryFontSizeSp = primaryFontSize.toFloat(),
+            secondaryFontSizeSp = secondaryFontSize.toFloat(),
             desiredHeadroom = if (vipHdrEnabled) maximumSignalHeadroom else 1f,
             pulse = pulse(),
             jelly =

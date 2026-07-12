@@ -37,7 +37,7 @@ internal class VipHdrLabelRenderer(
             if (secondary.isEmpty()) {
                 0f
             } else {
-                fontLineHeightPx(metrics.secondaryFontSizeSp * density, timeTypeface)
+                fontLineHeightPx(cell.secondaryFontSizeSp * density, timeTypeface)
             }
         val roomTop = bounds.top + verticalPadding
         val roomBottom =
@@ -54,7 +54,7 @@ internal class VipHdrLabelRenderer(
             centerY = (roomTop + roomBottom) / 2f,
             availableWidth = availableWidth,
             availableHeight = (roomBottom - roomTop).coerceAtLeast(1f),
-            baseSizePx = metrics.primaryFontSizeSp * density,
+            baseSizePx = cell.primaryFontSizeSp * density,
             minimumScale = 0.50f,
             typeface = roomTypeface,
         )
@@ -67,7 +67,7 @@ internal class VipHdrLabelRenderer(
                 centerY = bounds.bottom - verticalPadding - timeHeight / 2f,
                 availableWidth = availableWidth,
                 availableHeight = timeHeight,
-                baseSizePx = metrics.secondaryFontSizeSp * density,
+                baseSizePx = cell.secondaryFontSizeSp * density,
                 minimumScale = 0.62f,
                 typeface = timeTypeface,
             )

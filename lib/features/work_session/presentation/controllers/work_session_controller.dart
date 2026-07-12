@@ -114,19 +114,21 @@ final class WorkSessionController extends AsyncNotifier<WorkSession> {
   }) async {
     final generator = random ?? Random();
     final issuedAt = _nextTimestamp();
-    final roomNumbers = const AllRoomsTestDataGenerator().shuffledRoomNumbers(
-      generator,
-    );
     final housekeepers = await ref
         .read(housekeeperCatalogRepositoryProvider)
         .loadActive();
-    housekeepers.shuffle(generator);
+    final fixture = const AllRoomsTestDataGenerator().generate(
+      housekeepers: housekeepers,
+      changedAt: issuedAt,
+      seed: generator.nextInt(1 << 32),
+    );
     return _execute(
       ReplaceAllRoomAssignmentsCommand(
         commandId: _commandId(),
         issuedAt: issuedAt,
-        roomNumbers: roomNumbers,
-        housekeepers: housekeepers,
+        roomNumbers: fixture.roomNumbers,
+        housekeepers: fixture.housekeepers,
+        testRooms: fixture.rooms,
       ),
     );
   }

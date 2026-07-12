@@ -213,6 +213,8 @@ enum class EdrPresentationOutcome(val raw: Int) {
 data class EdrTileSnapshot (
   val roomId: String,
   val timeText: String,
+  val primaryFontSize: Double,
+  val secondaryFontSize: Double,
   val left: Double,
   val top: Double,
   val width: Double,
@@ -233,27 +235,31 @@ data class EdrTileSnapshot (
     fun fromList(pigeonVar_list: List<Any?>): EdrTileSnapshot {
       val roomId = pigeonVar_list[0] as String
       val timeText = pigeonVar_list[1] as String
-      val left = pigeonVar_list[2] as Double
-      val top = pigeonVar_list[3] as Double
-      val width = pigeonVar_list[4] as Double
-      val height = pigeonVar_list[5] as Double
-      val cornerRadius = pigeonVar_list[6] as Double
-      val baseColorArgb = pigeonVar_list[7] as Long
-      val vipHdrEnabled = pigeonVar_list[8] as Boolean
-      val vipJellyEnabled = pigeonVar_list[9] as Boolean
-      val vipJellySpeed = pigeonVar_list[10] as Double
-      val pulseGeneration = pigeonVar_list[11] as Long?
-      val pulseColorArgb = pigeonVar_list[12] as Long?
-      val pulseBoostColorArgb = pigeonVar_list[13] as Long?
-      val pulseStartedAtMicros = pigeonVar_list[14] as Long?
-      val springIntensity = pigeonVar_list[15] as Double
-      return EdrTileSnapshot(roomId, timeText, left, top, width, height, cornerRadius, baseColorArgb, vipHdrEnabled, vipJellyEnabled, vipJellySpeed, pulseGeneration, pulseColorArgb, pulseBoostColorArgb, pulseStartedAtMicros, springIntensity)
+      val primaryFontSize = pigeonVar_list[2] as Double
+      val secondaryFontSize = pigeonVar_list[3] as Double
+      val left = pigeonVar_list[4] as Double
+      val top = pigeonVar_list[5] as Double
+      val width = pigeonVar_list[6] as Double
+      val height = pigeonVar_list[7] as Double
+      val cornerRadius = pigeonVar_list[8] as Double
+      val baseColorArgb = pigeonVar_list[9] as Long
+      val vipHdrEnabled = pigeonVar_list[10] as Boolean
+      val vipJellyEnabled = pigeonVar_list[11] as Boolean
+      val vipJellySpeed = pigeonVar_list[12] as Double
+      val pulseGeneration = pigeonVar_list[13] as Long?
+      val pulseColorArgb = pigeonVar_list[14] as Long?
+      val pulseBoostColorArgb = pigeonVar_list[15] as Long?
+      val pulseStartedAtMicros = pigeonVar_list[16] as Long?
+      val springIntensity = pigeonVar_list[17] as Double
+      return EdrTileSnapshot(roomId, timeText, primaryFontSize, secondaryFontSize, left, top, width, height, cornerRadius, baseColorArgb, vipHdrEnabled, vipJellyEnabled, vipJellySpeed, pulseGeneration, pulseColorArgb, pulseBoostColorArgb, pulseStartedAtMicros, springIntensity)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
       roomId,
       timeText,
+      primaryFontSize,
+      secondaryFontSize,
       left,
       top,
       width,
@@ -278,13 +284,15 @@ data class EdrTileSnapshot (
       return true
     }
     val other = other as EdrTileSnapshot
-    return EdrOverlayApiPigeonUtils.deepEquals(this.roomId, other.roomId) && EdrOverlayApiPigeonUtils.deepEquals(this.timeText, other.timeText) && EdrOverlayApiPigeonUtils.deepEquals(this.left, other.left) && EdrOverlayApiPigeonUtils.deepEquals(this.top, other.top) && EdrOverlayApiPigeonUtils.deepEquals(this.width, other.width) && EdrOverlayApiPigeonUtils.deepEquals(this.height, other.height) && EdrOverlayApiPigeonUtils.deepEquals(this.cornerRadius, other.cornerRadius) && EdrOverlayApiPigeonUtils.deepEquals(this.baseColorArgb, other.baseColorArgb) && EdrOverlayApiPigeonUtils.deepEquals(this.vipHdrEnabled, other.vipHdrEnabled) && EdrOverlayApiPigeonUtils.deepEquals(this.vipJellyEnabled, other.vipJellyEnabled) && EdrOverlayApiPigeonUtils.deepEquals(this.vipJellySpeed, other.vipJellySpeed) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseGeneration, other.pulseGeneration) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseColorArgb, other.pulseColorArgb) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseBoostColorArgb, other.pulseBoostColorArgb) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseStartedAtMicros, other.pulseStartedAtMicros) && EdrOverlayApiPigeonUtils.deepEquals(this.springIntensity, other.springIntensity)
+    return EdrOverlayApiPigeonUtils.deepEquals(this.roomId, other.roomId) && EdrOverlayApiPigeonUtils.deepEquals(this.timeText, other.timeText) && EdrOverlayApiPigeonUtils.deepEquals(this.primaryFontSize, other.primaryFontSize) && EdrOverlayApiPigeonUtils.deepEquals(this.secondaryFontSize, other.secondaryFontSize) && EdrOverlayApiPigeonUtils.deepEquals(this.left, other.left) && EdrOverlayApiPigeonUtils.deepEquals(this.top, other.top) && EdrOverlayApiPigeonUtils.deepEquals(this.width, other.width) && EdrOverlayApiPigeonUtils.deepEquals(this.height, other.height) && EdrOverlayApiPigeonUtils.deepEquals(this.cornerRadius, other.cornerRadius) && EdrOverlayApiPigeonUtils.deepEquals(this.baseColorArgb, other.baseColorArgb) && EdrOverlayApiPigeonUtils.deepEquals(this.vipHdrEnabled, other.vipHdrEnabled) && EdrOverlayApiPigeonUtils.deepEquals(this.vipJellyEnabled, other.vipJellyEnabled) && EdrOverlayApiPigeonUtils.deepEquals(this.vipJellySpeed, other.vipJellySpeed) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseGeneration, other.pulseGeneration) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseColorArgb, other.pulseColorArgb) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseBoostColorArgb, other.pulseBoostColorArgb) && EdrOverlayApiPigeonUtils.deepEquals(this.pulseStartedAtMicros, other.pulseStartedAtMicros) && EdrOverlayApiPigeonUtils.deepEquals(this.springIntensity, other.springIntensity)
   }
 
   override fun hashCode(): Int {
     var result = javaClass.hashCode()
     result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.roomId)
     result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.timeText)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.primaryFontSize)
+    result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.secondaryFontSize)
     result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.left)
     result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.top)
     result = 31 * result + EdrOverlayApiPigeonUtils.deepHash(this.width)
@@ -302,7 +310,7 @@ data class EdrTileSnapshot (
     return result
   }
   override fun toString(): String {
-    return "EdrTileSnapshot(roomId=$roomId, timeText=$timeText, left=$left, top=$top, width=$width, height=$height, cornerRadius=$cornerRadius, baseColorArgb=$baseColorArgb, vipHdrEnabled=$vipHdrEnabled, vipJellyEnabled=$vipJellyEnabled, vipJellySpeed=$vipJellySpeed, pulseGeneration=$pulseGeneration, pulseColorArgb=$pulseColorArgb, pulseBoostColorArgb=$pulseBoostColorArgb, pulseStartedAtMicros=$pulseStartedAtMicros, springIntensity=$springIntensity)"
+    return "EdrTileSnapshot(roomId=$roomId, timeText=$timeText, primaryFontSize=$primaryFontSize, secondaryFontSize=$secondaryFontSize, left=$left, top=$top, width=$width, height=$height, cornerRadius=$cornerRadius, baseColorArgb=$baseColorArgb, vipHdrEnabled=$vipHdrEnabled, vipJellyEnabled=$vipJellyEnabled, vipJellySpeed=$vipJellySpeed, pulseGeneration=$pulseGeneration, pulseColorArgb=$pulseColorArgb, pulseBoostColorArgb=$pulseBoostColorArgb, pulseStartedAtMicros=$pulseStartedAtMicros, springIntensity=$springIntensity)"
   }
 }
 

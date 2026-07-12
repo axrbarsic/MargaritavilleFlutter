@@ -123,6 +123,8 @@ class EdrTileSnapshot {
   EdrTileSnapshot({
     required this.roomId,
     required this.timeText,
+    required this.primaryFontSize,
+    required this.secondaryFontSize,
     required this.left,
     required this.top,
     required this.width,
@@ -142,6 +144,10 @@ class EdrTileSnapshot {
   String roomId;
 
   String timeText;
+
+  double primaryFontSize;
+
+  double secondaryFontSize;
 
   double left;
 
@@ -175,6 +181,8 @@ class EdrTileSnapshot {
     return <Object?>[
       roomId,
       timeText,
+      primaryFontSize,
+      secondaryFontSize,
       left,
       top,
       width,
@@ -201,20 +209,22 @@ class EdrTileSnapshot {
     return EdrTileSnapshot(
       roomId: result[0]! as String,
       timeText: result[1]! as String,
-      left: result[2]! as double,
-      top: result[3]! as double,
-      width: result[4]! as double,
-      height: result[5]! as double,
-      cornerRadius: result[6]! as double,
-      baseColorArgb: result[7]! as int,
-      vipHdrEnabled: result[8]! as bool,
-      vipJellyEnabled: result[9]! as bool,
-      vipJellySpeed: result[10]! as double,
-      pulseGeneration: result[11] as int?,
-      pulseColorArgb: result[12] as int?,
-      pulseBoostColorArgb: result[13] as int?,
-      pulseStartedAtMicros: result[14] as int?,
-      springIntensity: result[15]! as double,
+      primaryFontSize: result[2]! as double,
+      secondaryFontSize: result[3]! as double,
+      left: result[4]! as double,
+      top: result[5]! as double,
+      width: result[6]! as double,
+      height: result[7]! as double,
+      cornerRadius: result[8]! as double,
+      baseColorArgb: result[9]! as int,
+      vipHdrEnabled: result[10]! as bool,
+      vipJellyEnabled: result[11]! as bool,
+      vipJellySpeed: result[12]! as double,
+      pulseGeneration: result[13] as int?,
+      pulseColorArgb: result[14] as int?,
+      pulseBoostColorArgb: result[15] as int?,
+      pulseStartedAtMicros: result[16] as int?,
+      springIntensity: result[17]! as double,
     );
   }
 
@@ -229,6 +239,8 @@ class EdrTileSnapshot {
     }
     return _deepEquals(roomId, other.roomId) &&
         _deepEquals(timeText, other.timeText) &&
+        _deepEquals(primaryFontSize, other.primaryFontSize) &&
+        _deepEquals(secondaryFontSize, other.secondaryFontSize) &&
         _deepEquals(left, other.left) &&
         _deepEquals(top, other.top) &&
         _deepEquals(width, other.width) &&
@@ -251,7 +263,7 @@ class EdrTileSnapshot {
 
   @override
   String toString() {
-    return 'EdrTileSnapshot(roomId: $roomId, timeText: $timeText, left: $left, top: $top, width: $width, height: $height, cornerRadius: $cornerRadius, baseColorArgb: $baseColorArgb, vipHdrEnabled: $vipHdrEnabled, vipJellyEnabled: $vipJellyEnabled, vipJellySpeed: $vipJellySpeed, pulseGeneration: $pulseGeneration, pulseColorArgb: $pulseColorArgb, pulseBoostColorArgb: $pulseBoostColorArgb, pulseStartedAtMicros: $pulseStartedAtMicros, springIntensity: $springIntensity)';
+    return 'EdrTileSnapshot(roomId: $roomId, timeText: $timeText, primaryFontSize: $primaryFontSize, secondaryFontSize: $secondaryFontSize, left: $left, top: $top, width: $width, height: $height, cornerRadius: $cornerRadius, baseColorArgb: $baseColorArgb, vipHdrEnabled: $vipHdrEnabled, vipJellyEnabled: $vipJellyEnabled, vipJellySpeed: $vipJellySpeed, pulseGeneration: $pulseGeneration, pulseColorArgb: $pulseColorArgb, pulseBoostColorArgb: $pulseBoostColorArgb, pulseStartedAtMicros: $pulseStartedAtMicros, springIntensity: $springIntensity)';
   }
 }
 
